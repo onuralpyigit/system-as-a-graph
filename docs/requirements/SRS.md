@@ -2,7 +2,7 @@
 
 **Definition:** This Software Requirements Specification (SRS) decomposes the six Computer Software Components (CSCs) specified in the SSS into ten Computer Software Units (CSUs). SaaG is the Computer Software Configuration Item (CSCI); each CSC below is decomposed into one or more CSUs, and each requirement is scoped to exactly one CSU. Every requirement in this document is traceable to its source System/Subsystem Specification (SSS) requirement via Appendix A.
 
-## Table 1. SRS Requirement Distribution
+**Table 1. SRS Requirement Distribution**
 
 | No | Component | Abbreviation | Number of CSUs | Number of Requirements |
 |---|---|---|---|---|

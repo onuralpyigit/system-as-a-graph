@@ -266,6 +266,8 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 | 6 — Design Analyzer | 2027-03-11 | 2027-05-07 | 6w |
 | 7 — Design Evaluator | 2027-05-10 | 2027-06-07 | 3w |
 
+**Figure 1. SaaG Development Schedule**
+
 ```mermaid
 %%{init: { 'themeVariables': { 'excludeBkgColor': 'rgba(128,128,128,0.08)' } } }%%
 gantt

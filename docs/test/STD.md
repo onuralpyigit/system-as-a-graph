@@ -4,7 +4,7 @@
 
 **Purpose:** This STD specifies the qualification test cases and procedures that verify the CSCI satisfies its design. Each test case corresponds one-to-one to a design element defined in `SDD.md` §3, exercises the SRS requirement(s) that design element traces to, and states an expected result. Test cases whose acceptance criteria depend on a rule set left open in `CDR.md` state the mechanically verifiable behavior and note the open item; they do not invent thresholds the design has deliberately deferred.
 
-## Table 1. STD Test Case Distribution
+**Table 1. STD Test Case Distribution**
 
 | No | Component | Abbreviation | CSUs | Number of Test Cases |
 |---|---|---|---|---|

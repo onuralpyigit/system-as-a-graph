@@ -74,6 +74,8 @@ Compact type scale for information density: `11px` (table meta/captions) / `12px
 
 The shell is a persistent Next.js layout; only the route outlet swaps. Left nav is grouped by workflow stage, mirroring the CSU groupings in `SDP.md` §2, so the nav structure never has to be redesigned as increments ship new screens into existing groups.
 
+**Figure 1. App Shell & Navigation**
+
 ```mermaid
 flowchart TB
     subgraph TOPBAR["Top Bar — persistent"]
@@ -116,6 +118,8 @@ Each screen below maps to VAE-01 requirements as grouped by actual UX/page bound
 - Findings & Reporting splits into Findings and Reports.
 - Analysis splits into Field Records (FRD.2–5) and Production.
 - Setup's source configuration (MSD.7–8) is a settings dialog, not a page; Findings carries VAE-03.9/21's summary KPI strip.
+
+**Figure 2. Screen Navigation Flow**
 
 ```mermaid
 flowchart TD

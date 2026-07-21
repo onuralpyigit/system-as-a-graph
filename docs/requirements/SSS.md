@@ -2,7 +2,7 @@
 
 **Definition:** The System as a Graph (SaaG) Digital System Model is a static digital system model developed using an architectural digital twin approach, which models the structural and relational architecture of the system using a node-relationship representation, without actually running the system applications. In this model, system entities such as software units, middleware and communication services, processor/console units, topics, and messages are represented as nodes; the dependency, publishing, and consuming relationships between them are represented as relationships. The behavioral analysis dimension of the model is achieved not by running the components, but by overlaying Analytical Evaluation Data — derived from field records or the scenario generator — onto this model.
 
-## Table 1. SSS Requirement Distribution
+**Table 1. SSS Requirement Distribution**
 
 | No | Component | Abbreviation | Number of Requirements |
 |---|---|---|---|
