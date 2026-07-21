@@ -252,71 +252,71 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 ## 3. Development Schedule
 
-**Estimated completion: 2027-06-07.** Per §2, the seven increments are built strictly serially, in dependency-safe order, starting **2026-07-20**. Each increment is sized to a 3–6 week, demoable, end-to-end slice, with backend and Operations Panel UI work running concurrently within each increment and a short Integration & Demo Prep buffer closing it out.
+**Estimated completion: 2027-04-16.** Per §2, the seven increments are built strictly serially in dependency-safe order, starting **2026-07-20**. Each increment is a 3–6 week, demoable, end-to-end slice with backend and Operations Panel UI work running concurrently, closed by a short Integration & Demo Prep buffer. One week = 5 business days (weekends excluded).
 
 **Table 3. Increment Schedule Summary**
 
 | Increment | Start | End | Duration |
 |---|---|---|---|
-| 1 — Model Setup Data Generation | 2026-07-20 | 2026-09-15 | 6w |
-| 2 — Model Manager | 2026-09-16 | 2026-11-12 | 6w |
-| 3 — Design Verifier | 2026-11-13 | 2027-01-11 | 6w |
-| 4 — Synthetic Data Pipeline | 2027-01-12 | 2027-02-09 | 3w |
-| 5 — Field Data Pipeline | 2027-02-10 | 2027-03-10 | 3w |
-| 6 — Design Analyzer | 2027-03-11 | 2027-05-07 | 6w |
-| 7 — Design Evaluator | 2027-05-10 | 2027-06-07 | 3w |
+| 1 — Model Setup Data Generation | 2026-07-20 | 2026-08-28 | 6w |
+| 2 — Model Manager | 2026-08-31 | 2026-10-09 | 6w |
+| 3 — Design Verifier | 2026-10-12 | 2026-11-20 | 6w |
+| 4 — Synthetic Data Pipeline | 2026-11-23 | 2026-12-21 | 21d |
+| 5 — Field Data Pipeline | 2026-12-22 | 2027-01-19 | 21d |
+| 6 — Design Analyzer | 2027-01-20 | 2027-03-18 | 42d |
+| 7 — Design Evaluator | 2027-03-19 | 2027-04-16 | 21d |
 
 **Figure 1. SaaG Development Schedule**
 
 ```mermaid
 %%{init: { 'themeVariables': { 'excludeBkgColor': 'rgba(128,128,128,0.08)' } } }%%
 gantt
-    title SaaG Development Schedule (Estimated Completion: Jun 2027)
+    title SaaG Development Schedule (Estimated Completion: Apr 2027)
     dateFormat YYYY-MM-DD
     axisFormat %b %Y
     excludes weekends
 
     section Inc 1 — Model Setup Data Generation
-    Project Scaffolding & Infra Setup                 :scaffold1, 2026-07-20, 1w
-    Model Setup Data Generation (MSD)                 :msd, after scaffold1, 4w
-    Login & Model Setup Data Control (VAE-01)         :vae01a, after scaffold1, 4w
-    Integration & Demo Prep                           :inc1int, after msd, 1w
+    Project Scaffolding & Infra Setup (1w)             :scaffold1, 2026-07-20, 2026-07-24
+    Model Setup Data Generation MSD (4w)               :msd, 2026-07-27, 2026-08-21
+    Login & Model Setup Data Control VAE-01 (4w)       :vae01a, 2026-07-27, 2026-08-21
+    Integration & Demo Prep (1w)                       :inc1int, 2026-08-24, 2026-08-28
 
     section Inc 2 — Model Manager
-    Model Manager (CSM-01)                            :csm01, after inc1int, 5w
-    Model Building & Viewing (VAE-01)                 :vae01b, after inc1int, 5w
-    Integration & Demo Prep                           :inc2int, after csm01, 1w
+    Model Manager CSM-01 (5w)                          :csm01, 2026-08-31, 2026-10-02
+    Model Building & Viewing VAE-01 (5w)               :vae01b, 2026-08-31, 2026-10-02
+    Integration & Demo Prep (1w)                       :inc2int, 2026-10-05, 2026-10-09
 
     section Inc 3 — Design Verifier
-    Design Verifier (VAE-02)                          :vae02, after inc2int, 5w
-    Model Editing & Findings Display (VAE-01)         :vae01c, after inc2int, 5w
-    Integration & Demo Prep                           :inc3int, after vae02, 1w
+    Design Verifier VAE-02 (5w)                        :vae02, 2026-10-12, 2026-11-13
+    Model Editing & Findings Display VAE-01 (5w)       :vae01c, 2026-10-12, 2026-11-13
+    Integration & Demo Prep (1w)                       :inc3int, 2026-11-16, 2026-11-20
 
     section Inc 4 — Synthetic Data Pipeline
-    Scenario Generator (SCG)                          :scg, after inc3int, 10d
-    Synthetic-Path Data Preparation (ADP)             :adpa, after scg, 6d
-    Analytical Data Source, Scenario & Production Setup (VAE-01) :vae01de, after inc3int, 16d
-    Integration & Demo Prep                           :inc4int, after adpa, 5d
+    Scenario Generator SCG (10d)                       :scg, 2026-11-23, 2026-12-04
+    Synthetic-Path Data Preparation ADP (6d)           :adpa, 2026-12-07, 2026-12-14
+    Analytical Data Source, Scenario & Production Setup VAE-01 (16d) :vae01de, 2026-11-23, 2026-12-14
+    Integration & Demo Prep (5d)                       :inc4int, 2026-12-15, 2026-12-21
 
     section Inc 5 — Field Data Pipeline
-    Analytical Data Binder (CSM-02)                   :csm02, after inc4int, 9d
-    Field Records Database (FRD)                      :frd, after csm02, 8d
-    Field-Path Data Preparation (ADP)                 :adpb, after frd, 3d
-    Analytical Data Binding Status (VAE-01)           :vae01f, after inc4int, 20d
-    Integration & Demo Prep                           :inc5int, after adpb, 1d
+    Analytical Data Binder CSM-02 (9d)                 :csm02, 2026-12-22, 2027-01-01
+    Field Records Database FRD (8d)                    :frd, 2027-01-04, 2027-01-13
+    Field-Path Data Preparation ADP (3d)                :adpb, 2027-01-14, 2027-01-18
+    Analytical Data Binding Status VAE-01 (20d)         :vae01f, 2026-12-22, 2027-01-18
+    Integration & Demo Prep (1d)                        :inc5int, 2027-01-19, 2027-01-19
 
     section Inc 6 — Design Analyzer
-    Design Analyzer (VAE-03)                          :vae03, after inc5int, 40d
-    Simulation Scenario Recording (VAE-01)            :vae01g, after inc5int, 40d
-    Integration & Demo Prep                           :inc6int, after vae03, 2d
+    Design Analyzer VAE-03 (40d)                        :vae03, 2027-01-20, 2027-03-16
+    Simulation Scenario Recording VAE-01 (40d)          :vae01g, 2027-01-20, 2027-03-16
+    Integration & Demo Prep (2d)                        :inc6int, 2027-03-17, 2027-03-18
 
     section Inc 7 — Design Evaluator
-    Design Evaluator (VAE-04)                         :vae04, after inc6int, 18d
-    Reporting & CLI Automation (VAE-01)               :vae01h, after inc6int, 18d
-    Integration & Demo Prep                           :inc7int, after vae04, 3d
+    Design Evaluator VAE-04 (18d)                       :vae04, 2027-03-19, 2027-04-13
+    Reporting & CLI Automation VAE-01 (18d)             :vae01h, 2027-03-19, 2027-04-13
+    Integration & Demo Prep (3d)                        :inc7int, 2027-04-14, 2027-04-16
 
     section Estimated Completion
-    Estimated Completion                              :milestone, completion, 2027-06-07, 0d
+    Estimated Completion (0d)                           :milestone, completion, 2027-04-16, 0d
 ```
 
 ---
