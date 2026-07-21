@@ -123,7 +123,7 @@ flowchart LR
     CSM02 -->|"INT-IF-05"| VAE01
 ```
 
-Every data-acquisition interface reports its own deficiency/access/format/integrity errors back through itself, consistent with the CSCI-wide validation pattern (§1, decision 5). The communication method and protocol for every interface listed above, and the choice between automatic and manual acquisition for EXT-IF-04, are to be determined during the critical design phase (tracked in `CDR.md`, group 1.4).
+Every data-acquisition interface reports its own deficiency/access/format/integrity errors back through itself, consistent with the CSCI-wide validation pattern (§1, decision 5). The communication method and protocol for every interface listed above, and the choice between automatic and manual acquisition for EXT-IF-04, are to be determined during the critical design phase (tracked in CDR §1.4).
 
 ### 2.4 Database Design
 
@@ -141,7 +141,7 @@ SaaG persists 7 data stores:
 | Working Model | Non-destructive structural sandbox derived from the Core System Model | VAE-01 | VAE-01.17 |
 | Findings, Operations & Reports | Verification/analysis/evaluation findings, operation records, and generated reports | VAE-01 | VAE-01.21–26 |
 
-Database-wide design decisions: (1) every store is keyed by project/platform/system-version; (2) the Core System Model and Analytical Evaluation Data are separable stores joined only through CSM-02's binding, per §1 decision 2; (3) Analytical Evaluation Data and the Findings/Operations/Reports store both preserve upstream-source provenance (field record vs. synthetic); (4) ingestion-oriented stores (Model Setup Data file, Field Records Database) share the common validation-status attribute set from §1 decision 5. Physical storage technology per store, and the detailed entity schemas and attribute definitions for all 7 stores, are to be determined during the critical design phase (tracked in `CDR.md`, group 1.5).
+Database-wide design decisions: (1) every store is keyed by project/platform/system-version; (2) the Core System Model and Analytical Evaluation Data are separable stores joined only through CSM-02's binding, per §1 decision 2; (3) Analytical Evaluation Data and the Findings/Operations/Reports store both preserve upstream-source provenance (field record vs. synthetic); (4) ingestion-oriented stores (Model Setup Data file, Field Records Database) share the common validation-status attribute set from §1 decision 5. Physical storage technology per store, and the detailed entity schemas and attribute definitions for all 7 stores, are to be determined during the critical design phase (tracked in CDR §1.5).
 
 ---
 

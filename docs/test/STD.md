@@ -2,7 +2,7 @@
 
 **Definition:** The System as a Graph (SaaG) Digital System Model is a static digital system model developed using an architectural digital twin approach, which models the structural and relational architecture of the system using a node-relationship representation, without actually running the system applications. In this model, system entities such as software units, middleware and communication services, processor/console units, topics, and messages are represented as nodes; the dependency, publishing, and consuming relationships between them are represented as relationships. The behavioral analysis dimension of the model is achieved not by running the components, but by overlaying Analytical Evaluation Data — derived from field records or the scenario generator — onto this model.
 
-**Purpose:** This STD specifies the qualification test cases and procedures that verify the CSCI satisfies its design. Each test case corresponds one-to-one to a design element defined in `SDD.md` §3, exercises the SRS requirement(s) that design element traces to, and states an expected result. Test cases whose acceptance criteria depend on a rule set left open in `CDR.md` state the mechanically verifiable behavior and note the open item; they do not invent thresholds the design has deliberately deferred.
+**Purpose:** This STD specifies the qualification test cases and procedures that verify the CSCI satisfies its design. Each test case corresponds one-to-one to a design element defined in SDD §3, exercises the SRS requirement(s) that design element traces to, and states an expected result. Test cases whose acceptance criteria depend on a rule set left open in the CDR state the mechanically verifiable behavior and note the open item; they do not invent thresholds the design has deliberately deferred.
 
 **Table 1. STD Test Case Distribution**
 
@@ -510,4 +510,4 @@ Expected Result: Concurrent multi-unit evaluation produces correctly-isolated pe
 | TC-VAE04-02 | Blocking Decision Engine | VAE-04.7 |
 | TC-VAE04-03 | Concurrent Evaluation Orchestrator | VAE-04.8 |
 
-**Coverage check:** all 40 SDD §3 design elements have exactly one test case above, and all 156 SRS requirements are covered through their owning design element, consistent with SDD §4. Test cases TC-ADP-03, TC-CSM01-04, TC-VAE01-06, TC-VAE02-02, TC-VAE02-04, TC-VAE02-05, TC-VAE02-06, and TC-VAE04-01 carry acceptance criteria pending CDR-01 through CDR-08, CDR-12, CDR-14, and CDR-16 resolution (see `CDR.md`).
+**Coverage check:** all 40 SDD §3 design elements have exactly one test case above, and all 156 SRS requirements are covered through their owning design element, consistent with SDD §4. Test cases TC-ADP-03, TC-CSM01-04, TC-VAE01-06, TC-VAE02-02, TC-VAE02-04, TC-VAE02-05, TC-VAE02-06, and TC-VAE04-01 carry acceptance criteria pending CDR-01 through CDR-08, CDR-12, CDR-14, and CDR-16 resolution (see the CDR).

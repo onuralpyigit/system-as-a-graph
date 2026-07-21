@@ -55,7 +55,7 @@ Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 The seven increments below are built one at a time, in dependency-safe order. Each increment delivers one or more CSCs' remaining CSUs plus the matching slice of VAE-01 (Operations Panel), which supports every other CSC and so appears across most increments rather than in one place. Each increment also states the explicit design, development, test, and packaging changes needed to deliver it, in addition to its demo scenario.
 
-**Definition of Done (applies to every increment):** an increment is Done when (1) every deliverable in its CSU/Deliverable table is implemented and satisfies its cited SRS requirement(s); (2) every CDR item cited in its Design paragraph is Resolved, or explicitly Deferred past this increment with a recorded reason (per `CDR.md`'s Status field); (3) everything called out in its Test paragraph passes — for requirement slices shared across increments, only the slice attributed to this increment must pass; (4) every service/container called out in its Packaging paragraph builds and deploys cleanly; (5) its Demo scenario has been executed end-to-end and observed successfully.
+**Definition of Done (applies to every increment):** an increment is Done when (1) every deliverable in its CSU/Deliverable table is implemented and satisfies its cited SRS requirement(s); (2) every CDR item cited in its Design paragraph is Resolved, or explicitly Deferred past this increment with a recorded reason (per CDR's Status field); (3) everything called out in its Test paragraph passes — for requirement slices shared across increments, only the slice attributed to this increment must pass; (4) every service/container called out in its Packaging paragraph builds and deploys cleanly; (5) its Demo scenario has been executed end-to-end and observed successfully.
 
 **Table 2. Increment Overview**
 
@@ -78,7 +78,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Completes:** SaaG-MSD
 
-**Design:** MSD (SRS MSD.1–23) and the login/MSD-control screen (VAE-01.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (CDR 09, 10, 17, 18, 19, 20, 22, 24).
+**Design:** MSD (SRS MSD.1–23) and the login/MSD-control screen (VAE-01.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
 
 **Development:** Build the MSD backend — connect to, validate, and assemble data from the four external sources — plus login/session handling. On the frontend: login, project/platform/version selection, source configuration, and an MSD production/status screen.
 
@@ -90,7 +90,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Definition of Done:**
 - [ ] MSD (MSD.1–23) and login/MSD-control (VAE-01.1–8) built and working
-- [ ] CDR 09, 10, 17, 18, 19, 20, 22, 24 resolved or deferred
+- [ ] CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24 resolved or deferred
 - [ ] MSD and login/workflow tests pass
 - [ ] MSD/web services deploy together
 - [ ] Demo run end-to-end
@@ -102,7 +102,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 | CSM-01 *(complete)* | Model Manager (CSM-01.1–31) |
 | VAE-01 *(ongoing)* | Model Building & Viewing (VAE-01.9, 19–20) |
 
-**Design:** Model Manager (SRS CSM-01.1–31) and the model-build/browsing screen (VAE-01.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (CDR 29–30); concurrency limits and the VAE read protocol are also open (CDR 16, 28).
+**Design:** Model Manager (SRS CSM-01.1–31) and the model-build/browsing screen (VAE-01.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (CDR-29–30); concurrency limits and the VAE read protocol are also open (CDR-16, CDR-28).
 
 **Development:** Build the Model Manager backend — turn Model Setup Data into a graph, keep it safe under concurrent access, support isolated evaluation copies — on a graph database. On the frontend: model browsing (search/filter/zoom/pan/attributes).
 
@@ -114,7 +114,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Definition of Done:**
 - [ ] Model Manager (CSM-01.1–31) and browsing screen (VAE-01.9,19–20) built and working
-- [ ] CDR 16, 28, 29–30 resolved or deferred
+- [ ] CDR-16, CDR-28, CDR-29–30 resolved or deferred
 - [ ] Model Manager and browsing tests pass, completing Increment 1's
 - [ ] Model Manager service and graph database deploy together
 - [ ] Demo run end-to-end
@@ -126,9 +126,9 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 | VAE-02 *(complete)* | Design Verifier (VAE-02.1–22) |
 | VAE-01 *(ongoing)* | Model Editing & Findings Display (VAE-01.17–18, 21–24) |
 
-**Design:** Design Verifier (SRS VAE-02.1–22) and the model-editor/findings screen (VAE-01.17–18, 21–24) are laid out, but most of the actual pass/fail rules are undecided — the biggest design gap in this plan (CDR 01–08).
+**Design:** Design Verifier (SRS VAE-02.1–22) and the model-editor/findings screen (VAE-01.17–18, 21–24) are laid out, but most of the actual pass/fail rules are undecided — the biggest design gap in this plan (CDR-01–08).
 
-**Development:** Build the Design Verifier's six checking engines against interim rules until CDR 01–08 close. On the frontend: the working-model editor (safe sandbox) and findings display/classification.
+**Development:** Build the Design Verifier's six checking engines against interim rules until CDR-01–08 close. On the frontend: the working-model editor (safe sandbox) and findings display/classification.
 
 **Test:** Verify all six engines catch their fault conditions, editor changes never touch the real model, and findings display correctly — though some checks can only verify mechanics, not thresholds, until the rules close. End-to-end: edit and verify.
 
@@ -138,7 +138,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Definition of Done:**
 - [ ] Design Verifier (VAE-02.1–22) and editor/findings screen (VAE-01.17–18,21–24) built and working
-- [ ] CDR 01–08 — the biggest open item in this plan — resolved or deferred
+- [ ] CDR-01–08 — the biggest open item in this plan — resolved or deferred
 - [ ] Verifier and editor/findings tests pass (to the extent rules allow)
 - [ ] Design Verifier service deploys and runs
 - [ ] Demo run end-to-end
@@ -153,7 +153,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Completes:** SaaG-SCG
 
-**Design:** Scenario Generator (SRS SCG.1–7) and the synthetic-data setup screen (VAE-01.10–15) are fully designed. Still open: what the synthetic data should simulate, the Analytical Evaluation Data format, and the SCG→ADP handoff (CDR 11, 12, 25).
+**Design:** Scenario Generator (SRS SCG.1–7) and the synthetic-data setup screen (VAE-01.10–15) are fully designed. Still open: what the synthetic data should simulate, the Analytical Evaluation Data format, and the SCG→ADP handoff (CDR-11, CDR-12, CDR-25).
 
 **Development:** Build the Scenario Generator (capture inputs, produce and record traceable synthetic data) and the synthetic-intake half of Analytical Data Preparation. On the frontend: scenario input and production/status screens.
 
@@ -165,7 +165,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Definition of Done:**
 - [ ] Scenario Generator (SCG.1–7) and setup screen (VAE-01.10–15) built and working
-- [ ] CDR 11, 12, 25 resolved or deferred
+- [ ] CDR-11, CDR-12, CDR-25 resolved or deferred
 - [ ] Scenario Generator and synthetic-path tests pass
 - [ ] Both services deploy together
 - [ ] Demo run end-to-end
@@ -181,7 +181,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Completes:** SaaG-FRD, SaaG-ADP, SaaG-CSM
 
-**Design:** Analytical Data Binder (SRS CSM-02.1–6) and Field Records Database (FRD.1–5) are fully designed, as is the binding-status screen (VAE-01.16). Still open: field-record storage capacity, the FRD external interface protocol, the FRD→ADP and ADP→CSM-02 handoffs, and the carried-over AED format decision (CDR 15, 21, 26, 27, 12).
+**Design:** Analytical Data Binder (SRS CSM-02.1–6) and Field Records Database (FRD.1–5) are fully designed, as is the binding-status screen (VAE-01.16). Still open: field-record storage capacity, the FRD external interface protocol, the FRD→ADP and ADP→CSM-02 handoffs, and the carried-over AED format decision (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
 
 **Development:** Build the Field Records Database (upload/catalog/search), the field-intake half of Analytical Data Preparation, and the Data Binder (attach behavioral data without altering the model). On the frontend: field-record upload/catalog and binding-status screens.
 
@@ -193,7 +193,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Definition of Done:**
 - [ ] Data Binder (CSM-02.1–6), FRD (FRD.1–5), and binding-status screen (VAE-01.16) built and working
-- [ ] CDR 15, 21, 26, 27, 12 resolved or deferred
+- [ ] CDR-15, CDR-21, CDR-26, CDR-27, CDR-12 resolved or deferred
 - [ ] Field-records, binder, and field-path tests pass, completing Increment 4's
 - [ ] New services and telemetry database deploy together
 - [ ] Demo run end-to-end
@@ -205,7 +205,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 | VAE-03 *(complete)* | Design Analyzer (VAE-03.1–21) |
 | VAE-01 *(ongoing)* | Simulation Scenario Recording (VAE-01.25) |
 
-**Design:** Design Analyzer (SRS VAE-03.1–21) and the simulation-recording screen (VAE-01.25) are fully designed. No item names it directly, but it depends on two carried-over decisions: the VAE read protocol and the model's storage/schema (CDR 28, 29–30).
+**Design:** Design Analyzer (SRS VAE-03.1–21) and the simulation-recording screen (VAE-01.25) are fully designed. No item names it directly, but it depends on two carried-over decisions: the VAE read protocol and the model's storage/schema (CDR-28, CDR-29–30).
 
 **Development:** Build the Design Analyzer's three engines (synthetic-data simulation, field-data analysis, drift detection). On the frontend: simulation-scenario recording and high-volume field-trace charts.
 
@@ -217,7 +217,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Definition of Done:**
 - [ ] Design Analyzer (VAE-03.1–21) and recording screen (VAE-01.25) built and working
-- [ ] Carried-over CDR 28, 29–30 resolved or deferred
+- [ ] Carried-over CDR-28, CDR-29–30 resolved or deferred
 - [ ] Design Analyzer tests pass
 - [ ] Design Analyzer service deploys and runs
 - [ ] Demo run end-to-end
@@ -231,7 +231,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Completes:** SaaG-VAE
 
-**Design:** Design Evaluator (SRS VAE-04.1–8) and the reporting/CLI screen (VAE-01.26–27) are fully designed. Still open: the scoring method, report file format, and CLI protocol/result format (CDR 13, 14, 23) — all should close before this final increment ships.
+**Design:** Design Evaluator (SRS VAE-04.1–8) and the reporting/CLI screen (VAE-01.26–27) are fully designed. Still open: the scoring method, report file format, and CLI protocol/result format (CDR-13, CDR-14, CDR-23) — all should close before this final increment ships.
 
 **Development:** Build the Design Evaluator (score candidates, force non-conforming on critical findings, run evaluations concurrently) and the CLI. Add PDF/JSON report generation and the report screen.
 
@@ -243,7 +243,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 **Definition of Done:**
 - [ ] Design Evaluator (VAE-04.1–8) and reporting/CLI screen (VAE-01.26–27) built and working
-- [ ] CDR 13, 14, 23 resolved or deferred
+- [ ] CDR-13, CDR-14, CDR-23 resolved or deferred
 - [ ] Evaluator and CLI tests pass, completing the reporting test from Increments 3/6/7
 - [ ] Full service stack deploys together
 - [ ] Demo run end-to-end — all six components complete

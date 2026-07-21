@@ -2,7 +2,7 @@
 
 **Definition:** This UXD specifies the visual identity, layout system, interaction patterns, and performance targets for **VAE-01, the Operations Panel** — the sole user-facing surface of the SaaG CSCI. It covers the web application only; the CLI half of VAE-01 (VAE-01.27) is a text-output automation interface and has no visual UX surface.
 
-**Purpose:** `SDD.md` §3.6.1 already fixes *what* each VAE-01 screen does and *which* SRS requirements it satisfies. This document fixes *how it looks and feels* — the design tokens, layout shell, and interaction patterns that make the Operations Panel read as a premium, high-performance instrument rather than a generic admin CRUD app — using only the technologies already committed to in `SDP.md` §5 Table 6.
+**Purpose:** SDD §3.6.1 already fixes *what* each VAE-01 screen does and *which* SRS requirements it satisfies. This document fixes *how it looks and feels* — the design tokens, layout shell, and interaction patterns that make the Operations Panel read as a premium, high-performance instrument rather than a generic admin CRUD app — using only the technologies already committed to in SDP §5 Table 6.
 
 ---
 
@@ -18,7 +18,7 @@
 
 ## 2. Visual Identity (Design Tokens)
 
-Tokens are expressed as shadcn/ui-style CSS custom properties (HSL triples, consumed by Tailwind CSS ~3.4 via `hsl(var(--x))`) so they drop directly into the stack fixed in `SDP.md` §5 Table 6 — no new theming library.
+Tokens are expressed as shadcn/ui-style CSS custom properties (HSL triples, consumed by Tailwind CSS ~3.4 via `hsl(var(--x))`) so they drop directly into the stack fixed in SDP §5 Table 6 — no new theming library.
 
 ### 2.1 Color — dark (default) and light
 
@@ -72,7 +72,7 @@ Compact type scale for information density: `11px` (table meta/captions) / `12px
 
 ## 3. App Shell & Navigation
 
-The shell is a persistent Next.js layout; only the route outlet swaps. Left nav is grouped by workflow stage, mirroring the CSU groupings in `SDP.md` §2, so the nav structure never has to be redesigned as increments ship new screens into existing groups.
+The shell is a persistent Next.js layout; only the route outlet swaps. Left nav is grouped by workflow stage, mirroring the CSU groupings in SDP §2, so the nav structure never has to be redesigned as increments ship new screens into existing groups.
 
 **Figure 1. App Shell & Navigation**
 
@@ -233,7 +233,7 @@ for the live per-source status dot (two-state readiness scale, §3).
 └────────────┴───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Analytical Data Workflow** *(Production)* — *VAE-01.10–11, 13–16* — Source-choice toggle — System Field Records vs. SCG synthetic scenario, mutually exclusive per `SDD.md` §3.4.1 — driving a conditional form (React Hook Form): either record selection against the Field Records catalog (VAE-01.12), or a scenario-input form (scope, type, interval, density, data types). Binding status against the Core System Model is the final stage, shown as a compact progress card once CSM-02 completes. One continuous page, not a separate one.
+**Analytical Data Workflow** *(Production)* — *VAE-01.10–11, 13–16* — Source-choice toggle — System Field Records vs. SCG synthetic scenario, mutually exclusive per SDD §3.4.1 — driving a conditional form (React Hook Form): either record selection against the Field Records catalog (VAE-01.12), or a scenario-input form (scope, type, interval, density, data types). Binding status against the Core System Model is the final stage, shown as a compact progress card once CSM-02 completes. One continuous page, not a separate one.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -254,7 +254,7 @@ for the live per-source status dot (two-state readiness scale, §3).
 └────────────┴───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Working Model Editor** — *VAE-01.17* — Same graph canvas as Model Visualization, entered via an in-page Browse/Edit toggle rather than a separate nav destination. A persistent, non-dismissable amber `--status-medium` banner and border mark it as distinct from read-only browsing; selecting a node or edge opens the same Inspector Panel, but its fields become editable (React Hook Form + shadcn) — the canvas itself is never directly editable. Every add/remove/edit is an explicit, undoable step; edits live only in the Working Model store (`SDD.md` §2.4), scoped to the active project/platform/version, never autosaved to the Core System Model. Switching Project/Platform/Version with unsaved edits pending prompts a confirmation dialog (shadcn `AlertDialog`); switching left-nav groups mid-edit is safe, since the edits persist in the store and the amber banner reappears on return.
+**Working Model Editor** — *VAE-01.17* — Same graph canvas as Model Visualization, entered via an in-page Browse/Edit toggle rather than a separate nav destination. A persistent, non-dismissable amber `--status-medium` banner and border mark it as distinct from read-only browsing; selecting a node or edge opens the same Inspector Panel, but its fields become editable (React Hook Form + shadcn) — the canvas itself is never directly editable. Every add/remove/edit is an explicit, undoable step; edits live only in the Working Model store (SDD §2.4), scoped to the active project/platform/version, never autosaved to the Core System Model. Switching Project/Platform/Version with unsaved edits pending prompts a confirmation dialog (shadcn `AlertDialog`); switching left-nav groups mid-edit is safe, since the edits persist in the store and the amber banner reappears on return.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────────┐
@@ -343,16 +343,16 @@ replaced by a "Build Model" trigger + progress, fed by the top-bar job strip.
 
 ## 5. Core Interaction Patterns
 
-Cross-cutting patterns, each owned by exactly one library from `SDP.md` §5 Table 6 — no screen invents its own variant.
+Cross-cutting patterns, each owned by exactly one library from SDP §5 Table 6 — no screen invents its own variant.
 
 | Pattern | Owner | Rule |
 |---|---|---|
 | Graph canvas | React Flow ^12.11 | Search/filter, zoom/pan, click-to-select → Inspector Panel, minimap always present. Below a configurable node-count threshold (§6) render at full detail; above it, degrade to level-of-detail (labels hidden, edges simplified) until the operator zooms in. |
 | Data tables | TanStack Table ^8.21 + shadcn/ui | Sort/filter/pagination and severity-colored rows are table-wide conventions, not per-screen choices; used by Findings, Reports, and the Field Records catalog. |
 | Charts | Recharts ^3.9 + shadcn/ui Chart, or ECharts ^6.1 | **Decision rule:** low-cardinality summary/KPI/status charts (findings counts, conformance breakdowns, VAE-03.9/21's top resource-usage/messaging-intensity entities on the Findings page) use Recharts/shadcn Chart for tight design-system integration; high-volume field-trace data (message flow, resource usage, latency/loss — VAE-03) uses ECharts for its canvas-based rendering at scale. Both read the same severity/status token scale for series color. |
-| Forms | React Hook Form ^7.81 + shadcn/ui | Inline, per-field validation errors, matching the CSCI-wide mandatory-field/format validation pattern already fixed in `SDD.md` §1 decision 5 — the UI never invents a different validation vocabulary than the backend's. |
+| Forms | React Hook Form ^7.81 + shadcn/ui | Inline, per-field validation errors, matching the CSCI-wide mandatory-field/format validation pattern already fixed in SDD §1 decision 5 — the UI never invents a different validation vocabulary than the backend's. |
 | Background operations | Procrastinate (PostgreSQL) + SSE | One status-strip + toast pattern for every long-running operation (MSD production, AED production, evaluation runs): queued → running → succeeded/failed, with failure reason surfaced inline, not just in a toast. |
-| Shell, routing & access control | Refine ^5.0 | Route guarding, session/auth redirects, and CRUD/resource data bindings underneath Login, Findings, Reports, and Field Records (`SDP.md` §5 Table 6) — supplies the plumbing beneath the visual-pattern owners above, not a visual pattern of its own. |
+| Shell, routing & access control | Refine ^5.0 | Route guarding, session/auth redirects, and CRUD/resource data bindings underneath Login, Findings, Reports, and Field Records (SDP §5 Table 6) — supplies the plumbing beneath the visual-pattern owners above, not a visual pattern of its own. |
 
 ---
 
@@ -378,7 +378,7 @@ Concrete, testable targets — the "outstanding performance" requirement is trea
 
 - **Contrast:** every `--foreground`/`--background` and `--*-foreground`/`--*` pairing in §2.1–2.2 must meet WCAG AA (4.5:1 body text, 3:1 large text/graphics) in both themes; the severity scale is chosen to stay distinguishable under common color-vision deficiencies (red/orange/amber/blue-gray/blue span both hue and lightness).
 - **Keyboard:** the graph canvas, findings table, and Inspector Panel are all keyboard-navigable (arrow/tab traversal, Enter to open Inspector, Esc to close) — no interaction pattern is mouse-only.
-- **States:** every data view (graph, table, form, chart) implements the same three non-happy-path states — **empty** (no data yet, with the action that produces it), **loading** (skeleton matching the eventual layout, not a spinner-only screen), **error** (inline, using `--status-critical`, with the same source/reason/time attributes the backend already records per `SDD.md` §1 decision 5) — so an operator learns the pattern once and reuses it everywhere.
+- **States:** every data view (graph, table, form, chart) implements the same three non-happy-path states — **empty** (no data yet, with the action that produces it), **loading** (skeleton matching the eventual layout, not a spinner-only screen), **error** (inline, using `--status-critical`, with the same source/reason/time attributes the backend already records per SDD §1 decision 5) — so an operator learns the pattern once and reuses it everywhere.
 
 ---
 

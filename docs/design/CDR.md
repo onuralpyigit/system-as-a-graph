@@ -67,7 +67,7 @@
 
 ## 2. Impact if Left Unresolved
 
-- **CDR-01–08** block `SDD.md` §3.6.2–§3.6.1 (Design Verifier and Findings & Reporting Manager design elements) from being fully specifiable, and leave `STD.md` test cases TC-VAE02-02, TC-VAE02-04, TC-VAE02-05, TC-VAE02-06, and TC-VAE01-06 unable to state a concrete pass/fail threshold until resolved.
-- **CDR-09–16** block full closure of the MSD, SCG, ADP, VAE-01, and VAE-04 requirements and design elements they are cited against, and leave `STD.md` test cases TC-ADP-03 (CDR-12), TC-VAE04-01 (CDR-14), and TC-CSM01-04 (CDR-16) unable to state concrete acceptance data until resolved.
-- **CDR-17–28** block finalizing `SDD.md` §2.3 and any future integration testing across the 12 interfaces.
-- **CDR-29–30** block finalizing `SDD.md` §2.4's physical schema and any future performance/capacity testing.
+- **CDR-01–08** block SDD §3.6.2–§3.6.1 (Design Verifier and Findings & Reporting Manager design elements) from being fully specifiable, and leave STD test cases TC-VAE02-02, TC-VAE02-04, TC-VAE02-05, TC-VAE02-06, and TC-VAE01-06 unable to state a concrete pass/fail threshold until resolved.
+- **CDR-09–16** block full closure of the MSD, SCG, ADP, VAE-01, and VAE-04 requirements and design elements they are cited against, and leave STD test cases TC-ADP-03 (CDR-12), TC-VAE04-01 (CDR-14), and TC-CSM01-04 (CDR-16) unable to state concrete acceptance data until resolved.
+- **CDR-17–28** block finalizing SDD §2.3 and any future integration testing across the 12 interfaces.
+- **CDR-29–30** block finalizing SDD §2.4's physical schema and any future performance/capacity testing.
