@@ -63,6 +63,8 @@
 | CDR-29 | Physical storage technology for each of the 7 data stores (e.g. property-graph DB vs. relational vs. document store for the Core System Model) | SDD §2.4 | Open |
 | CDR-30 | Entity schemas and detailed attribute definitions for all 7 persisted data stores | SDD §2.4 | Open |
 
+---
+
 ## 2. Impact if Left Unresolved
 
 - **CDR-01–08** block `SDD.md` §3.6.2–§3.6.1 (Design Verifier and Findings & Reporting Manager design elements) from being fully specifiable, and leave `STD.md` test cases TC-VAE02-02, TC-VAE02-04, TC-VAE02-05, TC-VAE02-06, and TC-VAE01-06 unable to state a concrete pass/fail threshold until resolved.

@@ -165,8 +165,6 @@ All external data acquisition funnels through a common validation and error-reco
 
 **Data Validation & Model Setup Data Assembler** — performs a mandatory-field-presence check across all received/manually-entered source data; records error reason, source name/type, project/platform association, and error time for each failure; assembles the data that passes verification into the Model Setup Data file handed off via INT-IF-01. Traces to MSD.21–23.
 
----
-
 ### 3.2 SCG — Scenario Generator (SaaG-SCG)
 
 #### 3.2.1 CSC-wide design decisions
@@ -181,8 +179,6 @@ Synthetic data generation is fully decoupled from field data collection; scenari
 
 **Scenario Output Recorder** — records produced synthetic data together with scenario name, production time, and project/platform/system-version association; prepares the data for transfer via INT-IF-02. Traces to SCG.5, 7.
 
----
-
 ### 3.3 FRD — Field Records Database (SaaG-FRD)
 
 #### 3.3.1 CSC-wide design decisions
@@ -194,8 +190,6 @@ System Field Records are stored centrally and indexed for retrieval by project, 
 **Record Upload Manager** — accepts user uploads of telemetry and system data records in a controlled, traceable manner, associated with project/platform/system-version; detects and reports format incompatibility, integrity errors, or missing fields at upload time. Traces to FRD.2, 5.
 
 **Record Catalog Manager** — records each uploaded System Field Record with its source, upload time, and project/platform/version association; supports listing, search, and selection of existing records by project, platform, system version, record source, or upload time. Traces to FRD.3–4.
-
----
 
 ### 3.4 ADP — Analytical Data Preparation (SaaG-ADP)
 
@@ -210,8 +204,6 @@ Analytical Evaluation Data is produced from exactly one of two upstream sources 
 **Scenario Data Ingestion** — obtains synthetic data from SCG for Analytical Evaluation Data production; detects and reports format incompatibility, unreadable data, or missing fields. Traces to ADP.3, 6.
 
 **Analytical Data Assembler** — processes and appropriately associates the ingested System Field Records or synthetic data, and produces the Analytical Evaluation Data transmitted via INT-IF-04. Traces to ADP.4.
-
----
 
 ### 3.5 Node-Relationship Based Core System Model (SaaG-CSM)
 
@@ -246,8 +238,6 @@ The structural graph (Core System Model) and the behavioral overlay (Analytical 
 **Node/Relationship Matcher & Binder** — associates the Analytical Evaluation Data with the relevant project/platform/system version/model; matches record, telemetry, and synthetic data to the corresponding nodes and relationships; preserves provenance (field vs. synthetic); binds without altering the Core System Model, keeping the two layers separable. Traces to CSM-02.1, 3–5.
 
 **Unmatched Record Reporter** — reports node or relationship records for which no counterpart can be found in the Analytical Evaluation Data. Traces to CSM-02.6.
-
----
 
 ### 3.6 Design Verification, Analysis and Evaluation (SaaG-VAE)
 
