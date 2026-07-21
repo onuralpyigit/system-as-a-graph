@@ -76,15 +76,15 @@ Increment 0 establishes the repository scaffolding, shared cross-CSC infrastruct
 |---|---|
 | — | Repository scaffolding, shared cross-CSC infrastructure, and documentation skeleton |
 
-**Design:** No SRS requirements are implemented in this increment. It establishes the repository structure (§4), the hexagonal directory conventions every CSC follows, and the shared `contracts/`, `types/`, `errors/`, and `security/` primitives every later increment depends on.
+**Design:** No SRS requirements are implemented. Establishes the repository structure (§4), hexagonal directory conventions, and shared cross-CSC primitives every later increment depends on.
 
-**Development:** Scaffold the repository per §4 (per-CSC `src/`+`tests/` hexagonal layout, `web/`, `cli/`, `deploy/`), stand up the base Docker Compose stack (§5) with placeholder/health-check services, initialize the shared cross-CSC packages, and populate the `docs/` skeleton (`requirements/`, `planning/`, `design/`, `test/`) so every downstream document has a home.
+**Development:** Scaffold the repository per §4, stand up the base Docker Compose stack with placeholder services, initialize shared packages, and populate the `docs/` skeleton.
 
-**Test:** Verify the repository builds and lints cleanly, the base Docker Compose stack starts with placeholder services healthy, and CI runs successfully against the empty scaffolding.
+**Test:** Verify the repository builds and lints cleanly, placeholder services start healthy, and CI runs successfully against the empty scaffolding.
 
 **Packaging:** Stand up the base Docker Compose stack and CI pipeline — no application services yet.
 
-**Demo:** A clean checkout of the repository builds, lints, and brings up its full Docker Compose stack end-to-end with no application logic, and every planning/requirements/design/test document has a placeholder in place under `docs/`.
+**Demo:** A clean checkout builds, lints, and brings up the full Docker Compose stack with no application logic, and every planned document has a placeholder under `docs/`.
 
 **Definition of Done:**
 - [ ] Repository scaffolded per §4 (per-CSC hexagonal layout, `web/`, `cli/`, `deploy/`, `shared/`)
