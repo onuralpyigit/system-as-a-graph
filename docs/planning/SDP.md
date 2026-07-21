@@ -53,7 +53,7 @@ Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 ## 2. Incremental Development Plan
 
-The seven increments below are built one at a time, in dependency-safe order. Each increment delivers one or more CSCs' remaining CSUs plus the matching slice of VAE-01 (Operations Panel), which supports every other CSC and so appears across most increments rather than in one place. Each increment also states the explicit design, development, test, and packaging changes needed to deliver it, in addition to its demo scenario.
+Increment 0 establishes the repository scaffolding, shared cross-CSC infrastructure, and documentation skeleton that every subsequent increment builds on. The seven functional increments that follow are built one at a time, in dependency-safe order. Each increment delivers one or more CSCs' remaining CSUs plus the matching slice of VAE-01 (Operations Panel), which supports every other CSC and so appears across most increments rather than in one place. Each increment also states the explicit design, development, test, and packaging changes needed to deliver it, in addition to its demo scenario.
 
 **Definition of Done (applies to every increment):** an increment is Done when (1) every deliverable in its CSU/Deliverable table is implemented and satisfies its cited SRS requirement(s); (2) every CDR item cited in its Design paragraph is Resolved, or explicitly Deferred past this increment with a recorded reason (per CDR's Status field); (3) everything called out in its Test paragraph passes — for requirement slices shared across increments, only the slice attributed to this increment must pass; (4) every service/container called out in its Packaging paragraph builds and deploys cleanly; (5) its Demo scenario has been executed end-to-end and observed successfully.
 
@@ -61,6 +61,7 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 | # | Increment | CSUs delivered | CSCs complete |
 |---|---|---|---|
+| 0 | Project Scaffolding | — | — |
 | 1 | Model Setup Data Generation | MSD | SaaG-MSD |
 | 2 | Model Manager | CSM-01 | — |
 | 3 | Design Verifier | VAE-02 | — |
@@ -68,6 +69,29 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 | 5 | Field Data Pipeline | CSM-02, FRD, ADP (field slice) | SaaG-FRD, SaaG-ADP, SaaG-CSM |
 | 6 | Design Analyzer | VAE-03 | — |
 | 7 | Design Evaluator | VAE-04, VAE-01 (complete) | SaaG-VAE |
+
+### Increment 0: Project Scaffolding
+
+| CSU | Deliverable |
+|---|---|
+| — | Repository scaffolding, shared cross-CSC infrastructure, and documentation skeleton |
+
+**Design:** No SRS requirements are implemented in this increment. It establishes the repository structure (§4), the hexagonal directory conventions every CSC follows, and the shared `contracts/`, `types/`, `errors/`, and `security/` primitives every later increment depends on.
+
+**Development:** Scaffold the repository per §4 (per-CSC `src/`+`tests/` hexagonal layout, `web/`, `cli/`, `deploy/`), stand up the base Docker Compose stack (§5) with placeholder/health-check services, initialize the shared cross-CSC packages, and populate the `docs/` skeleton (`requirements/`, `planning/`, `design/`, `test/`) so every downstream document has a home.
+
+**Test:** Verify the repository builds and lints cleanly, the base Docker Compose stack starts with placeholder services healthy, and CI runs successfully against the empty scaffolding.
+
+**Packaging:** Stand up the base Docker Compose stack and CI pipeline — no application services yet.
+
+**Demo:** A clean checkout of the repository builds, lints, and brings up its full Docker Compose stack end-to-end with no application logic, and every planning/requirements/design/test document has a placeholder in place under `docs/`.
+
+**Definition of Done:**
+- [ ] Repository scaffolded per §4 (per-CSC hexagonal layout, `web/`, `cli/`, `deploy/`, `shared/`)
+- [ ] Base Docker Compose stack and CI pipeline stood up
+- [ ] `docs/` skeleton populated for every planned document
+- [ ] Scaffolding builds, lints, and deploys cleanly
+- [ ] Demo run end-to-end
 
 ### Increment 1: Model Setup Data Generation
 
@@ -252,71 +276,67 @@ The seven increments below are built one at a time, in dependency-safe order. Ea
 
 ## 3. Development Schedule
 
-**Estimated completion: 2027-04-16.** Per §2, the seven increments are built strictly serially in dependency-safe order, starting **2026-07-20**. Each increment is a 3–6 week, demoable, end-to-end slice with backend and Operations Panel UI work running concurrently, closed by a short Integration & Demo Prep buffer. One week = 5 business days (weekends excluded).
+**Estimated completion: 2027-03-12.** Per §2, Increment 0 plus the seven functional increments are built strictly serially in dependency-safe order, starting **2026-07-20**. Each functional increment is a 3–6 week, demoable, end-to-end slice with backend and Operations Panel UI work running concurrently. One week = 5 business days (weekends excluded).
 
 **Table 3. Increment Schedule Summary**
 
 | Increment | Start | End | Duration |
 |---|---|---|---|
-| 1 — Model Setup Data Generation | 2026-07-20 | 2026-08-28 | 6w |
-| 2 — Model Manager | 2026-08-31 | 2026-10-09 | 6w |
-| 3 — Design Verifier | 2026-10-12 | 2026-11-20 | 6w |
-| 4 — Synthetic Data Pipeline | 2026-11-23 | 2026-12-21 | 21d |
-| 5 — Field Data Pipeline | 2026-12-22 | 2027-01-19 | 21d |
-| 6 — Design Analyzer | 2027-01-20 | 2027-03-18 | 42d |
-| 7 — Design Evaluator | 2027-03-19 | 2027-04-16 | 21d |
+| 0 — Project Scaffolding | 2026-07-20 | 2026-07-31 | 2w |
+| 1 — Model Setup Data Generation | 2026-08-03 | 2026-08-28 | 4w |
+| 2 — Model Manager | 2026-08-31 | 2026-10-02 | 5w |
+| 3 — Design Verifier | 2026-10-05 | 2026-11-06 | 5w |
+| 4 — Synthetic Data Pipeline | 2026-11-09 | 2026-12-04 | 4w |
+| 5 — Field Data Pipeline | 2026-12-07 | 2027-01-01 | 4w |
+| 6 — Design Analyzer | 2027-01-04 | 2027-02-12 | 6w |
+| 7 — Design Evaluator | 2027-02-15 | 2027-03-12 | 4w |
 
 **Figure 1. SaaG Development Schedule**
 
 ```mermaid
 %%{init: { 'themeVariables': { 'excludeBkgColor': 'rgba(128,128,128,0.08)' } } }%%
 gantt
-    title SaaG Development Schedule (Estimated Completion: Apr 2027)
+    title SaaG Development Schedule (Estimated Completion: Mar 2027)
     dateFormat YYYY-MM-DD
     axisFormat %b %Y
     excludes weekends
 
+    section Inc 0 — Project Scaffolding
+    Project Scaffolding (2w)      :scaffold1, 2026-07-20, 2026-07-31
+
     section Inc 1 — Model Setup Data Generation
-    Project Scaffolding & Infra Setup (1w)             :scaffold1, 2026-07-20, 2026-07-24
-    Model Setup Data Generation MSD (4w)               :msd, 2026-07-27, 2026-08-21
-    Login & Model Setup Data Control VAE-01 (4w)       :vae01a, 2026-07-27, 2026-08-21
-    Integration & Demo Prep (1w)                       :inc1int, 2026-08-24, 2026-08-28
+    Model Setup Data Generation MSD (4w)               :msd, 2026-08-03, 2026-08-28
+    Login & Model Setup Data Control VAE-01 (4w)       :vae01a, 2026-08-03, 2026-08-28
 
     section Inc 2 — Model Manager
     Model Manager CSM-01 (5w)                          :csm01, 2026-08-31, 2026-10-02
     Model Building & Viewing VAE-01 (5w)               :vae01b, 2026-08-31, 2026-10-02
-    Integration & Demo Prep (1w)                       :inc2int, 2026-10-05, 2026-10-09
 
     section Inc 3 — Design Verifier
-    Design Verifier VAE-02 (5w)                        :vae02, 2026-10-12, 2026-11-13
-    Model Editing & Findings Display VAE-01 (5w)       :vae01c, 2026-10-12, 2026-11-13
-    Integration & Demo Prep (1w)                       :inc3int, 2026-11-16, 2026-11-20
+    Design Verifier VAE-02 (5w)                        :vae02, 2026-10-05, 2026-11-06
+    Model Editing & Findings Display VAE-01 (5w)       :vae01c, 2026-10-05, 2026-11-06
 
     section Inc 4 — Synthetic Data Pipeline
-    Scenario Generator SCG (10d)                       :scg, 2026-11-23, 2026-12-04
-    Synthetic-Path Data Preparation ADP (6d)           :adpa, 2026-12-07, 2026-12-14
-    Analytical Data Source, Scenario & Production Setup VAE-01 (16d) :vae01de, 2026-11-23, 2026-12-14
-    Integration & Demo Prep (5d)                       :inc4int, 2026-12-15, 2026-12-21
+    Scenario Generator SCG (10d)                       :scg, 2026-11-09, 2026-11-20
+    Synthetic-Path Data Preparation ADP (6d)           :adpa, 2026-11-23, 2026-11-30
+    Analytical Data Source, Scenario & Production Setup VAE-01 (4w) :vae01de, 2026-11-09, 2026-12-04
 
     section Inc 5 — Field Data Pipeline
-    Analytical Data Binder CSM-02 (9d)                 :csm02, 2026-12-22, 2027-01-01
-    Field Records Database FRD (8d)                    :frd, 2027-01-04, 2027-01-13
-    Field-Path Data Preparation ADP (3d)                :adpb, 2027-01-14, 2027-01-18
-    Analytical Data Binding Status VAE-01 (20d)         :vae01f, 2026-12-22, 2027-01-18
-    Integration & Demo Prep (1d)                        :inc5int, 2027-01-19, 2027-01-19
+    Analytical Data Binder CSM-02 (9d)                 :csm02, 2026-12-07, 2026-12-17
+    Field Records Database FRD (8d)                    :frd, 2026-12-18, 2026-12-29
+    Field-Path Data Preparation ADP (3d)                :adpb, 2026-12-30, 2027-01-01
+    Analytical Data Binding Status VAE-01 (20d)         :vae01f, 2026-12-07, 2027-01-01
 
     section Inc 6 — Design Analyzer
-    Design Analyzer VAE-03 (40d)                        :vae03, 2027-01-20, 2027-03-16
-    Simulation Scenario Recording VAE-01 (40d)          :vae01g, 2027-01-20, 2027-03-16
-    Integration & Demo Prep (2d)                        :inc6int, 2027-03-17, 2027-03-18
+    Design Analyzer VAE-03 (6w)                         :vae03, 2027-01-04, 2027-02-12
+    Simulation Scenario Recording VAE-01 (6w)           :vae01g, 2027-01-04, 2027-02-12
 
     section Inc 7 — Design Evaluator
-    Design Evaluator VAE-04 (18d)                       :vae04, 2027-03-19, 2027-04-13
-    Reporting & CLI Automation VAE-01 (18d)             :vae01h, 2027-03-19, 2027-04-13
-    Integration & Demo Prep (3d)                        :inc7int, 2027-04-14, 2027-04-16
+    Design Evaluator VAE-04 (4w)                       :vae04, 2027-02-15, 2027-03-12
+    Reporting & CLI Automation VAE-01 (4w)             :vae01h, 2027-02-15, 2027-03-12
 
     section Estimated Completion
-    Estimated Completion (0d)                           :milestone, completion, 2027-04-16, 0d
+    Estimated Completion (0d)                           :milestone, completion, 2027-03-12, 0d
 ```
 
 ---
