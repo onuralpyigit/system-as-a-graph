@@ -318,7 +318,7 @@ gantt
 
     section Inc 4 — Synthetic Data Pipeline
     Scenario Generator SCG (10d)                       :scg, 2026-11-09, 2026-11-20
-    Synthetic-Path Data Preparation ADP (6d)           :adpa, 2026-11-23, 2026-11-30
+    Synthetic-Path Data Preparation ADP (10d)          :adpa, 2026-11-23, 2026-12-04
     Analytical Data Source, Scenario & Production Setup VAE-01 (4w) :vae01de, 2026-11-09, 2026-12-04
 
     section Inc 5 — Field Data Pipeline
