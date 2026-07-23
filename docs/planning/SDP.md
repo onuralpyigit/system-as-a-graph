@@ -401,42 +401,48 @@ system-as-a-graph/
 │   └── tests/
 │
 ├── csm/                               # CSC-5: Core System Model
-│   ├── src/
-│   │   ├── model_manager/             # CSM-01
+│   ├── model_manager/                 # CSM-01
+│   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
 │   │   │   ├── model/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
-│   │   └── data_binder/               # CSM-02
-│   │       ├── api/
-│   │       ├── use_cases/
-│   │       ├── model/
-│   │       ├── ports/
-│   │       └── adapters/
-│   └── tests/
+│   │   └── tests/
+│   └── data_binder/                   # CSM-02
+│       ├── src/
+│       │   ├── api/
+│       │   ├── use_cases/
+│       │   ├── model/
+│       │   ├── ports/
+│       │   └── adapters/
+│       └── tests/
 │
 ├── vae/                               # CSC-6: Verification, Analysis, Evaluation
-│   ├── src/
-│   │   ├── design_verifier/           # VAE-02
+│   ├── design_verifier/               # VAE-02
+│   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
 │   │   │   ├── model/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
-│   │   ├── design_analyzer/           # VAE-03
+│   │   └── tests/
+│   ├── design_analyzer/               # VAE-03
+│   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
 │   │   │   ├── model/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
-│   │   └── design_evaluator/          # VAE-04
-│   │       ├── api/
-│   │       ├── use_cases/
-│   │       ├── model/
-│   │       ├── ports/
-│   │       └── adapters/
-│   └── tests/
+│   │   └── tests/
+│   └── design_evaluator/              # VAE-04
+│       ├── src/
+│       │   ├── api/
+│       │   ├── use_cases/
+│       │   ├── model/
+│       │   ├── ports/
+│       │   └── adapters/
+│       └── tests/
 │
 ├── shared/
 │   ├── contracts/
@@ -482,6 +488,7 @@ system-as-a-graph/
 | `model/` | Domain core: business objects, rules, and calculations owned by the CSU |
 | `ports/` | Outbound ports: interfaces required by use cases for databases, files, queues, or external systems |
 | `adapters/` | Outbound adapters: implementations of `ports/`, such as PostgreSQL, FalkorDB, LDAP, Git, REST, or file adapters |
+| `tests/` | Test suite scoped to the CSU (or the CSC directly, for CSCs not divided into CSUs) |
 
 ---
 

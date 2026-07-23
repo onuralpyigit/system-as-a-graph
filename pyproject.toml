@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "system-as-a-graph"
+version = "0.1.0"
+requires-python = ">=3.11"
+# Shared dependencies for all CSCs (msd, scg, frd, adp, csm, vae) and shared/.
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "httpx",
+    "pytest",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "msd", "scg", "frd", "adp", "csm", "vae"]
