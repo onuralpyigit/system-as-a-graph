@@ -18,15 +18,15 @@ from shared.types.identifiers import PlatformRef, SystemVersionRef
 
 @dataclass(frozen=True)
 class ModelSetupDataRecord:
-    """Metadata row for a produced Model Setup Data file (SDD §2.4).
+    """Metadata row for a produced Model Setup Data document (SDD §2.4).
 
-    The document itself lives on disk; this row is what CSM-01 lists and looks
-    it up by.
+    The document itself lives in PostgreSQL, alongside this row; this row is
+    what CSM-01 lists and looks it up by.
 
     Attributes:
         run_id: Identifier of the production run that created it.
         system_version: Scope it was produced for.
-        file_path: Absolute path of the written document.
+        file_path: The document's display name (not a filesystem path).
         produced_at: Production time.
         entity_count: Number of entities in the document.
         relation_count: Number of relations in the document.
@@ -102,15 +102,15 @@ class ModelSetupDataRepository(Protocol):
     """Persists produced Model Setup Data documents (SRS MSD.23)."""
 
     def save(self, record: ModelSetupDataRecord, document: dict) -> str:
-        """Write the document and store its metadata row.
+        """Store the document and its metadata row.
 
         Args:
             record: Metadata to store; its ``file_path`` may be replaced by the
-                adapter with the path it actually wrote to.
+                adapter with the document's display name.
             document: The serialized Model Setup Data document.
 
         Returns:
-            Absolute path of the written file.
+            The document's display name.
         """
         ...
 

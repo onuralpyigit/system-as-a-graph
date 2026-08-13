@@ -29,15 +29,18 @@ def seed_file() -> Path | None:
     return Path(configured) if configured else None
 
 
-def load_seed(path: Path) -> list[DataSourceConfiguration]:
+def load_seed(path: Path, cipher) -> list[DataSourceConfiguration]:
     """Read source configurations from a seed file.
 
     The file carries exactly what an operator would type into the source
-    configuration screen — including the *name* of the environment variable
-    holding each credential, never a credential itself.
+    configuration screen — including each credential's secret in plaintext,
+    since this is a deployment-supplied starting point, not operator input
+    over the network. Every secret is encrypted before it reaches the
+    returned configurations.
 
     Args:
         path: File to read.
+        cipher: Encrypts each entry's plaintext secret for storage.
 
     Returns:
         The configurations described by the file.
@@ -49,10 +52,10 @@ def load_seed(path: Path) -> list[DataSourceConfiguration]:
     with path.open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
 
-    return [_to_configuration(entry) for entry in payload.get("sources", [])]
+    return [_to_configuration(entry, cipher) for entry in payload.get("sources", [])]
 
 
-def _to_configuration(entry: dict) -> DataSourceConfiguration:
+def _to_configuration(entry: dict, cipher) -> DataSourceConfiguration:
     credential = entry.get("credential")
     return DataSourceConfiguration(
         source_type=DataSourceType(entry["source_type"]),
@@ -62,7 +65,7 @@ def _to_configuration(entry: dict) -> DataSourceConfiguration:
         credential=(
             CredentialReference(
                 username=credential.get("username", ""),
-                secret_env_var=credential["secret_env_var"],
+                encrypted_secret=cipher.encrypt(credential["secret"]),
             )
             if credential
             else None

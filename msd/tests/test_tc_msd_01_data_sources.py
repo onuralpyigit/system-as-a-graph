@@ -42,7 +42,7 @@ def test_configuration_can_be_edited_and_deleted(harness):
         name="bitbucket-a",
         access_method=AccessMethod.GIT_HTTPS,
         connection_address="https://bitbucket.example/scm/saag",
-        credential=CredentialReference(username="ops", secret_env_var="BB_A_TOKEN"),
+        credential=CredentialReference(username="ops", encrypted_secret="BB_A_TOKEN"),
         priority=5,
     )
     harness.data_sources.configure(edited)
@@ -57,10 +57,10 @@ def test_configuration_can_be_edited_and_deleted(harness):
 
 
 def test_configuration_never_stores_the_secret_itself(harness):
-    """Only the name of the variable holding a secret is persisted."""
+    """Only the encrypted secret is persisted, never a plaintext one."""
     stored = harness.data_sources.get(DataSourceType.SOURCE_REPOSITORY, "bitbucket-a")
 
-    assert stored.credential.secret_env_var == "TEST_BITBUCKET_A"
+    assert stored.credential.encrypted_secret == "TEST_BITBUCKET_A"
     assert not hasattr(stored.credential, "secret")
 
 

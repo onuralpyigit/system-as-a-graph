@@ -19,7 +19,6 @@ from msd.src.adapters.extraction.system_descriptor import SystemDescriptorExtrac
 from msd.src.adapters.extraction.type_support import TypeSupportExtractor
 from msd.src.adapters.extraction.unit_descriptor import UnitDescriptorExtractor
 from msd.src.adapters.factory import AdapterContext, AdapterFactory
-from msd.src.adapters.file.model_setup_data_store import FileModelSetupDataStore
 from msd.src.adapters.memory import (
     InMemoryAcquisitionErrorRepository,
     InMemoryDataSourceConfigurationRepository,
@@ -81,7 +80,6 @@ class Harness:
     Attributes:
         data_root: The test's own copy of the fake data tree, safe to mutate.
         workspace: Directory transferred files are copied into.
-        output_dir: Directory produced documents are written to.
         rules: Rules the adapters read their behaviour from.
         faults: Fault policy the test can inject into.
         data_sources: Data source configuration use case.
@@ -94,7 +92,6 @@ class Harness:
 
     data_root: Path
     workspace: Path
-    output_dir: Path
     rules: RulesConfig
     faults: FaultPolicy
     data_sources: ManageDataSourcesUseCase
@@ -245,7 +242,7 @@ class _AlwaysResolves:
 
     def resolve(self, reference) -> str:
         """Return a placeholder secret for any reference."""
-        return f"secret-for-{reference.secret_env_var}"
+        return f"secret-for-{reference.encrypted_secret}"
 
 
 @pytest.fixture
@@ -264,7 +261,7 @@ def harness(tmp_path: Path) -> Harness:
                 access_method=_ACCESS_METHODS[source_type],
                 connection_address=f"double://{name}",
                 credential=CredentialReference(
-                    username="saag", secret_env_var=f"TEST_{name.upper().replace('-', '_')}"
+                    username="saag", encrypted_secret=f"TEST_{name.upper().replace('-', '_')}"
                 ),
                 priority=priority,
             )
@@ -275,15 +272,12 @@ def harness(tmp_path: Path) -> Harness:
     return Harness(
         data_root=data_root,
         workspace=tmp_path / "workspace",
-        output_dir=tmp_path / "output",
         rules=load_rules(),
         faults=FaultPolicy(),
         data_sources=data_sources,
         configurations=configurations,
         inventory=ManageVersionInventoryUseCase(InMemoryVersionInventoryRepository()),
         errors=InMemoryAcquisitionErrorRepository(),
-        documents=InMemoryModelSetupDataRepository(
-            FileModelSetupDataStore(tmp_path / "output")
-        ),
+        documents=InMemoryModelSetupDataRepository(),
         clock=FixedClock(FIXED_NOW),
     )

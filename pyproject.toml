@@ -18,6 +18,7 @@ dependencies = [
     "pymysql",
     "ldap3",
     "pyyaml",
+    "cryptography",
     "pytest",
     "ruff",
 ]
@@ -25,16 +26,10 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["."]
 
-# Rule files and the fake data tree ship with the package: an air-gapped
-# deployment edits them in place instead of rebuilding the image.
+# Rule files ship with the package: an air-gapped deployment edits them
+# in place instead of rebuilding the image.
 [tool.setuptools.package-data]
-msd = [
-    "src/adapters/*.json",
-    "src/adapters/fake/data/**/*",
-]
-"vae.operations_panel" = [
-    "src/adapters/fake/data/*.json",
-]
+msd = ["src/adapters/*.json"]
 
 [tool.ruff]
 target-version = "py311"

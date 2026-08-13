@@ -5,7 +5,9 @@
     "configuration management database is read with, the URL template a package",
     "registry is asked through, where the Ansible tree sits. Moving to the real",
     "environment means editing this file (or the source configuration screen),",
-    "not the software."
+    "not the software. Credential secrets here are plaintext dev/stand-in",
+    "values, encrypted at load time; an operator normally enters them through",
+    "the Setup screen instead of a seed file."
   ],
   "sources": [
     {
@@ -15,7 +17,7 @@
       "connection_address": "mysql+pymysql://saag@cmdb:3306/cmdb",
       "credential": {
         "username": "saag",
-        "secret_env_var": "MSD_CMDB_PRIMARY_SECRET"
+        "secret": "saag"
       },
       "priority": 0,
       "parameters": {
@@ -61,7 +63,7 @@
       "connection_address": "http://package-registry:8100",
       "credential": {
         "username": "saag",
-        "secret_env_var": "MSD_ARTIFACTORY_TOKEN"
+        "secret": "standin-registry-token"
       },
       "priority": 0,
       "parameters": {

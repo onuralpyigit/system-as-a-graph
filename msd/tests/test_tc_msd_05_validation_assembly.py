@@ -6,9 +6,6 @@ Date: 2026-07-31
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 from msd.src.adapters.build.code_generation import (
     GmakeCodeGenerator,
     PrebuiltCodeGenerator,
@@ -37,17 +34,16 @@ def test_complete_source_data_assembles_into_one_document(harness):
     assert result.document.schema_version == SCHEMA_VERSION
 
 
-def test_the_document_is_written_where_csm_can_read_it(harness):
-    """The file lands under the configured directory with the agreed name (CDR-24)."""
+def test_the_document_is_stored_where_csm_can_read_it(harness):
+    """The document round-trips through the repository under the agreed name (CDR-24)."""
     harness.record_inventory()
 
     result = harness.production().produce(harness.scope, run_id="tc05")
 
-    path = Path(result.file_path)
-    assert path.name == "msd_2026-07-31_avionics.json"
-    assert path.is_file()
+    assert result.file_path == "msd_2026-07-31_avionics.json"
 
-    reloaded = ModelSetupDataDocument.from_dict(json.loads(path.read_text(encoding="utf-8")))
+    stored = harness.documents.load(result.run_id)
+    reloaded = ModelSetupDataDocument.from_dict(stored)
     assert len(reloaded.entities) == len(result.document.entities)
     assert len(reloaded.relations) == len(result.document.relations)
 

@@ -8,10 +8,9 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import replace
-from pathlib import Path
 
-from msd.src.adapters.file.model_setup_data_store import FileModelSetupDataStore
 from msd.src.model.data_source import DataSourceConfiguration, DataSourceType
+from msd.src.model.model_setup_data import document_file_name
 from msd.src.model.version_inventory import SoftwareUnitVersionInventory
 from msd.src.ports.repositories import ModelSetupDataRecord
 from shared.errors.acquisition import AcquisitionError
@@ -92,27 +91,23 @@ class InMemoryAcquisitionErrorRepository:
 
 
 class InMemoryModelSetupDataRepository:
-    """Writes documents to disk but keeps their metadata rows in memory.
+    """Keeps documents and their metadata rows in process memory.
 
-    The document still lands on disk because it is the CSM-01 interface; only
-    the index over it is volatile, which is exactly what a database-less run
-    can offer.
+    Used when no database is configured, so a database-less run has nothing
+    to persist to — documents don't outlive the process either way.
     """
 
-    def __init__(self, store: FileModelSetupDataStore) -> None:
-        """Initialize the repository.
-
-        Args:
-            store: Disk store the documents are written to.
-        """
-        self._store = store
+    def __init__(self) -> None:
+        """Initialize an empty repository."""
         self._records: dict[str, ModelSetupDataRecord] = {}
+        self._documents: dict[str, dict] = {}
 
     def save(self, record: ModelSetupDataRecord, document: dict) -> str:
-        """Write the document and remember its metadata row."""
-        path = self._store.write(record.system_version.platform.name, document)
-        self._records[record.run_id] = replace(record, file_path=str(path))
-        return str(path)
+        """Store the document and remember its metadata row."""
+        name = document_file_name(record.system_version.platform.name, record.produced_at)
+        self._records[record.run_id] = replace(record, file_path=name)
+        self._documents[record.run_id] = document
+        return name
 
     def list_for(self, system_version: SystemVersionRef) -> list[ModelSetupDataRecord]:
         """Fetch the metadata rows for a system version, newest first."""
@@ -129,10 +124,7 @@ class InMemoryModelSetupDataRepository:
 
     def load(self, run_id: str) -> dict | None:
         """Read back a produced document by run id, or None when unknown."""
-        record = self._records.get(run_id)
-        if record is None:
-            return None
-        return self._store.read(Path(record.file_path))
+        return self._documents.get(run_id)
 
 
 def _scope_key(system_version: SystemVersionRef) -> tuple[str, str, str]:

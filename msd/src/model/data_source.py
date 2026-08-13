@@ -45,27 +45,28 @@ class AccessMethod(str, Enum):
 
 @dataclass(frozen=True)
 class CredentialReference:
-    """Pointer to a credential, never the credential itself.
+    """A credential as the operator entered it, encrypted at rest.
 
-    Only the name of the environment variable holding the secret is persisted,
-    so neither the database nor the Model Setup Data file ever carries a
-    password or token. Resolution happens at call time through the credential
-    resolver port.
+    The secret is submitted once through the Operations Panel and encrypted
+    before it is stored; only the ciphertext travels with the configuration
+    from then on. Resolution (decryption) happens at connection time through
+    the credential resolver port, never returning the secret to storage or to
+    an API response.
 
     Attributes:
         username: Connection user name; not a secret, so it is stored directly.
-        secret_env_var: Name of the environment variable holding the secret.
+        encrypted_secret: The secret, encrypted at rest.
 
     Raises:
-        ValueError: If the environment variable name is empty.
+        ValueError: If the encrypted secret is empty.
     """
 
     username: str
-    secret_env_var: str
+    encrypted_secret: str
 
     def __post_init__(self) -> None:
-        if not self.secret_env_var or not self.secret_env_var.strip():
-            raise ValueError("Credential reference needs a secret environment variable name")
+        if not self.encrypted_secret or not self.encrypted_secret.strip():
+            raise ValueError("Credential reference needs an encrypted secret")
 
 
 @dataclass(frozen=True)

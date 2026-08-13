@@ -7,11 +7,9 @@ Date: 2026-07-31
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
 
 import pytest
 
-from msd.src.adapters.file.model_setup_data_store import FileModelSetupDataStore
 from msd.src.adapters.postgres.repositories import (
     PostgresAcquisitionErrorRepository,
     PostgresDataSourceConfigurationRepository,
@@ -70,14 +68,14 @@ def engine():
 
 
 def test_data_source_configuration_round_trips(engine):
-    """A configuration survives a write/read cycle, secret reference included."""
+    """A configuration survives a write/read cycle, encrypted secret included."""
     repository = PostgresDataSourceConfigurationRepository(engine)
     configuration = DataSourceConfiguration(
         source_type=DataSourceType.SOURCE_REPOSITORY,
         name="bitbucket-a",
         access_method=AccessMethod.GIT_HTTPS,
         connection_address="https://bitbucket.example/scm/saag",
-        credential=CredentialReference(username="ops", secret_env_var="BB_A_TOKEN"),
+        credential=CredentialReference(username="ops", encrypted_secret="ciphertext-BB-A"),
         priority=2,
     )
 
@@ -122,10 +120,9 @@ def test_acquisition_errors_are_queryable_by_run_and_platform(engine):
     assert repository.list_for_platform(SCOPE.platform) == [error]
 
 
-def test_documents_are_written_to_disk_and_indexed_in_the_database(engine, tmp_path: Path):
-    """The document lands on disk; the row points at it and lists by scope."""
-    store = FileModelSetupDataStore(tmp_path)
-    repository = PostgresModelSetupDataRepository(engine, store)
+def test_documents_are_stored_in_the_database_and_indexed_by_scope(engine):
+    """The document round-trips through PostgreSQL; the row lists by scope."""
+    repository = PostgresModelSetupDataRepository(engine)
     produced_at = datetime(2026, 7, 31, 9, 30, tzinfo=UTC)
     document = {
         "schema_version": "1.0",
@@ -157,7 +154,7 @@ def test_documents_are_written_to_disk_and_indexed_in_the_database(engine, tmp_p
         document,
     )
 
-    assert Path(path).name == "msd_2026-07-31_avionics.json"
+    assert path == "msd_2026-07-31_avionics.json"
     assert [record.run_id for record in repository.list_for(SCOPE)] == ["run-1"]
     assert repository.load("run-1") == document
     assert repository.load("missing-run") is None

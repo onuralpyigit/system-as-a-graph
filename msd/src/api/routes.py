@@ -31,11 +31,7 @@ from msd.src.api.schemas import (
     SystemVersionModel,
     TopologyResponse,
 )
-from msd.src.model.data_source import (
-    CredentialReference,
-    DataSourceConfiguration,
-    DataSourceType,
-)
+from msd.src.model.data_source import DataSourceConfiguration
 from msd.src.model.network_topology import NetworkComponent, NetworkTopology
 from msd.src.model.version_inventory import (
     SoftwareUnitVersion,
@@ -66,46 +62,13 @@ def health():
 
 @router.get("/data-sources", response_model=list[DataSourceModel])
 def list_data_sources(container: Container = Depends(get_container)):
-    """List every configured external data source (SRS MSD.2-5, 8)."""
-    return [_to_source_model(item) for item in container.data_sources.list_all()]
+    """List every configured external data source (SRS MSD.2-5, 8).
 
-
-@router.post("/data-sources", response_model=DataSourceModel, status_code=201)
-def configure_data_source(
-    payload: DataSourceModel, container: Container = Depends(get_container)
-):
-    """Save a data source configuration, replacing one with the same key."""
-    saved = container.data_sources.configure(
-        DataSourceConfiguration(
-            source_type=payload.source_type,
-            name=payload.name,
-            access_method=payload.access_method,
-            connection_address=payload.connection_address,
-            credential=(
-                CredentialReference(
-                    username=payload.credential.username,
-                    secret_env_var=payload.credential.secret_env_var,
-                )
-                if payload.credential
-                else None
-            ),
-            priority=payload.priority,
-        )
-    )
-    return _to_source_model(saved)
-
-
-@router.delete("/data-sources/{source_type}/{name}", status_code=204)
-def delete_data_source(
-    source_type: DataSourceType, name: str, container: Container = Depends(get_container)
-):
-    """Delete a data source configuration.
-
-    Raises:
-        HTTPException: 404 when no such configuration exists.
+    Read-only and carries no secret, so it stays open on MSD's own API; saving
+    or deleting a configuration is credential-bearing and goes only through
+    the Operations Panel's session-guarded proxy (SDD 3.6.1.1), not here.
     """
-    if not container.data_sources.remove(source_type, name):
-        raise HTTPException(status_code=404, detail=f"No such data source: {name}")
+    return [_to_source_model(item) for item in container.data_sources.list_all()]
 
 
 @router.get("/projects", response_model=AcquisitionResponse)
@@ -342,7 +305,7 @@ def _to_source_model(configuration: DataSourceConfiguration) -> DataSourceModel:
         credential=(
             {
                 "username": configuration.credential.username,
-                "secret_env_var": configuration.credential.secret_env_var,
+                "secret_set": bool(configuration.credential.encrypted_secret),
             }
             if configuration.credential
             else None

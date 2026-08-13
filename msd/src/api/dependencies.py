@@ -21,10 +21,6 @@ from msd.src.adapters.extraction.system_descriptor import SystemDescriptorExtrac
 from msd.src.adapters.extraction.type_support import TypeSupportExtractor
 from msd.src.adapters.extraction.unit_descriptor import UnitDescriptorExtractor
 from msd.src.adapters.factory import AdapterContext, AdapterFactory
-from msd.src.adapters.file.model_setup_data_store import (
-    FileModelSetupDataStore,
-    output_dir,
-)
 from msd.src.adapters.memory import (
     InMemoryAcquisitionErrorRepository,
     InMemoryDataSourceConfigurationRepository,
@@ -40,7 +36,11 @@ from msd.src.adapters.postgres.repositories import (
 from msd.src.adapters.postgres.tables import build_engine, create_schema, database_url
 from msd.src.adapters.rules_config import RulesConfig, get_rules
 from msd.src.adapters.source_seed import load_seed, seed_file
-from msd.src.adapters.support import EnvCredentialResolver, SystemClock
+from msd.src.adapters.support import (
+    CipherCredentialResolver,
+    FernetSecretCipher,
+    SystemClock,
+)
 from msd.src.model.data_source import DataSourceRegistry, DataSourceType
 from msd.src.ports.repositories import (
     AcquisitionErrorRepository,
@@ -74,6 +74,7 @@ class Container:
         documents: Repository produced documents are written through.
         workspace: Directory transferred files are copied into.
         factory: Builds one adapter per configured source.
+        cipher: Encrypts/decrypts operator-entered source credentials.
     """
 
     rules: RulesConfig
@@ -84,6 +85,7 @@ class Container:
     documents: ModelSetupDataRepository
     workspace: Path
     factory: AdapterFactory
+    cipher: FernetSecretCipher
 
     def registry(self) -> DataSourceRegistry:
         """Build a registry over the currently configured sources."""
@@ -155,7 +157,7 @@ def build_container() -> Container:
     """
     rules = get_rules()
     workspace = Path(os.getenv(WORKSPACE_ENV_VAR) or Path(tempfile.gettempdir()) / "saag-msd")
-    store = FileModelSetupDataStore(output_dir())
+    cipher = FernetSecretCipher()
 
     configurations: DataSourceConfigurationRepository
     inventory_repository: VersionInventoryRepository
@@ -169,17 +171,17 @@ def build_container() -> Container:
         configurations = PostgresDataSourceConfigurationRepository(engine)
         inventory_repository = PostgresVersionInventoryRepository(engine)
         errors = PostgresAcquisitionErrorRepository(engine)
-        documents = PostgresModelSetupDataRepository(engine, store)
+        documents = PostgresModelSetupDataRepository(engine)
     else:
         configurations = InMemoryDataSourceConfigurationRepository()
         inventory_repository = InMemoryVersionInventoryRepository()
         errors = InMemoryAcquisitionErrorRepository()
-        documents = InMemoryModelSetupDataRepository(store)
+        documents = InMemoryModelSetupDataRepository()
 
     data_sources = ManageDataSourcesUseCase(configurations)
     seed = seed_file()
     if seed is not None:
-        data_sources.seed(load_seed(seed))
+        data_sources.seed(load_seed(seed, cipher))
 
     return Container(
         rules=rules,
@@ -189,11 +191,12 @@ def build_container() -> Container:
         errors=errors,
         documents=documents,
         workspace=workspace,
+        cipher=cipher,
         factory=AdapterFactory(
             AdapterContext(
                 workspace=workspace,
                 classifier=rules.classifier,
-                credentials=EnvCredentialResolver(),
+                credentials=CipherCredentialResolver(cipher),
             )
         ),
     )

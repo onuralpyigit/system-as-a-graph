@@ -7,12 +7,10 @@ Date: 2026-07-31
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 from sqlalchemy import delete, insert, select
 from sqlalchemy.engine import Engine
 
-from msd.src.adapters.file.model_setup_data_store import FileModelSetupDataStore
 from msd.src.adapters.postgres.tables import (
     acquisition_errors,
     data_sources,
@@ -25,6 +23,7 @@ from msd.src.model.data_source import (
     DataSourceConfiguration,
     DataSourceType,
 )
+from msd.src.model.model_setup_data import document_file_name
 from msd.src.model.version_inventory import (
     SoftwareUnitVersion,
     SoftwareUnitVersionInventory,
@@ -62,7 +61,7 @@ class PostgresDataSourceConfigurationRepository:
                     access_method=configuration.access_method.value,
                     connection_address=configuration.connection_address,
                     username=credential.username if credential else "",
-                    secret_env_var=credential.secret_env_var if credential else "",
+                    encrypted_secret=credential.encrypted_secret if credential else "",
                     priority=configuration.priority,
                     parameters=json.dumps(configuration.parameters),
                 )
@@ -226,34 +225,33 @@ class PostgresAcquisitionErrorRepository:
 
 
 class PostgresModelSetupDataRepository:
-    """Writes Model Setup Data files to disk and their metadata rows to PostgreSQL.
+    """Stores Model Setup Data documents and their metadata rows in PostgreSQL.
 
-    The split is deliberate: the document is the interface CSM-01 reads
-    (INT-IF-01), while the row is what an operator lists and selects from.
+    The document lives in the same row as its metadata (a single INSERT covers
+    both), rather than on disk: CSM-01 will read it back through this
+    repository (INT-IF-01), not off a shared filesystem.
     """
 
-    def __init__(self, engine: Engine, store: FileModelSetupDataStore) -> None:
+    def __init__(self, engine: Engine) -> None:
         """Initialize the repository.
 
         Args:
             engine: Engine to run statements through.
-            store: Disk store the documents are written to.
         """
         self._engine = engine
-        self._store = store
 
     def save(self, record: ModelSetupDataRecord, document: dict) -> str:
-        """Write the document, then store the metadata row pointing at it.
+        """Store the document and its metadata row together.
 
         Args:
             record: Metadata to store; its ``file_path`` is replaced with the
-                path actually written.
+                document's display name.
             document: The serialized document.
 
         Returns:
-            Absolute path of the written file.
+            The document's display name (``msd_<date>_<platform>.json``).
         """
-        path = self._store.write(record.system_version.platform.name, document)
+        name = document_file_name(record.system_version.platform.name, record.produced_at)
 
         with self._engine.begin() as connection:
             connection.execute(
@@ -267,7 +265,8 @@ class PostgresModelSetupDataRepository:
                     project=record.system_version.project.name,
                     platform=record.system_version.platform.name,
                     system_version=record.system_version.version,
-                    file_path=str(path),
+                    file_path=name,
+                    document=json.dumps(document),
                     produced_at=record.produced_at,
                     entity_count=record.entity_count,
                     relation_count=record.relation_count,
@@ -275,7 +274,7 @@ class PostgresModelSetupDataRepository:
                 )
             )
 
-        return str(path)
+        return name
 
     def list_for(self, system_version: SystemVersionRef) -> list[ModelSetupDataRecord]:
         """Fetch the metadata rows for a system version, newest first."""
@@ -302,7 +301,7 @@ class PostgresModelSetupDataRepository:
 
         if row is None:
             return None
-        return self._store.read(Path(row["file_path"]))
+        return json.loads(row["document"])
 
 
 def _to_configuration(row) -> DataSourceConfiguration:
@@ -313,9 +312,9 @@ def _to_configuration(row) -> DataSourceConfiguration:
         connection_address=row["connection_address"],
         credential=(
             CredentialReference(
-                username=row["username"], secret_env_var=row["secret_env_var"]
+                username=row["username"], encrypted_secret=row["encrypted_secret"]
             )
-            if row["secret_env_var"]
+            if row["encrypted_secret"]
             else None
         ),
         priority=row["priority"],

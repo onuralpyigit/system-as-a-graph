@@ -35,7 +35,7 @@ class ProductionResult:
         run_id: Identifier of this run.
         document: The assembled document, or None when nothing survived
             verification.
-        file_path: Where the document was written; empty when none was.
+        file_path: The document's display name; empty when none was produced.
         errors: Every failure recorded during the run.
         excluded_units: Units left out of the model, mapped to why.
     """

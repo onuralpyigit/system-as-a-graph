@@ -28,8 +28,8 @@ DATABASE_URL_ENV_VAR = "DATABASE_URL"
 
 metadata = MetaData()
 
-#: Configured external data sources (SRS MSD.8). Only the *name* of the
-#: variable holding a secret is stored, never the secret itself.
+#: Configured external data sources (SRS MSD.8). The secret is encrypted
+#: before it reaches this table; only the ciphertext is stored.
 data_sources = Table(
     "msd_data_source",
     metadata,
@@ -38,7 +38,7 @@ data_sources = Table(
     Column("access_method", String(64), nullable=False),
     Column("connection_address", Text, nullable=False),
     Column("username", String(128), nullable=False, default=""),
-    Column("secret_env_var", String(128), nullable=False, default=""),
+    Column("encrypted_secret", Text, nullable=False, default=""),
     Column("priority", Integer, nullable=False, default=0),
     Column("parameters", Text, nullable=False, default="{}"),
 )
@@ -82,7 +82,10 @@ model_setup_data_records = Table(
     Column("project", String(128), nullable=False),
     Column("platform", String(128), nullable=False),
     Column("system_version", String(64), nullable=False),
+    # A display name (msd_<date>_<platform>.json), not a filesystem path — the
+    # document itself lives in the `document` column, not on disk.
     Column("file_path", Text, nullable=False),
+    Column("document", Text, nullable=False),
     Column("produced_at", DateTime(timezone=True), nullable=False),
     Column("entity_count", Integer, nullable=False),
     Column("relation_count", Integer, nullable=False),

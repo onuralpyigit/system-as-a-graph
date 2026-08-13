@@ -15,12 +15,10 @@ from shared.errors.acquisition import AcquisitionStatus
 
 
 class CredentialModel(BaseModel):
-    """A credential reference. The secret itself is never sent or stored here."""
+    """A credential's status. The secret itself is never returned."""
 
     username: str = ""
-    secret_env_var: str = Field(
-        description="Name of the environment variable holding the secret"
-    )
+    secret_set: bool = False
 
 
 class DataSourceModel(BaseModel):
@@ -31,6 +29,30 @@ class DataSourceModel(BaseModel):
     access_method: AccessMethod
     connection_address: str
     credential: CredentialModel | None = None
+    priority: int = 0
+
+
+class CredentialInput(BaseModel):
+    """A credential as the operator enters it. Write-only: never echoed back."""
+
+    username: str = ""
+    secret: str | None = Field(
+        default=None,
+        description=(
+            "The secret, in plaintext, encrypted before storage. Omit or leave "
+            "blank on an update to keep the previously stored secret unchanged."
+        ),
+    )
+
+
+class DataSourceConfigureRequest(BaseModel):
+    """Request to save a data source configuration (SRS MSD.8)."""
+
+    source_type: DataSourceType
+    name: str
+    access_method: AccessMethod
+    connection_address: str
+    credential: CredentialInput | None = None
     priority: int = 0
 
 

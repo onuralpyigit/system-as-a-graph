@@ -16,9 +16,9 @@ from msd.src.model.data_source import CredentialReference
 class CredentialResolverPort(Protocol):
     """Turns a stored credential reference into a usable secret.
 
-    Secrets are never persisted with the source configuration; only the name of
-    the variable holding them is. Resolution happens at connection time so a
-    rotated secret takes effect without editing stored configuration.
+    The secret is encrypted at rest with the source configuration; resolution
+    decrypts it at connection time, so the plaintext never lives longer than
+    one call.
     """
 
     def resolve(self, reference: CredentialReference) -> str:
@@ -31,8 +31,35 @@ class CredentialResolverPort(Protocol):
             The secret value.
 
         Raises:
-            AcquisitionFailure: With AUTHORIZATION_ERROR when the referenced
-                variable is unset, since the connection cannot be authorized.
+            AcquisitionFailure: With AUTHORIZATION_ERROR when the reference
+                cannot be decrypted, since the connection cannot be authorized.
+        """
+        ...
+
+
+@runtime_checkable
+class SecretCipherPort(Protocol):
+    """Encrypts and decrypts secrets stored alongside source configuration."""
+
+    def encrypt(self, plaintext: str) -> str:
+        """Encrypt a secret for storage.
+
+        Args:
+            plaintext: The secret as the operator entered it.
+
+        Returns:
+            The ciphertext to persist.
+        """
+        ...
+
+    def decrypt(self, ciphertext: str) -> str:
+        """Decrypt a stored secret.
+
+        Args:
+            ciphertext: The stored value.
+
+        Returns:
+            The plaintext secret.
         """
         ...
 
