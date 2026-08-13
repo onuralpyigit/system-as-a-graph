@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLogout } from "@refinedev/core";
 import { LogOut } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -14,17 +15,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSession } from "@/lib/use-session";
 import { ContextSwitcher } from "./context-switcher";
-import { NAV_GROUPS } from "./nav-groups";
+import { useNavGroups } from "./nav-groups";
 import { ThemeToggle } from "./theme-toggle";
 
-function PipelineDot({ readiness }: { readiness: "muted" | "conforming" }) {
+function NavDot({ state }: { state: "running" | "succeeded" | "failed" }) {
   return (
     <span
       aria-hidden
       className={cn(
         "inline-block h-1.5 w-1.5 rounded-full",
-        readiness === "conforming" ? "bg-status-conforming" : "bg-muted-foreground/40",
+        state === "running"
+          ? "animate-pulse bg-status-info"
+          : state === "failed"
+            ? "bg-status-critical"
+            : "bg-status-conforming",
       )}
     />
   );
@@ -32,10 +38,11 @@ function PipelineDot({ readiness }: { readiness: "muted" | "conforming" }) {
 
 function GroupNav() {
   const pathname = usePathname();
+  const navGroups = useNavGroups();
 
   return (
     <nav className="flex items-center gap-5">
-      {NAV_GROUPS.map((group) => {
+      {navGroups.map((group) => {
         const active = pathname === group.href || pathname.startsWith(`${group.href}/`);
         return (
           <Link
@@ -46,7 +53,7 @@ function GroupNav() {
               active ? "font-semibold text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <PipelineDot readiness={group.readiness} />
+            {group.dot ? <NavDot state={group.dot} /> : null}
             {group.label}
           </Link>
         );
@@ -56,17 +63,26 @@ function GroupNav() {
 }
 
 function SessionMenu() {
+  const { session } = useSession();
+  const { mutate: logout } = useLogout();
+  const initials = (session?.display_name ?? session?.username ?? "?")
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-1 focus-visible:ring-ring">
         <Avatar>
-          <AvatarFallback>OP</AvatarFallback>
+          <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>operator@ldap</DropdownMenuLabel>
+        <DropdownMenuLabel>{session?.username ?? "—"}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => logout()}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </DropdownMenuItem>
@@ -83,8 +99,6 @@ export function TopBar() {
         <GroupNav />
       </div>
       <div className="flex items-center gap-4">
-        {/* Background-job status strip (SSE) lands with Procrastinate integration */}
-        <span className="text-xs text-muted-foreground">No active jobs</span>
         <ThemeToggle />
         <SessionMenu />
       </div>

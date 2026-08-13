@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/patterns/page-header";
+import { PageHeader } from "@/components/app-shell/page-header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function FindingsPage() {

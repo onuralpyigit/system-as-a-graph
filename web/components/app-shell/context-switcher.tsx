@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Check, ChevronDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { PROJECT_OPTIONS } from "./context-data";
+import { useContextSwitcherState } from "@/lib/context-switcher-state";
+import { useDataSources } from "@/lib/data-sources";
+import { useProjects, usePlatforms, useVersions, useWorkingScope } from "@/lib/scope";
 
 function ColumnHeading({ children }: { children: string }) {
   return (
@@ -31,8 +34,8 @@ function OptionRow({
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted",
-        active ? "bg-muted text-foreground" : "text-muted-foreground",
+        "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-muted",
+        active && "bg-muted",
       )}
     >
       <span className="flex items-center gap-1.5">
@@ -49,56 +52,95 @@ function OptionRow({
 }
 
 export function ContextSwitcher() {
-  const [open, setOpen] = useState(false);
-  const [projectKey, setProjectKey] = useState(PROJECT_OPTIONS[0].key);
+  const { open, setOpen } = useContextSwitcherState();
+  const { scope, select } = useWorkingScope();
+  const { hasCmdbSource, isLoading: sourcesLoading } = useDataSources();
 
-  const project = useMemo(
-    () => PROJECT_OPTIONS.find((p) => p.key === projectKey) ?? PROJECT_OPTIONS[0],
-    [projectKey],
-  );
+  // Transient picker state: what the operator is navigating to inside the
+  // popover. Seeded from the committed scope when one exists (reopening the
+  // switcher should show your current selection) — but never auto-picked
+  // from the fetched lists when it doesn't, so nothing shows as chosen until
+  // the operator actually clicks project, then platform, then version
+  // themselves (SRS VAE-01.4).
+  const [projectKey, setProjectKey] = useState<string | undefined>(undefined);
+  const [platformKey, setPlatformKey] = useState<string | undefined>(undefined);
+  const [versionKey, setVersionKey] = useState<string | undefined>(undefined);
 
-  const [platformKey, setPlatformKey] = useState(project.platforms[0].key);
-  const platform = useMemo(
-    () => project.platforms.find((p) => p.key === platformKey) ?? project.platforms[0],
-    [project, platformKey],
-  );
+  const { data: projectsData } = useProjects();
+  const projects = useMemo(() => projectsData?.projects ?? [], [projectsData]);
 
-  const [versionKey, setVersionKey] = useState(
-    platform.versions.find((v) => v.effective)?.key ?? platform.versions[0].key,
-  );
-  const version = useMemo(
-    () => platform.versions.find((v) => v.key === versionKey) ?? platform.versions[0],
-    [platform, versionKey],
-  );
+  useEffect(() => {
+    if (projectKey) return;
+    if (scope) setProjectKey(scope.project);
+  }, [scope, projectKey]);
+
+  const { data: platformsData } = usePlatforms(projectKey);
+  const platforms = useMemo(() => platformsData?.platforms ?? [], [platformsData]);
+
+  useEffect(() => {
+    if (!projectKey || platformKey) return;
+    if (scope && scope.project === projectKey) setPlatformKey(scope.platform);
+  }, [projectKey, scope, platformKey]);
+
+  const { data: versionsData } = useVersions(projectKey, platformKey);
+  const versions = useMemo(() => versionsData?.versions ?? [], [versionsData]);
+
+  useEffect(() => {
+    if (!platformKey || versionKey) return;
+    if (scope && scope.project === projectKey && scope.platform === platformKey) {
+      setVersionKey(scope.system_version);
+    }
+  }, [platformKey, scope, projectKey, versionKey]);
 
   function selectProject(key: string) {
-    const next = PROJECT_OPTIONS.find((p) => p.key === key);
-    if (!next) return;
     setProjectKey(key);
-    setPlatformKey(next.platforms[0].key);
-    setVersionKey(next.platforms[0].versions.find((v) => v.effective)?.key ?? next.platforms[0].versions[0].key);
+    setPlatformKey(undefined);
+    setVersionKey(undefined);
   }
 
   function selectPlatform(key: string) {
-    const next = project.platforms.find((p) => p.key === key);
-    if (!next) return;
     setPlatformKey(key);
-    setVersionKey(next.versions.find((v) => v.effective)?.key ?? next.versions[0].key);
+    setVersionKey(undefined);
   }
 
   function selectVersion(key: string) {
     setVersionKey(key);
     setOpen(false);
+    if (projectKey && platformKey) {
+      select({ project: projectKey, platform: platformKey, system_version: key });
+    }
+  }
+
+  // Deliberately not projectKey/platformKey/versionKey here even when set:
+  // those are the popover's pre-seeded picker state (first project, first
+  // platform, effective version) shown before the operator has confirmed
+  // anything — not a real selection. Showing them as the trigger label would
+  // claim a scope is active when select() hasn't been called yet.
+  const triggerLabel = scope
+    ? { project: scope.project, platform: scope.platform, version: scope.system_version }
+    : { project: "Select project", platform: "—", version: "—" };
+
+  // Project/platform/version is populated by querying the configured CMDB
+  // sources (SRS MSD.9-13) — without one, there's nothing to select yet.
+  if (!sourcesLoading && !hasCmdbSource) {
+    return (
+      <Link
+        href="/setup"
+        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        Configure a source to begin
+      </Link>
+    );
   }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-foreground outline-none transition-colors hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring">
-        <span>{project.label}</span>
+        <span>{triggerLabel.project}</span>
         <span className="text-muted-foreground">/</span>
-        <span>{platform.label}</span>
+        <span>{triggerLabel.platform}</span>
         <span className="text-muted-foreground">/</span>
-        <span>{version.label}</span>
+        <span>{triggerLabel.version}</span>
         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent className="w-[28rem]">
@@ -106,25 +148,28 @@ export function ContextSwitcher() {
           <div>
             <ColumnHeading>Project</ColumnHeading>
             <div className="flex flex-col gap-0.5">
-              {PROJECT_OPTIONS.map((p) => (
+              {projects.map((project) => (
                 <OptionRow
-                  key={p.key}
-                  label={p.label}
-                  active={p.key === project.key}
-                  onSelect={() => selectProject(p.key)}
+                  key={project}
+                  label={project}
+                  active={project === projectKey}
+                  onSelect={() => selectProject(project)}
                 />
               ))}
+              {projects.length === 0 ? (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">No projects</div>
+              ) : null}
             </div>
           </div>
           <div>
             <ColumnHeading>Platform</ColumnHeading>
             <div className="flex flex-col gap-0.5">
-              {project.platforms.map((p) => (
+              {platforms.map((platform) => (
                 <OptionRow
-                  key={p.key}
-                  label={p.label}
-                  active={p.key === platform.key}
-                  onSelect={() => selectPlatform(p.key)}
+                  key={platform}
+                  label={platform}
+                  active={platform === platformKey}
+                  onSelect={() => selectPlatform(platform)}
                 />
               ))}
             </div>
@@ -132,13 +177,13 @@ export function ContextSwitcher() {
           <div>
             <ColumnHeading>Version</ColumnHeading>
             <div className="flex flex-col gap-0.5">
-              {platform.versions.map((v) => (
+              {versions.map((version) => (
                 <OptionRow
-                  key={v.key}
-                  label={v.label}
-                  active={v.key === version.key}
-                  effective={v.effective}
-                  onSelect={() => selectVersion(v.key)}
+                  key={version.version}
+                  label={version.version}
+                  active={version.version === versionKey}
+                  effective={version.is_effective}
+                  onSelect={() => selectVersion(version.version)}
                 />
               ))}
             </div>
