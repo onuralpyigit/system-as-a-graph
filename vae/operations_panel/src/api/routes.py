@@ -20,6 +20,8 @@ from vae.operations_panel.src.api.dependencies import (
     get_panel_container,
 )
 from vae.operations_panel.src.api.schemas import (
+    DataSourceConfigureRequest,
+    DataSourceResponse,
     LoginRequest,
     ModelSetupDataFileResponse,
     ProductionErrorResponse,
@@ -283,6 +285,82 @@ def production_errors(
     ]
 
 
+@router.get("/production-errors/{run_id}", response_model=list[ProductionErrorResponse])
+def production_errors_for_run(
+    run_id: str,
+    authorization: str | None = Header(default=None),
+    container: PanelContainer = Depends(get_panel_container),
+):
+    """List the failures recorded during one production run (SRS VAE-01.8)."""
+    _session(container, authorization, Authorization.VIEW)
+    return [
+        ProductionErrorResponse(
+            status=error.status,
+            reason=error.reason,
+            source_name=error.source_name,
+            source_type=error.source_type,
+            occurred_at=error.occurred_at,
+            detail=error.detail,
+        )
+        for error in container.workflow.errors_for_run(run_id)
+    ]
+
+
+@router.get("/data-sources", response_model=list[DataSourceResponse])
+def list_data_sources(
+    authorization: str | None = Header(default=None),
+    container: PanelContainer = Depends(get_panel_container),
+):
+    """List every configured external data source (SRS MSD.2-5, 8).
+
+    The panel is the only place a source's credential is ever written (SDD
+    3.6.1.1); MSD's own API exposes this read-only, with no secret in it.
+    """
+    _session(container, authorization, Authorization.VIEW)
+    return [_to_source_response(item) for item in container.workflow.list_data_sources()]
+
+
+@router.post("/data-sources", response_model=DataSourceResponse, status_code=201)
+def configure_data_source(
+    payload: DataSourceConfigureRequest,
+    authorization: str | None = Header(default=None),
+    container: PanelContainer = Depends(get_panel_container),
+):
+    """Save a data source configuration, replacing one with the same key (SRS MSD.8).
+
+    The secret is encrypted before it is stored and never echoed back; omitting
+    it on an edit keeps whatever secret is already stored for that source.
+    """
+    _session(container, authorization, Authorization.CONFIGURE_SOURCES)
+    saved = container.workflow.configure_data_source(
+        source_type=payload.source_type,
+        name=payload.name,
+        access_method=payload.access_method,
+        connection_address=payload.connection_address,
+        username=payload.username,
+        secret=payload.secret,
+        priority=payload.priority,
+    )
+    return _to_source_response(saved)
+
+
+@router.delete("/data-sources/{source_type}/{name}", status_code=204)
+def delete_data_source(
+    source_type: str,
+    name: str,
+    authorization: str | None = Header(default=None),
+    container: PanelContainer = Depends(get_panel_container),
+):
+    """Delete a data source configuration.
+
+    Raises:
+        HTTPException: 404 when no such configuration exists.
+    """
+    _session(container, authorization, Authorization.CONFIGURE_SOURCES)
+    if not container.workflow.delete_data_source(source_type, name):
+        raise HTTPException(status_code=404, detail=f"No such data source: {name}")
+
+
 @router.get("/source-status", response_model=SourceStatusSnapshotResponse)
 def source_status(
     project: str | None = Query(default=None),
@@ -414,6 +492,18 @@ def _to_job_response(job) -> ProductionJobResponse:
         entity_count=job.entity_count,
         relation_count=job.relation_count,
         error_count=job.error_count,
+    )
+
+
+def _to_source_response(config) -> DataSourceResponse:
+    return DataSourceResponse(
+        source_type=config.source_type,
+        name=config.name,
+        access_method=config.access_method,
+        connection_address=config.connection_address,
+        username=config.username,
+        secret_set=config.secret_set,
+        priority=config.priority,
     )
 
 

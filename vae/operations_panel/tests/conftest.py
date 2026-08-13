@@ -25,6 +25,7 @@ from vae.operations_panel.src.adapters.memory import (
     InMemorySourceStatusRepository,
     InMemoryWorkingScopeRepository,
 )
+from vae.operations_panel.src.model.data_source import DataSourceConfig
 from vae.operations_panel.src.model.production_job import (
     AvailableSystemVersion,
     ModelSetupDataFile,
@@ -77,10 +78,13 @@ class StubModelSetupDataGateway:
 
     files: list[ModelSetupDataFile] = field(default_factory=list)
     errors: list[ProductionError] = field(default_factory=list)
+    errors_by_run: dict[str, list[ProductionError]] = field(default_factory=dict)
     sources: list[SourceStatus] = field(default_factory=list)
     outcome: ProductionOutcome | None = None
     raises: Exception | None = None
     produced: list[SystemVersionRef] = field(default_factory=list)
+    data_sources: dict[tuple[str, str], DataSourceConfig] = field(default_factory=dict)
+    stored_secrets: dict[tuple[str, str], str] = field(default_factory=dict)
 
     def list_projects(self) -> list[str]:
         """List the one project the stub knows."""
@@ -122,6 +126,46 @@ class StubModelSetupDataGateway:
         """Return the configured failures."""
         del platform
         return list(self.errors)
+
+    def list_errors_for_run(self, run_id: str) -> list[ProductionError]:
+        """Return the failures configured for one run."""
+        return list(self.errors_by_run.get(run_id, []))
+
+    def list_data_sources(self) -> list[DataSourceConfig]:
+        """Return the configured sources, as a real gateway would list them."""
+        return list(self.data_sources.values())
+
+    def configure_data_source(
+        self,
+        source_type: str,
+        name: str,
+        access_method: str,
+        connection_address: str,
+        username: str,
+        secret: str | None,
+        priority: int,
+    ) -> DataSourceConfig:
+        """Store a source, keeping any previously stored secret when none is given."""
+        key = (source_type, name)
+        if secret:
+            self.stored_secrets[key] = secret
+        config = DataSourceConfig(
+            source_type=source_type,
+            name=name,
+            access_method=access_method,
+            connection_address=connection_address,
+            username=username,
+            secret_set=key in self.stored_secrets,
+            priority=priority,
+        )
+        self.data_sources[key] = config
+        return config
+
+    def delete_data_source(self, source_type: str, name: str) -> bool:
+        """Remove a stored source, reporting whether one existed."""
+        key = (source_type, name)
+        self.stored_secrets.pop(key, None)
+        return self.data_sources.pop(key, None) is not None
 
 
 @dataclass

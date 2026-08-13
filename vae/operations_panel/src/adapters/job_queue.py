@@ -80,4 +80,5 @@ class ProcrastinateJobQueue:
                 platform=request.system_version.platform.name,
                 system_version=request.system_version.version,
                 started_by=request.started_by,
+                run_id=request.run_id,
             )

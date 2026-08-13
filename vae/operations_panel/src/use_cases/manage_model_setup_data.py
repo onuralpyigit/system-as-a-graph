@@ -10,6 +10,7 @@ from dataclasses import replace
 from uuid import uuid4
 
 from shared.types.identifiers import PlatformRef, SystemVersionRef
+from vae.operations_panel.src.model.data_source import DataSourceConfig
 from vae.operations_panel.src.model.production_job import (
     JobStatus,
     ModelSetupDataFile,
@@ -122,17 +123,24 @@ class ModelSetupDataWorkflowUseCase:
         Returns:
             The recorded process, in progress.
         """
+        # Generated here, not inside run(), so the run this job will execute
+        # under is known — and its errors fetchable — from the moment it's
+        # in progress, not only once it resolves.
+        run_id = uuid4().hex
         job = ProductionJob(
             job_id=uuid4().hex,
             system_version=scope,
             started_by=username,
             status=JobStatus.IN_PROGRESS,
             started_at=self._clock.now(),
+            run_id=run_id,
         )
         self._jobs.save(job)
 
         self._queue.enqueue(
-            ProductionJobRequest(job_id=job.job_id, system_version=scope, started_by=username)
+            ProductionJobRequest(
+                job_id=job.job_id, system_version=scope, started_by=username, run_id=run_id
+            )
         )
         return job
 
@@ -172,6 +180,66 @@ class ModelSetupDataWorkflowUseCase:
             scope: Project/platform/system version to list for.
         """
         return self._gateway.list_errors(scope.platform)
+
+    def errors_for_run(self, run_id: str) -> list[ProductionError]:
+        """List the failures recorded during one production run (SRS VAE-01.8).
+
+        Args:
+            run_id: MSD's identifier for the run, as reported on a production
+                job once it has begun.
+        """
+        return self._gateway.list_errors_for_run(run_id)
+
+    def list_data_sources(self) -> list[DataSourceConfig]:
+        """List every configured external data source (SRS MSD.2-5, 8)."""
+        return self._gateway.list_data_sources()
+
+    def configure_data_source(
+        self,
+        source_type: str,
+        name: str,
+        access_method: str,
+        connection_address: str,
+        username: str,
+        secret: str | None,
+        priority: int,
+    ) -> DataSourceConfig:
+        """Save a data source configuration (SRS MSD.8).
+
+        Args:
+            source_type: Which of the four external source types this serves.
+            name: Operator-chosen name, unique within the source type.
+            access_method: Vendor/protocol used to reach it.
+            connection_address: Base URL, DSN, or path, depending on method.
+            username: Connection user name; empty when the source needs none.
+            secret: The secret, in plaintext, encrypted before storage. None
+                or blank on an update keeps the previously stored secret.
+            priority: Search order when several sources of one type compete.
+
+        Returns:
+            The saved configuration's status, never the secret.
+        """
+        return self._gateway.configure_data_source(
+            source_type=source_type,
+            name=name,
+            access_method=access_method,
+            connection_address=connection_address,
+            username=username,
+            secret=secret,
+            priority=priority,
+        )
+
+    def delete_data_source(self, source_type: str, name: str) -> bool:
+        """Delete a data source configuration.
+
+        Args:
+            source_type: Type of the source.
+            name: Name of the source.
+
+        Returns:
+            True when a configuration was deleted.
+        """
+        return self._gateway.delete_data_source(source_type, name)
 
     def check_sources(self, platform: PlatformRef | None = None) -> SourceStatusSnapshot:
         """Probe every configured source now and record the result (SRS VAE-01.7).
@@ -225,10 +293,15 @@ class ModelSetupDataWorkflowUseCase:
         if job is None:
             raise UnknownProductionJob(f"No production process '{request.job_id}'")
 
+        # Falls back to a fresh id only for a request queued before run_id
+        # existed on it; every request start_production() enqueues now
+        # carries one already.
+        run_id = request.run_id or uuid4().hex
+
         try:
-            outcome = self._gateway.produce(request.system_version, run_id=uuid4().hex)
+            outcome = self._gateway.produce(request.system_version, run_id=run_id)
         except Exception as exc:  # noqa: BLE001 - the operator must see any failure
-            job.fail(finished_at=self._clock.now(), reason=str(exc))
+            job.fail(finished_at=self._clock.now(), reason=str(exc), run_id=run_id)
             self._jobs.save(job)
             return job
 
@@ -246,6 +319,7 @@ class ModelSetupDataWorkflowUseCase:
                 finished_at=self._clock.now(),
                 reason=_first_reason(outcome.errors),
                 run_id=outcome.run_id,
+                error_count=len(outcome.errors),
             )
 
         self._jobs.save(job)

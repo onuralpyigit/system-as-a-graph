@@ -10,11 +10,17 @@ from uuid import uuid4
 
 from msd.src.adapters.support import SystemClock
 from msd.src.api.dependencies import Container
-from msd.src.model.data_source import DataSourceType
+from msd.src.model.data_source import (
+    AccessMethod,
+    CredentialReference,
+    DataSourceConfiguration,
+    DataSourceType,
+)
 from msd.src.model.version_inventory import SoftwareUnitVersion
 from msd.src.use_cases._recording import RunRecorder
 from shared.errors.acquisition import AcquisitionFailure
 from shared.types.identifiers import PlatformRef, ProjectRef, SystemVersionRef
+from vae.operations_panel.src.model.data_source import DataSourceConfig
 from vae.operations_panel.src.model.production_job import (
     AvailableSystemVersion,
     ModelSetupDataFile,
@@ -92,7 +98,16 @@ class InProcessModelSetupDataGateway:
         ]
 
     def produce(self, system_version: SystemVersionRef, run_id: str) -> ProductionOutcome:
-        """Run Model Setup Data production and report what it produced."""
+        """Run Model Setup Data production and report what it produced.
+
+        Production reads a previously recorded Software Unit Version
+        Inventory rather than acquiring one itself (SDD 3.1.2) — MSD.14
+        records it as its own step. The panel is the operator's one
+        "Produce" action, so it refreshes the inventory from CMDB here,
+        under this run, rather than requiring a separate step nothing in
+        the UI exposes.
+        """
+        self._refresh_inventory(system_version, run_id)
         result = self._container.production().produce(system_version, run_id=run_id)
         return ProductionOutcome(
             run_id=result.run_id,
@@ -100,8 +115,25 @@ class InProcessModelSetupDataGateway:
             file_path=result.file_path,
             entity_count=len(result.document.entities) if result.document else 0,
             relation_count=len(result.document.relations) if result.document else 0,
-            errors=[_to_error(error) for error in result.errors],
+            # Not result.errors: that's only what the production step itself
+            # recorded. _refresh_inventory above records under this same
+            # run_id too, so the count reported here must match what
+            # list_errors_for_run(run_id) — the expandable detail view —
+            # would show, or the two silently disagree.
+            errors=[_to_error(error) for error in self._container.errors.list_for_run(run_id)],
         )
+
+    def _refresh_inventory(self, system_version: SystemVersionRef, run_id: str) -> None:
+        recorder = RunRecorder(
+            run_id=run_id,
+            platform=system_version.platform,
+            errors=self._container.errors,
+            clock=SystemClock(),
+        )
+        units, _ = self._container.configuration_data().list_software_units(
+            system_version.platform, system_version.version, recorder
+        )
+        self._container.inventory.record(system_version, units)
 
     def probe_sources(self, platform: PlatformRef | None = None) -> list[SourceStatus]:
         """Touch every configured source and report whether it answered.
@@ -149,6 +181,57 @@ class InProcessModelSetupDataGateway:
             _to_error(error) for error in self._container.errors.list_for_platform(platform)
         ]
 
+    def list_errors_for_run(self, run_id: str) -> list[ProductionError]:
+        """List the failures MSD recorded for one production run (SRS VAE-01.8)."""
+        return [_to_error(error) for error in self._container.errors.list_for_run(run_id)]
+
+    def list_data_sources(self) -> list[DataSourceConfig]:
+        """List every configured external data source (SRS MSD.2-5, 8)."""
+        return [_to_source_config(item) for item in self._container.data_sources.list_all()]
+
+    def configure_data_source(
+        self,
+        source_type: str,
+        name: str,
+        access_method: str,
+        connection_address: str,
+        username: str,
+        secret: str | None,
+        priority: int,
+    ) -> DataSourceConfig:
+        """Save a data source configuration, encrypting any newly entered secret.
+
+        Leaves a previously stored secret untouched when the operator edits a
+        source's address/priority without re-entering its secret.
+        """
+        existing = self._container.data_sources.get(DataSourceType(source_type), name)
+        if secret:
+            encrypted = self._container.cipher.encrypt(secret)
+        elif existing and existing.credential:
+            encrypted = existing.credential.encrypted_secret
+        else:
+            encrypted = ""
+
+        saved = self._container.data_sources.configure(
+            DataSourceConfiguration(
+                source_type=DataSourceType(source_type),
+                name=name,
+                access_method=AccessMethod(access_method),
+                connection_address=connection_address,
+                credential=(
+                    CredentialReference(username=username, encrypted_secret=encrypted)
+                    if encrypted
+                    else None
+                ),
+                priority=priority,
+            )
+        )
+        return _to_source_config(saved)
+
+    def delete_data_source(self, source_type: str, name: str) -> bool:
+        """Delete a data source configuration."""
+        return self._container.data_sources.remove(DataSourceType(source_type), name)
+
     @staticmethod
     def _touch(source_type: DataSourceType, adapter, platform: PlatformRef) -> None:
         if source_type is DataSourceType.CONFIGURATION_MANAGEMENT_DATABASE:
@@ -167,6 +250,20 @@ class InProcessModelSetupDataGateway:
             errors=self._container.errors,
             clock=SystemClock(),
         )
+
+
+def _to_source_config(configuration: DataSourceConfiguration) -> DataSourceConfig:
+    return DataSourceConfig(
+        source_type=configuration.source_type.value,
+        name=configuration.name,
+        access_method=configuration.access_method.value,
+        connection_address=configuration.connection_address,
+        username=configuration.credential.username if configuration.credential else "",
+        secret_set=bool(
+            configuration.credential and configuration.credential.encrypted_secret
+        ),
+        priority=configuration.priority,
+    )
 
 
 def _to_error(error) -> ProductionError:

@@ -130,3 +130,33 @@ class SourceStatusSnapshotResponse(BaseModel):
     checked_at: datetime
     all_reachable: bool
     statuses: list[SourceStatusResponse] = Field(default_factory=list)
+
+
+class DataSourceResponse(BaseModel):
+    """One configured external data source (SRS MSD.2-5, 8). No secret in it."""
+
+    source_type: str
+    name: str
+    access_method: str
+    connection_address: str
+    username: str = ""
+    secret_set: bool = False
+    priority: int = 0
+
+
+class DataSourceConfigureRequest(BaseModel):
+    """Request to save a data source configuration (SRS MSD.8)."""
+
+    source_type: str
+    name: str
+    access_method: str
+    connection_address: str
+    username: str = ""
+    secret: str | None = Field(
+        default=None,
+        description=(
+            "The secret, in plaintext, encrypted before storage. Omit or "
+            "leave blank on an update to keep the previously stored secret."
+        ),
+    )
+    priority: int = 0

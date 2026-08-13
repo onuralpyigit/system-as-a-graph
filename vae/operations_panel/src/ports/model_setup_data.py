@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
 from shared.types.identifiers import PlatformRef, ProjectRef, SystemVersionRef
+from vae.operations_panel.src.model.data_source import DataSourceConfig
 from vae.operations_panel.src.model.production_job import (
     AvailableSystemVersion,
     ModelSetupDataFile,
@@ -97,4 +98,51 @@ class ModelSetupDataGatewayPort(Protocol):
 
     def list_errors(self, platform: PlatformRef) -> list[ProductionError]:
         """List the failures MSD recorded for a platform (SRS VAE-01.8)."""
+        ...
+
+    def list_errors_for_run(self, run_id: str) -> list[ProductionError]:
+        """List the failures MSD recorded for one production run (SRS VAE-01.8)."""
+        ...
+
+    def list_data_sources(self) -> list[DataSourceConfig]:
+        """List every configured external data source (SRS MSD.2-5, 8)."""
+        ...
+
+    def configure_data_source(
+        self,
+        source_type: str,
+        name: str,
+        access_method: str,
+        connection_address: str,
+        username: str,
+        secret: str | None,
+        priority: int,
+    ) -> DataSourceConfig:
+        """Save a data source configuration, replacing one with the same key.
+
+        Args:
+            source_type: Which of the four external source types this serves.
+            name: Operator-chosen name, unique within the source type.
+            access_method: Vendor/protocol used to reach it.
+            connection_address: Base URL, DSN, or path, depending on method.
+            username: Connection user name; empty when the source needs none.
+            secret: The secret, in plaintext, encrypted before storage. None
+                or blank on an update keeps the previously stored secret.
+            priority: Search order when several sources of one type compete.
+
+        Returns:
+            The saved configuration's status, never the secret.
+        """
+        ...
+
+    def delete_data_source(self, source_type: str, name: str) -> bool:
+        """Delete a data source configuration.
+
+        Args:
+            source_type: Type of the source.
+            name: Name of the source.
+
+        Returns:
+            True when a configuration was deleted.
+        """
         ...

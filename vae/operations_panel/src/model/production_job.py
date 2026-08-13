@@ -90,18 +90,22 @@ class ProductionJob:
         self.relation_count = relation_count
         self.error_count = error_count
 
-    def fail(self, finished_at: datetime, reason: str, run_id: str = "") -> None:
+    def fail(
+        self, finished_at: datetime, reason: str, run_id: str = "", error_count: int = 0
+    ) -> None:
         """Mark the process failed.
 
         Args:
             finished_at: Completion time.
             reason: Why it failed, in terms an operator can act on.
             run_id: MSD run identifier, when production got far enough to have one.
+            error_count: Failures recorded during the run, when it got that far.
         """
         self.status = JobStatus.FAILED
         self.finished_at = finished_at
         self.failure_reason = reason
         self.run_id = run_id
+        self.error_count = error_count
 
 
 @dataclass
@@ -112,11 +116,14 @@ class ProductionJobRequest:
         job_id: Job to update.
         system_version: Scope to produce for.
         started_by: Operator who started it.
+        run_id: MSD run identifier, generated at start time so it is known
+            (and errors are attributable) even while the job is in progress.
     """
 
     job_id: str
     system_version: SystemVersionRef
     started_by: str = ""
+    run_id: str = ""
 
 
 @dataclass

@@ -53,16 +53,23 @@ def procrastinate_app() -> App:
 
     @app.task(name=PRODUCTION_TASK_NAME)
     def produce_model_setup_data(
-        job_id: str, project: str, platform: str, system_version: str, started_by: str
+        job_id: str,
+        project: str,
+        platform: str,
+        system_version: str,
+        started_by: str,
+        run_id: str = "",
     ) -> None:
         """Run one queued Model Setup Data production process.
 
         Imported lazily so the worker builds the panel in its own process
-        rather than inheriting the API's wiring.
+        rather than inheriting the API's wiring. ``run_id`` defaults to empty
+        only for a job deferred before this parameter existed; run() falls
+        back to generating one for that case.
         """
         from vae.operations_panel.src.api.dependencies import run_production_job
 
-        run_production_job(job_id, project, platform, system_version, started_by)
+        run_production_job(job_id, project, platform, system_version, started_by, run_id)
 
     return app
 

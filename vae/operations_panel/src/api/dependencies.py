@@ -133,7 +133,7 @@ def get_panel_container() -> PanelContainer:
 
 
 def run_production_job(
-    job_id: str, project: str, platform: str, version: str, started_by: str
+    job_id: str, project: str, platform: str, version: str, started_by: str, run_id: str = ""
 ) -> None:
     """Execute a queued production process.
 
@@ -146,12 +146,14 @@ def run_production_job(
         platform: Platform to produce for.
         version: System version to produce for.
         started_by: Operator who started the process.
+        run_id: MSD run identifier assigned at start time.
     """
     get_panel_container().workflow.run(
         ProductionJobRequest(
             job_id=job_id,
             system_version=system_version(project, platform, version),
             started_by=started_by,
+            run_id=run_id,
         )
     )
 

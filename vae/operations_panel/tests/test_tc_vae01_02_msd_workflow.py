@@ -179,6 +179,70 @@ def test_recorded_failures_are_presented_to_the_operator(panel):
     }
 
 
+def test_a_configured_source_is_listed_with_its_secret_status_only(panel):
+    """The secret itself never comes back out of the workflow (SRS MSD.8)."""
+    panel.workflow.configure_data_source(
+        source_type="source_repository",
+        name="bitbucket-a",
+        access_method="git_https",
+        connection_address="https://bitbucket.example/scm/saag",
+        username="ops",
+        secret="s3cr3t-token",
+        priority=0,
+    )
+
+    listed = panel.workflow.list_data_sources()
+
+    assert len(listed) == 1
+    assert listed[0].username == "ops"
+    assert listed[0].secret_set is True
+    assert not hasattr(listed[0], "secret")
+
+
+def test_editing_a_source_without_a_secret_keeps_the_stored_one(panel):
+    """Address/priority can change without re-entering the secret."""
+    panel.workflow.configure_data_source(
+        source_type="source_repository",
+        name="bitbucket-a",
+        access_method="git_https",
+        connection_address="https://bitbucket.example/scm/saag",
+        username="ops",
+        secret="s3cr3t-token",
+        priority=0,
+    )
+
+    edited = panel.workflow.configure_data_source(
+        source_type="source_repository",
+        name="bitbucket-a",
+        access_method="git_https",
+        connection_address="https://bitbucket.example/scm/saag-v2",
+        username="ops",
+        secret=None,
+        priority=1,
+    )
+
+    assert edited.connection_address == "https://bitbucket.example/scm/saag-v2"
+    assert edited.priority == 1
+    assert edited.secret_set is True
+
+
+def test_a_deleted_source_no_longer_appears(panel):
+    """Removing a source's configuration removes it from the listing."""
+    panel.workflow.configure_data_source(
+        source_type="network_topology",
+        name="ansible-tree",
+        access_method="ansible",
+        connection_address="/etc/saag/ansible",
+        username="",
+        secret=None,
+        priority=0,
+    )
+
+    assert panel.workflow.delete_data_source("network_topology", "ansible-tree") is True
+    assert panel.workflow.list_data_sources() == []
+    assert panel.workflow.delete_data_source("network_topology", "ansible-tree") is False
+
+
 def test_an_unknown_process_identifier_is_refused(panel):
     """Monitoring something that was never started is an error, not an empty status."""
     with pytest.raises(UnknownProductionJob):
@@ -236,6 +300,10 @@ def test_a_started_process_is_in_progress_until_the_worker_runs_it(users_file):
 
     assert panel.workflow.status(job.job_id).status is JobStatus.IN_PROGRESS
     assert panel.workflow.status(job.job_id).finished_at is None
+    # The run this job will execute under is known while still in progress,
+    # not only once it resolves — that's what makes its errors fetchable
+    # (list_errors_for_run) before completion.
+    assert panel.workflow.status(job.job_id).run_id != ""
     assert [request.job_id for request in queue.deferred] == [job.job_id]
 
     panel.workflow.run(queue.deferred[0])
