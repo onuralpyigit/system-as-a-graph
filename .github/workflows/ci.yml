@@ -107,4 +107,4 @@ jobs:
         run: docker compose build
 
       - name: Build dev images
-        run: docker compose -f compose.dev.yml build
+        run: docker compose -f compose.dev.yaml build

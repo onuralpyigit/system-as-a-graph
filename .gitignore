@@ -224,3 +224,4 @@ __marimo__/
 
 !msd/src/adapters/build/
 !msd/src/adapters/build/**
+msd/src/adapters/build/**/__pycache__/

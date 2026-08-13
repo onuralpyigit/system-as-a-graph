@@ -88,9 +88,9 @@ The shell is a persistent Next.js layout; only the route outlet swaps. Group nav
 flowchart TB
     subgraph TOPBAR["Top Bar — persistent, single row"]
         PPV["Project / Platform / Version selector"]
-        GROUPNAV["Group Nav — Setup · Model · Analytical Data · Findings (pipeline-dot per group)"]
+        GROUPNAV["Group Nav — Setup · Model · Analytical Data · Findings (per-group job dot)"]
+        THEME["Theme toggle — Light / Dark / System"]
         SESSION["Session — avatar + dropdown (LDAP user, sign out)"]
-        JOBS["Background-job status strip (SSE)"]
     end
     subgraph SHELL["App Shell"]
         MAIN["Route Outlet — active screen, full width"]
@@ -100,18 +100,12 @@ flowchart TB
     MAIN --> INSPECT
 ```
 
-- **Top bar**: one persistent row — project/platform/version selector (VAE-01.4), group nav, avatar dropdown (LDAP user, sign out), and a job-status strip for in-flight MSD/production/evaluation ops (Procrastinate + SSE). No left sidebar; the route outlet always spans full width.
+- **Top bar**: one persistent row — project/platform/version selector (VAE-01.4), group nav, a Light/Dark/System theme toggle, avatar dropdown (LDAP user, sign out). No left sidebar; the route outlet always spans full width.
 - **Group nav**: four groups — Setup, Model, Analytical Data, Findings — each one page, no subpages. Active state: bold `--foreground` vs. `--muted-foreground` text, not a pill (pills are for in-page tabs, §5). Three groups push further content behind in-page toggles instead:
   - **Model** toggles Browse/Edit on one shared canvas.
   - **Analytical Data** toggles Field Records/Scenario Generator (FRD.2–5, VAE-01.10, 12, 15–16 / VAE-01.11, 13–16) on one shared screen — the same pattern as Model.
   - **Findings**: four-way toggle — **Verification**, **Analysis**, **Evaluation** (split by which of VAE-02/03/04 produced results), plus **Reports** across all three.
-- **Pipeline-progress badges**: each group carries a two-state readiness dot — `--muted` (not yet available) vs. `--status-conforming` (has output) — not the full severity scale (§2.2). Per active project/platform/version:
-  - Setup: `--muted` until an MSD file exists.
-  - Model: `--muted` until a Core System Model is built.
-  - Analytical Data: `--muted` until bound Analytical Evaluation Data (AED) exists.
-  - Findings: `--muted` until any of Verification/Analysis/Evaluation has results.
-
-  A pipeline-completeness snapshot, distinct from the job-status strip's live view.
+- **Background-job indicator**: each group carries a dot for its own in-flight MSD/production/evaluation ops (Procrastinate + SSE) — blinking while running, solid `--status-conforming`/`--status-critical` once finished and not yet viewed, gone once the operator has visited the page. No separate status-strip element; the signal lives on the nav item it's about.
 - **Inspector panel**: one reusable right-docked panel (tier 10) for both graph (node/edge) and findings-table (finding) detail.
 
 ---
@@ -124,48 +118,48 @@ Each screen maps VAE-01 requirements to actual UX/page boundaries (nearest SDD �
 - **Analytical Data toggle:** Analytical Data toggles Field Records (FRD.2–5, VAE-01.10, 12, 15–16) / Scenario Generator (VAE-01.11, 13–16) by data source.
 - **Analysis KPI strip:** Analysis carries VAE-03.9/21's KPI strip.
 
-**Session & Authentication** — *VAE-01.3–4* — Centered single-card login, no shell chrome until authenticated. LDAP form (React Hook Form + shadcn), guarded by Refine's access-control provider (§5). Post-login: project/platform/version selection if none active, else last-visited screen, else Model Visualization & Navigation.
+**Session & Authentication** — *VAE-01.3–4* — Two-column split: brand mark plus centered login card on the left, a full-bleed cover photo on the right (hidden below `lg`); no shell chrome until authenticated. LDAP form (React Hook Form + shadcn), guarded by Refine's access-control provider (§5). Post-login: project/platform/version selection if none active, else last-visited screen, else Model Visualization & Navigation.
 
 **Figure 2. Session & Authentication — Login Screen**
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                                                                        │
-│                (bare dark canvas — no shell chrome until authenticated)                │
-│                                                                                        │
-│                   ┌────────────────────────────────────────────────┐                   │
-│                   │            SaaG — Operations Panel             │                   │
-│                   ├────────────────────────────────────────────────┤                   │
-│                   │ Username  [____________________]               │                   │
-│                   │ Password  [____________________]               │                   │
-│                   │                                                │                   │
-│                   │                  [ Sign in ]                   │                   │
-│                   │ ! Auth failed — invalid credentials (§7)       │                   │
-│                   └────────────────────────────────────────────────┘                   │
-│                                                                                        │
+│ (icon) SaaG                                 │                                          │
+│                                              │                                          │
+│                                              │                                          │
+│              ┌────────────────────┐         │            (cover photo,                │
+│              │ Login to your      │         │             hidden below lg)             │
+│              │ account            │         │                                          │
+│              │ Enter your username│         │                                          │
+│              │ and password...    │         │                                          │
+│              │ Username  [______] │         │                                          │
+│              │ Password  [______] │         │                                          │
+│              │                    │         │                                          │
+│              │    [ Sign in ]     │         │                                          │
+│              │ ! Auth failed (§7) │         │                                          │
+│              └────────────────────┘         │                                          │
+│                                              │                                          │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Setup** — *VAE-01.5–8, MSD.7–8* — Stepper-style status view: file list plus a production trigger, progress fed by the top-bar job strip. Errors (missing-data/access/authorization/format/integrity) surface inline via §7. On success, **"Continue to Model →"** navigates to the Model page — the build itself happens there via Model's own **"Build Model"** trigger. A status dot per data source sits under the header (VAE-01.7); **Edit** opens a plain form for that source's address/credentials, including the network-topology manual-entry toggle (MSD.7–8) — one form, no separate dialog.
+**Setup** — *VAE-01.5–8, MSD.7–8* — Two stacked sections under the page header. **Sources**: a collapsible summary row (VAE-01.7) — a status dot + label per source type (not-configured/pending/reachable/unreachable) plus an overall badge ("all reachable" / "checking…" / "attention needed" / "N not configured"); expanding it swaps to a full table (type, name, address, credential, edit/delete) for scopes with more than one source of a type. **Edit** and **Add source** both open a shadcn `Dialog` form (source type, access method — read-only, derived from type —, name, connection address, username, priority, secret); there is no separate manual-entry toggle for network topology, it shares the same generic address field as the other three source types. **Production**: a "Produce Model Setup Data" button (disabled without a configured CMDB source, while a run is active, or mid-submit) above a paginated (TanStack Table) history of past runs — status badge (running/succeeded/failed), file path, started/duration/finished timestamps, entity/relation counts, and a Select action once succeeded; a failed or still-running run's errors expand inline per row rather than surfacing only in aggregate. Progress and outcome are also reflected on the Setup group's nav-item dot (§3), not a top-bar strip. On selecting a succeeded run, **"Continue to Model →"** navigates to the Model page — the build itself happens there via Model's own **"Build Model"** trigger.
 
 **Figure 3. Setup**
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ Project v Platform v Version v 2.3.1 [Setup] Model Analytical Data Findings avatar v   │
-│ Model Setup Data Workflow                             [ Produce Model Setup Data ]     │
+│ Project v Platform v Version v 2.3.1 [Setup] Model Analytical Data Findings ☀ avatar v │
+│ Setup                                                  [ Produce Model Setup Data ]     │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ Sources: * config-mgmt DB  * source repo  * package repo  * net topology   [Edit]      │
+│ > Sources  [all reachable]                                          [ Add source ]     │
+│   * config-mgmt DB [Edit]  * source repo [Edit]  * package repo [Add]  * net topo [Add]│
 │                                                                                        │
-│ Selected MSD file: msd_2026-07-14_platformA.json                                       │
+│ Status    File                Started      Duration  Finished     Entities  Relations  │
+│ ------    ----                -------      --------  --------     --------  ---------  │
+│ succeeded msd_...platformA...  2026-07-14   2m 10s    2026-07-14   1204      3311  [Select]│
+│ ▸ failed  —                    2026-07-10   0m 42s    2026-07-10   —         —     (1 error)│
 │                                                                                        │
-│ File list                                                                              │
-│   msd_2026-07-14_platformA.json                                                   ready│
-│   msd_2026-06-30_platformA.json                                                   ready│
-│                                                                                        │
-│ status: running 63% (top-bar job strip)                                                │
-│                                                                                        │
-│ ! missing-data/access/authorization/format/integrity errors (inline, §7)               │
+│ Selected MSD file: msd_2026-07-14_platformA.json           [ Continue to Model → ]     │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -243,7 +237,7 @@ Unsaved edits + Project/Platform/Version switch prompts a confirmation dialog (s
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Model Visualization & Navigation** — *VAE-01.9, 19–20* — Full-bleed React Flow canvas (tier 0), floating top-left search/filter bar (type/project/platform/version/unit), bottom-right minimap. Node/edge selection opens the Inspector Panel (§3). No Core System Model yet: canvas replaced by a "Build Model" trigger + progress (VAE-01.9), fed by the job strip.
+**Model Visualization & Navigation** — *VAE-01.9, 19–20* — Full-bleed React Flow canvas (tier 0), floating top-left search/filter bar (type/project/platform/version/unit), bottom-right minimap. Node/edge selection opens the Inspector Panel (§3). No Core System Model yet: canvas replaced by a "Build Model" trigger + progress (VAE-01.9), reflected on the Model group's nav-item dot (§3).
 
 **Figure 7. Model Visualization & Navigation**
 
@@ -383,7 +377,7 @@ Cross-cutting patterns, each owned by exactly one library from SDP §5 Table 6 �
 | Page header | shadcn/ui header row | Bold page title (30px, §2.3) left; at most one primary action (`--primary` button, e.g. "Produce Model Setup Data") right-aligned. Never duplicates the top bar's selector. |
 | Tab navigation | shadcn/ui `Tabs` | Every in-page toggle (Browse/Edit, Field Records/Scenario Generator, Verification/Analysis/Evaluation/Reports) is one pill-shaped tab list under the page header — `--muted` track, `--card`-filled active pill, plain `--muted-foreground` inactive text. |
 | KPI / stat cards | shadcn/ui `Card` | Low-cardinality summary numbers (VAE-03.9/21's top-entity KPIs) as bordered stat cards — label + icon, large tabular-nums value, muted caption. Icons fixed per card: Top Resource Usage = `Cpu`, Top Msg Intensity = `Activity` (lucide-react). |
-| Background operations | Procrastinate (PostgreSQL) + SSE | One status-strip + toast pattern for every long-running op (MSD, AED, evaluation): queued → running → succeeded/failed, failure reason inline. |
+| Background operations | Procrastinate (PostgreSQL) + SSE | One nav-item dot pattern for every long-running op (MSD, AED, evaluation): blinking while queued/running, solid (success/failure-colored) once finished until the operator visits the owning page, gone once viewed. Full detail (reason, per-error breakdown) lives on that page, not in the top bar. |
 | Shell, routing & access control | Refine ^5.0 | Route guarding, auth redirects, CRUD/resource bindings under Login, Verification, Analysis, Evaluation, Reports, Field Records (SDP §5 Table 6) — plumbing only, no visual pattern of its own. |
 
 ---

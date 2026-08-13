@@ -1,0 +1,59 @@
+services:
+  api:
+    build:
+      context: .
+      target: prod
+    image: saag-api
+    container_name: saag-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - msd-workspace:/var/lib/saag/workspace
+
+  worker:
+    build:
+      context: .
+      target: prod
+    image: saag-api
+    container_name: saag-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    volumes:
+      - msd-workspace:/var/lib/saag/workspace
+    command: ["procrastinate", "--app=vae.operations_panel.worker.app", "worker"]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: saag-postgres
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saag} -d ${POSTGRES_DB:-saag}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: ./web
+      target: prod
+    image: saag-web
+    container_name: saag-web
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+
+volumes:
+  msd-workspace:
+  postgres-data:

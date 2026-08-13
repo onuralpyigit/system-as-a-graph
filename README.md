@@ -67,61 +67,33 @@ LICENSE          # Apache License 2.0
 
 ## Getting started
 
-The API runs on http://localhost:8000 and the web app on http://localhost:3000, whether run locally or via Docker.
+Run the API and web app in containers. The API is served at http://localhost:8000 and the web app at http://localhost:3000.
 
-### Backend (Python 3.11+)
+### Development
+
+Hot reload, with source bind-mounted into the containers:
 
 ```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-pip install .
-uvicorn main:app --reload
+docker compose -f compose.dev.yaml up --build   # start
+docker compose -f compose.dev.yaml down         # stop and remove
 ```
 
-Run tests and linting:
+Testing and linting, against the running dev stack:
 
 ```bash
-pytest
-ruff check .
+docker compose -f compose.dev.yaml exec api pytest
+docker compose -f compose.dev.yaml exec api ruff check .
+docker compose -f compose.dev.yaml exec web npm run lint
+docker compose -f compose.dev.yaml exec web npm run test:e2e
 ```
 
-### Web app (Next.js)
+### Production
+
+Standalone builds, no bind mounts:
 
 ```bash
-cd web
-npm install
-npm run dev
-```
-
-Run end-to-end tests and linting:
-
-```bash
-npx playwright install --with-deps chromium # one-time browser download
-npm run test:e2e
-npm run lint
-```
-
-### Docker
-
-Run the API and web app in containers, without installing Python or Node locally.
-
-**Development** — hot reload, with source bind-mounted into the containers:
-
-```bash
-docker compose -f compose.dev.yml up --build
-```
-
-**Production** — standalone builds, no bind mounts:
-
-```bash
-docker compose up --build
-```
-
-Stop and remove containers:
-
-```bash
-docker compose -f compose.dev.yml down    # dev
-docker compose down                       # prod
+docker compose up --build   # start
+docker compose down         # stop and remove
 ```
 
 ## License

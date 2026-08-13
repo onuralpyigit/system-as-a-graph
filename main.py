@@ -1,4 +1,7 @@
+import os
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from adp.src.api.routes import router as adp_router
 from csm.data_binder.src.api.routes import router as csm_data_binder_router
@@ -11,7 +14,25 @@ from vae.design_evaluator.src.api.routes import router as vae_design_evaluator_r
 from vae.design_verifier.src.api.routes import router as vae_design_verifier_router
 from vae.operations_panel.src.api.routes import router as vae_operations_panel_router
 
+#: Origins the Operations Panel UI is served from. The API and the web app
+#: run as separate origins (different ports in dev, likely different hosts in
+#: production), so the browser needs an explicit CORS allowance to call this
+#: API at all.
+WEB_ORIGINS_ENV_VAR = "WEB_ALLOWED_ORIGINS"
+_DEFAULT_WEB_ORIGINS = "http://localhost:3000"
+
 app = FastAPI(title="system-as-a-graph API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv(WEB_ORIGINS_ENV_VAR, _DEFAULT_WEB_ORIGINS).split(",")
+        if origin.strip()
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")

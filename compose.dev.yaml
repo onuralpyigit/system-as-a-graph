@@ -8,36 +8,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      cmdb:
-        condition: service_healthy
     env_file:
-      - path: .env
-        required: false
+      - .env
     environment:
-      # Console-script entry points do not put the working directory on
-      # sys.path, so without this the bind-mounted source below would be
-      # ignored in favour of the copy baked into the image.
       PYTHONPATH: /app
-      DATABASE_URL: postgresql+psycopg://saag:saag@postgres:5432/saag
-      MSD_OUTPUT_DIR: /var/lib/saag/msd
-      MSD_WORKSPACE_DIR: /var/lib/saag/workspace
+      LDAP_SERVICE_PASSWORD: saag-standin-admin
       MSD_SOURCE_SEED_FILE: /app/tests/standins/sources.json
-      VAE_JWT_SECRET: ${VAE_JWT_SECRET:-development-only-secret-replace-via-dotenv}
-      VAE_SOURCE_STREAM_SECONDS: ${VAE_SOURCE_STREAM_SECONDS:-15}
-      LDAP_URL: ldap://openldap:389
-      LDAP_BIND_DN_TEMPLATE: uid={username},ou=people,dc=saag,dc=local
-      LDAP_GROUP_SEARCH_BASE: ou=groups,dc=saag,dc=local
-      LDAP_SERVICE_BIND_DN: cn=admin,dc=saag,dc=local
-      LDAP_SERVICE_PASSWORD: ${LDAP_ADMIN_PASSWORD:-saag-standin-admin}
-      LDAP_GROUP_AUTHORIZATIONS: view=saag-viewers,configure_sources=saag-operators,produce_model_setup_data=saag-operators
-      MSD_CMDB_PRIMARY_SECRET: ${MSD_CMDB_PRIMARY_SECRET:-saag}
-      MSD_ARTIFACTORY_TOKEN: ${MSD_ARTIFACTORY_TOKEN:-standin-registry-token}
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
-      - msd-output-dev:/var/lib/saag/msd
       - msd-workspace-dev:/var/lib/saag/workspace
+      - .:/app
       - ./tests/standins/ansible:/etc/saag/ansible:ro
 
   worker:
@@ -49,54 +30,34 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      cmdb:
-        condition: service_healthy
     env_file:
-      - path: .env
-        required: false
+      - .env
     environment:
       PYTHONPATH: /app
-      DATABASE_URL: postgresql+psycopg://saag:saag@postgres:5432/saag
-      MSD_OUTPUT_DIR: /var/lib/saag/msd
-      MSD_WORKSPACE_DIR: /var/lib/saag/workspace
+      LDAP_SERVICE_PASSWORD: saag-standin-admin
       MSD_SOURCE_SEED_FILE: /app/tests/standins/sources.json
-      VAE_JWT_SECRET: ${VAE_JWT_SECRET:-development-only-secret-replace-via-dotenv}
-      LDAP_URL: ldap://openldap:389
-      LDAP_BIND_DN_TEMPLATE: uid={username},ou=people,dc=saag,dc=local
-      LDAP_GROUP_SEARCH_BASE: ou=groups,dc=saag,dc=local
-      LDAP_SERVICE_BIND_DN: cn=admin,dc=saag,dc=local
-      LDAP_SERVICE_PASSWORD: ${LDAP_ADMIN_PASSWORD:-saag-standin-admin}
-      MSD_CMDB_PRIMARY_SECRET: ${MSD_CMDB_PRIMARY_SECRET:-saag}
-      MSD_ARTIFACTORY_TOKEN: ${MSD_ARTIFACTORY_TOKEN:-standin-registry-token}
     volumes:
-      - .:/app
-      - msd-output-dev:/var/lib/saag/msd
       - msd-workspace-dev:/var/lib/saag/workspace
+      - .:/app
       - ./tests/standins/ansible:/etc/saag/ansible:ro
     command: ["procrastinate", "--app=vae.operations_panel.worker.app", "worker"]
 
   postgres:
     image: postgres:16-alpine
     container_name: saag-postgres-dev
-    environment:
-      POSTGRES_USER: saag
-      POSTGRES_PASSWORD: saag
-      POSTGRES_DB: saag
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U saag -d saag"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-saag} -d ${POSTGRES_DB:-saag}"]
       interval: 5s
       timeout: 5s
       retries: 10
     volumes:
       - postgres-data-dev:/var/lib/postgresql/data
 
-  # --- Stand-in external systems -------------------------------------------
-  # Real technologies holding demo data. They exist so the adapters can speak
-  # their true protocols in development; production points the same adapters at
-  # the customer's own servers and none of this is deployed.
-
+  # Stand-in external systems used only in dev.
   cmdb:
     image: mysql:8
     container_name: saag-cmdb-dev
@@ -104,7 +65,7 @@ services:
       MYSQL_ROOT_PASSWORD: saag-root
       MYSQL_DATABASE: cmdb
       MYSQL_USER: saag
-      MYSQL_PASSWORD: ${MSD_CMDB_PRIMARY_SECRET:-saag}
+      MYSQL_PASSWORD: saag
     ports:
       - "3306:3306"
     healthcheck:
@@ -113,8 +74,8 @@ services:
       timeout: 5s
       retries: 20
     volumes:
-      - ./tests/standins/cmdb:/docker-entrypoint-initdb.d:ro
       - cmdb-data-dev:/var/lib/mysql
+      - ./tests/standins/cmdb:/docker-entrypoint-initdb.d:ro
 
   gitea:
     image: gitea/gitea:1.22
@@ -125,7 +86,6 @@ services:
       GITEA__service__DISABLE_REGISTRATION: "false"
       GITEA__server__ROOT_URL: http://gitea:3000/
     ports:
-      # Host port only for looking at it; everything inside talks to gitea:3000.
       - "3002:3000"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://127.0.0.1:3000/api/healthz || exit 1"]
@@ -143,8 +103,8 @@ services:
         condition: service_healthy
     environment:
       GITEA_URL: http://gitea:3000
-      GITEA_ADMIN_USER: ${GITEA_ADMIN_USER:-saag}
-      GITEA_ADMIN_PASSWORD: ${GITEA_ADMIN_PASSWORD:-saag-standin-password}
+      GITEA_ADMIN_USER: saag
+      GITEA_ADMIN_PASSWORD: saag-standin-password
     volumes:
       - ./tests/standins:/standins
     entrypoint: ["/bin/sh", "-c", "apk add --no-cache curl >/dev/null && sh /standins/git/seed.sh"]
@@ -155,13 +115,12 @@ services:
     environment:
       LDAP_ORGANISATION: SaaG stand-in
       LDAP_DOMAIN: saag.local
-      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:-saag-standin-admin}
+      LDAP_ADMIN_PASSWORD: saag-standin-admin
     ports:
       - "389:389"
-    # --copy-service applies the bootstrap LDIF mounted below on first start.
-    command: ["--copy-service"]
     volumes:
       - ./tests/standins/ldap:/container/service/slapd/assets/config/bootstrap/ldif/custom:ro
+    command: ["--copy-service"]
 
   package-registry:
     build:
@@ -172,18 +131,12 @@ services:
     environment:
       PYTHONPATH: /app
       PACKAGE_REGISTRY_ARTIFACTS: /app/tests/standins/package_registry/artifacts.json
-      PACKAGE_REGISTRY_TOKEN: ${MSD_ARTIFACTORY_TOKEN:-standin-registry-token}
+      PACKAGE_REGISTRY_TOKEN: standin-registry-token
     ports:
       - "8100:8100"
     volumes:
       - .:/app
-    command:
-      - "uvicorn"
-      - "tests.standins.package_registry.app:app"
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "8100"
+    command: ["uvicorn", "tests.standins.package_registry.app:app", "--host", "0.0.0.0", "--port", "8100"]
 
   web:
     build:
@@ -191,15 +144,16 @@ services:
       target: dev
     image: saag-web:dev
     container_name: saag-web-dev
+    env_file:
+      - .env
     ports:
-      - "3001:3000"
+      - "3000:3000"
     volumes:
       - ./web:/app
       - /app/node_modules
 
 volumes:
-  postgres-data-dev:
-  msd-output-dev:
   msd-workspace-dev:
+  postgres-data-dev:
   cmdb-data-dev:
   gitea-data-dev:
