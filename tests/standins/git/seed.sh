@@ -21,21 +21,27 @@ GITEA_EMAIL="${GITEA_ADMIN_EMAIL:-saag@standin.local}"
 TOKEN_NAME="${GITEA_TOKEN_NAME:-msd}"
 SOURCE_ROOT="${SOURCE_ROOT:-/standins/data/source_repository}"
 TOKEN_FILE="${GITEA_TOKEN_FILE:-/standins/git/token}"
+GITEA_CONFIG="${GITEA_CONFIG:-/data/gitea/conf/app.ini}"
 
 log() { echo "[git-seed] $*"; }
+
+# Start Gitea via s6 so the config and database are initialized.
+log "starting Gitea"
+chown -R git:git /etc/s6
+/bin/s6-svscan /etc/s6 &
+S6_PID=$!
 
 log "waiting for ${GITEA_URL}"
 until curl -sf "${GITEA_URL}/api/healthz" >/dev/null 2>&1; do sleep 2; done
 
-# The first account registered on a fresh Gitea becomes its administrator, so
-# no separate admin bootstrap is needed. A second run simply fails the form and
-# carries on with the credentials it already has.
-log "ensuring user '${GITEA_USER}'"
-curl -sf -o /dev/null -X POST "${GITEA_URL}/user/sign_up" \
-  --data-urlencode "user_name=${GITEA_USER}" \
-  --data-urlencode "email=${GITEA_EMAIL}" \
-  --data-urlencode "password=${GITEA_PASSWORD}" \
-  --data-urlencode "retype=${GITEA_PASSWORD}" || log "user already present"
+# Create admin user now that Gitea config and DB exist.
+log "creating admin user '${GITEA_USER}'"
+su-exec git /usr/local/bin/gitea admin user create \
+  --config "${GITEA_CONFIG}" \
+  --username "${GITEA_USER}" \
+  --password "${GITEA_PASSWORD}" \
+  --email "${GITEA_EMAIL}" \
+  --admin 2>/dev/null || log "  user already present"
 
 log "issuing an access token"
 TOKEN=$(curl -sf -X POST "${GITEA_URL}/api/v1/users/${GITEA_USER}/tokens" \
@@ -67,8 +73,6 @@ for server_path in "${SOURCE_ROOT}"/*; do
   for unit_path in "${server_path}"/*; do
     [ -d "${unit_path}" ] || continue
     versioned=$(basename "${unit_path}")
-    # <unit>_<version>: the version is everything after the last underscore
-    # that begins a semantic version, matching how MSD names things.
     unit=$(echo "${versioned}" | sed -E 's/_[0-9]+\.[0-9]+.*$//')
     version=$(echo "${versioned}" | sed -E "s/^${unit}_//")
 
@@ -95,3 +99,4 @@ for server_path in "${SOURCE_ROOT}"/*; do
 done
 
 log "done"
+wait $S6_PID
