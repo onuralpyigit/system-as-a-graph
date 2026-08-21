@@ -63,7 +63,7 @@ Modern mission-critical Naval Combat Management Systems (CMS)---such as HAVELSAN
 
 We report on \textbf{System as a Graph (SaaG)}, an architectural digital twin---specifically an architectural \emph{digital model} in the taxonomy of Kritzinger et al.~\cite{kritzinger2018}, rather than a live-synchronized twin---that is reconstructed fresh from candidate release descriptors and audited inside the continuous delivery pipelines of HAVELSAN. SaaG reconstructs an attributed typed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$) capturing applications, brokers, tactical topics, tactical processing nodes, and shared libraries. It derives asymmetric failure-dependency projections from pub/sub topology and gates the CI/CD pipeline on rule violations across mission criticality levels (S1--S4).
 
-Our central industrial finding is clear and generalizable: \textbf{graph analysis is not the computational bottleneck}. Auditing a large-scale 444-component naval task group command profile takes $\approx 1$\,s (mean 1.01\,s, P95 1.42\,s), representing under 0.2\% of a typical 9-minute automated build pipeline. Applying SaaG retrospectively to 18 months of historical release builds (114 candidate builds) across six major naval platform projects---\textbf{ADVENT Kalyon}, \textbf{Milgem CMS}, \textbf{LHD CMS}, \textbf{ADVENT Rota}, \textbf{ADVENT Martı}, and \textbf{ADVENT Ufuk}---14 of 19 (73.7\%) recorded post-deployment middleware incidents would have been flagged prior to installation. However, of seven verification capabilities specified with naval combat system architects, \textbf{six remain constrained by configuration-data acquisition across defense engineering silos} rather than by algorithmic limits. We report the model architecture, verification performance across platform scales, retrospective incident findings, and practical lessons from industrial deployment.
+Our central industrial finding is clear and generalizable: \textbf{graph analysis is not the computational bottleneck}. Auditing an operational naval combatant or multi-console flagship profile (1,498 to 3,254 components across up to 66 distributed nodes) takes merely 0.125 to 1.152\,s (mean 1.152\,s, P95 1.161\,s on the 66-node LHD flagship; 0.760\,s on Milgem frigate), representing under 0.22\% of a typical 9-minute automated build pipeline. Applying SaaG retrospectively to 18 months of historical release builds (114 candidate builds) across six major naval platform projects---\textbf{ADVENT Kalyon}, \textbf{Milgem CMS}, \textbf{LHD CMS}, \textbf{ADVENT Rota}, \textbf{ADVENT Martı}, and \textbf{ADVENT Ufuk}---14 of 19 (73.7\%) recorded post-deployment middleware incidents would have been flagged prior to installation. However, of seven verification capabilities specified with naval combat system architects, \textbf{six remain constrained by configuration-data acquisition across defense engineering silos} rather than by algorithmic limits. We report the model architecture, verification performance across platform scales, retrospective incident findings, and practical lessons from industrial deployment.
 \end{abstract}
 
 \begin{CCSXML}
@@ -163,7 +163,7 @@ This paper makes the following contributions:
 \begin{enumerate}\itemsep=0.5pt
     \item \textbf{Naval CMS Architectural Model Baseline (\S2):} A formal directed multigraph representation ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$) capturing 5 entity classes, 6 structural relations, and 6 failure-dependency projection rules that explicitly map the downstream propagation of architectural risk in pub/sub naval combat systems.
     \item \textbf{CI/CD Pipeline Gating \& Retrospective Incident Replay (\S3, \S4):} A two-stage deployment gate operating on standard CI runners with a defined safety severity rubric (S1--S4) aligned with military safety frameworks (MIL-STD-882E~\cite{milstd882e}). In an 18-month retrospective study of 114 candidate releases across six ADVENT platform lines (Kalyon, Milgem, LHD, Rota, Martı, Ufuk), SaaG statically identifies 14 of 19 (73.7\%) post-deployment middleware incidents prior to installation.
-    \item \textbf{Verification Complexity \& Industrial Bottleneck Analysis (\S5, \S6):} Empirical benchmarks across 5 scaling operational naval platform profiles (29 to 444 components) demonstrating that static verification executes in under 0.6\,s up to 296 components (Milgem/Kalyon) and $\approx 1$\,s (P95 1.42\,s) at 444 components for the LHD task group flagship profile ($<0.2\%$ of a 9-minute build). We document an industrial gap analysis demonstrating that 6 of 7 specified verification capabilities are blocked by configuration data acquisition across defense engineering silos, not by graph analysis complexity.
+    \item \textbf{Verification Complexity \& Industrial Bottleneck Analysis (\S5, \S6):} Empirical benchmarks across 5 scaling operational naval platform profiles (1,498 to 3,254 components; 1 to 66 nodes) demonstrating that static verification executes in 0.125\,s (Martı), 0.410\,s (Ufuk), 0.435\,s (Rota), 0.760\,s (Milgem frigate), and 1.152\,s (LHD flagship with 66 nodes, P95 1.161\,s), consuming $<0.22\%$ of a 9-minute build. We analyze why physical node distribution drives graph lifting complexity, and document that 6 of 7 specified verification capabilities are blocked by configuration data acquisition across defense engineering silos, not by graph analysis complexity.
 \end{enumerate}
 
 \section{The Static Architectural Model}
@@ -337,7 +337,13 @@ An updated release of the multi-sensor track fusion service (\path{track-fusion-
 \subsection{Multi-Scale Naval Platform Benchmarking Setup}
 
 We evaluated SaaG verification latency across 5 scaling operational profiles modeled on real-world ADVENT CMS platform configurations:
-Scale Tiny (ADVENT Rota USV: $|V|=29, |E|=84$), Scale S (ADVENT Martı MPA: $|V|=74, |E|=228$), Scale M (ADVENT Ufuk Coastal C2: $|V|=148, |E|=468$), Scale L (Milgem / Kalyon Frigate: $|V|=296, |E|=952$), and Scale XL (LHD CMS Flagship: $|V|=444, |E|=1,440$).
+\begin{enumerate}\itemsep=0.5pt
+    \item \textbf{ADVENT Rota (USV/UxV Platform):} 258 Apps, 1,852 Topics, 1 Node, 81 Libraries ($|V|=2,192, |E|=6,980$).
+    \item \textbf{ADVENT Martı (Maritime Patrol Aircraft / Helicopter):} 238 Apps, 1,219 Topics, 1 Node, 40 Libraries ($|V|=1,498, |E|=4,824$).
+    \item \textbf{ADVENT Ufuk (Coastal Surveillance \& C2 Station):} 184 Apps, 1,857 Topics, 23 Nodes, 110 Libraries ($|V|=2,174, |E|=7,142$).
+    \item \textbf{Milgem CMS / ADVENT Kalyon (Corvette/Frigate Combatant):} 318 Apps, 2,831 Topics, 21 Nodes, 84 Libraries ($|V|=3,254, |E|=11,460$).
+    \item \textbf{LHD CMS / ADVENT Kalyon (Task Group Command Flagship):} 308 Apps, 2,303 Topics, 66 Nodes, 98 Libraries ($|V|=2,775, |E|=9,620$).
+\end{enumerate}
 
 \noindent\emph{Environment:} Benchmarks executed on Ubuntu 22.04 LTS (AMD EPYC 7763, 32 GB RAM) using Python 3.11 with NetworkX 3.2, executing in-memory graph construction without external database roundtrips. Measurements represent 500 candidate build evaluations per scale across 5 random seeds after 20 warm-up runs.
 
@@ -346,25 +352,28 @@ Scale Tiny (ADVENT Rota USV: $|V|=29, |E|=84$), Scale S (ADVENT Martı MPA: $|V|
 \caption{Gate Execution Latency Across 5 ADVENT CMS Profiles ($N=500$).}
 \label{tab:latency}
 \small
-\begin{tabularx}{\columnwidth}{l X c c c c}
+\setlength{\tabcolsep}{2.2pt}
+\begin{tabularx}{\columnwidth}{l X r r r r r}
 \toprule
-\textbf{Scale} & \textbf{Platform} & $|V|$ & $|E|$ & \textbf{Graph Ingest.} & \textbf{Total Mean} \\
+\textbf{Platform} & \textbf{Domain} & \textbf{Comp.} & \textbf{Graph (s)} & \textbf{Rules (s)} & \textbf{Total (s)} & \textbf{P95} \\
 \midrule
-Tiny & ADVENT Rota (UxV) & 29 & 84 & 0.008 $\pm$ 0.001\,s & \textbf{0.010\,s} \\
-S & ADVENT Martı (Air C2) & 74 & 228 & 0.042 $\pm$ 0.002\,s & \textbf{0.050\,s} \\
-M & ADVENT Ufuk (Coastal) & 148 & 468 & 0.112 $\pm$ 0.005\,s & \textbf{0.130\,s} \\
-L & Milgem / Kalyon & 296 & 952 & 0.485 $\pm$ 0.018\,s & \textbf{0.530\,s} \\
-XL & LHD CMS Flagship & 444 & 1,440 & 0.925 $\pm$ 0.031\,s & \textbf{1.010\,s} \\
+Martı & Air C2 & 1,498 & 0.123 & 0.002 & \textbf{0.125} & 0.150 \\
+Ufuk & Coastal C2 & 2,174 & 0.406 & 0.003 & \textbf{0.410} & 0.435 \\
+Rota & USV/UxV & 2,192 & 0.430 & 0.005 & \textbf{0.435} & 0.450 \\
+LHD CMS & Flagship & 2,775 & 1.138 & 0.014 & \textbf{1.152} & 1.161 \\
+Milgem & Frigate & 3,254 & 0.757 & 0.003 & \textbf{0.760} & 0.780 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Scaling Behavior \& Complexity Breakdown}
+\subsection{Scaling Behavior \& Node Distribution Impact}
 
-Verification completes in under 0.6\,s up to 296 components (Milgem/Kalyon) and in $\approx 1$\,s (mean 1.01\,s, P95 1.42\,s) at 444 components (LHD Flagship profile, $<0.2\%$ of a 9-minute automated build). Fitting an empirical power law reveals a scaling exponent of $n^{1.69}$. Graph construction accounts for \textbf{91.6\% of total wall-clock time}, whereas pure rule auditing accounts for only \textbf{8.4\%}.
-
-The theoretical complexity of individual verification checks confirms their tractability:
-Tarjan's SCC cycle detection is $O(|V| + |E|)$; host core pinning check is $O(k^2)$ per node ($k \ll |V|$); and DDS RxO matching is $O(|P(t)| \cdot |S(t)|)$ per topic $t$.
+The benchmark results in Table~\ref{tab:latency} demonstrate two central insights:
+\begin{itemize}\itemsep=0.5pt
+    \item \textbf{Dominance of Graph Construction:} Graph construction accounts for \textbf{98.4\% to 99.6\% of total wall-clock time} across all platforms, while pure rule auditing executes in merely \textbf{2 to 14 milliseconds} ($0.002$--$0.014$\,s).
+    \item \textbf{Impact of Physical Node Topology:} Comparing LHD CMS (2,775 components, 66 physical nodes) and Milgem CMS (3,254 components, 21 physical nodes) reveals that node count significantly impacts graph lifting. Evaluating pairwise colocation and routing dependencies across 66 OPCON consoles and server blades incurs $O(k^2)$ lifting overhead per host node, resulting in 1.152\,s latency on LHD compared to 0.760\,s on Milgem.
+\end{itemize}
+Across all operational configurations, total pipeline gating latency remains $\le 1.15$\,s ($<0.22\%$ of a typical 9-minute automated build).
 
 \section{Lessons Learned: The Data-Acquisition Bottleneck in Defense Systems}
 
@@ -409,7 +418,8 @@ Policy engines (ArchUnit, OPA-Gatekeeper) enforce static rules on manifests. Kri
 
 \section{Conclusion \& Future Work}
 
-We presented \textbf{SaaG}, an architectural digital model for pre-deployment verification and CI/CD gating in Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG statically audits DDS QoS contracts, CPU core allocations, topic continuity, and dependency cycles. Benchmarks across 5 ADVENT scale profiles (from ADVENT Rota USVs to the LHD Task Group Flagship) demonstrate that verification requires $\approx 1$\,s ($<0.2\%$ of an automated build). An 18-month retrospective study shows that SaaG statically prevents 73.7\% of historical middleware incidents. Our analysis demonstrates that graph analysis is computationally cheap, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
+We presented \textbf{SaaG}, an architectural digital model for pre-deployment verification and CI/CD gating in Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG statically audits DDS QoS contracts, CPU core allocations, topic continuity, and dependency cycles. Benchmarks across 5 ADVENT operational profiles (from ADVENT Martı MPA at 0.125\,s to the 66-node LHD Flagship at 1.152\,s) demonstrate that verification requires $\le 1.15$\,s ($<0.22\%$ of an automated build). An 18-month retrospective study shows that SaaG statically prevents 73.7\% of historical middleware incidents. Our analysis demonstrates that graph analysis is computationally cheap, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
+
 
 \noindent\textbf{Future Work:} We are developing automated ICD harvesters to bridge configuration data ingestion blockers, expanding delta-aware gating across multi-ship task group pipelines, and exploring LLM-assisted remediation proposals subject to mandatory human-in-the-loop safety reviews under naval software assurance guidelines.
 
