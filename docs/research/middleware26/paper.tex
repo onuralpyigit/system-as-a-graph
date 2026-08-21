@@ -388,10 +388,10 @@ The primary practical insight from developing and deploying SaaG in naval defens
 \toprule
 \textbf{Specified Verification Capability} & \textbf{Prototype Status (SaaG-P)} & \textbf{Primary Operational Blocker} \\
 \midrule
-1. Endpoint-Level DDS RxO Conformance & Partially Realized (Topic-level) & \textbf{Data Ingestion:} Endpoint-level IDL XML descriptors stored in siloed vendor tools \\
-2. Field-Level Payload Schema Alignment & Partially Realized (Topic string match) & \textbf{Data Ingestion:} Third-party sensor/weapon ICD AST parser not integrated into build agent \\
-3. Hardware Core Pinning Non-Overlap & Partially Realized (Core capacity flag) & \textbf{Data Ingestion:} OS core-binding scripts reside outside application source repos \\
-4. OS Memory \& Kernel Parameter Audit & Partially Realized (Config requirement) & \textbf{Data Ingestion:} Target deployment host profiles not accessible via CMDB API \\
+1. Endpoint-Level DDS RxO Conformance & Partially Realized (Topic-level) & \textbf{Data Ingestion:} Endpoint IDL descriptors stored in vendor-siloed toolchains \\
+2. Field-Level Payload Schema Alignment & Partially Realized (Topic name match) & \textbf{Data Ingestion:} Third-party sensor/weapon ICD parsers not integrated into build runner \\
+3. Hardware Core Pinning Non-Overlap & Partially Realized (Host core capacity) & \textbf{Data Ingestion:} OS core-binding scripts reside outside application source repos \\
+4. OS Memory \& Kernel Parameter Audit & Partially Realized (Config requirement) & \textbf{Data Ingestion:} Target deployment host profiles not accessible via programmatic CMDB \\
 5. Live Architectural Drift Telemetry & Partially Realized (Diff engine spec) & \textbf{Data Ingestion:} Operational field log telemetry repository unbuilt \\
 6. Scored Installation Suitability Model & Implemented as Exit-Code Gate & \textbf{Implementation:} Multi-variable penalty weights require cross-organization calibration \\
 7. Automated CMDB \& Topology Ingestion & Partially Realized (JSON descriptors) & \textbf{Data Ingestion:} Enterprise CMDB lacked machine-readable REST export interfaces \\
@@ -401,12 +401,17 @@ The primary practical insight from developing and deploying SaaG in naval defens
 
 \subsection{The Anatomy of Data Ingestion Blockers in Defense Projects}
 
-As summarized in Table~\ref{tab:gap_analysis}, \textbf{6 of the 7 specified capabilities} were obstructed by configuration data silos: (1) \emph{Classified \& OEM Siloing:} Application code resided in Git, while sensor/weapon Interface Control Documents (ICDs) and hardware core pinnings resided in isolated shipyard commissioning archives; (2) \emph{Format Fragmentation:} QoS contracts were split across XML profiles, C++ pragmas, and startup scripts; (3) \emph{Absence of CMDB APIs:} Enterprise asset databases lacked programmatic CI/CD integration.
+As summarized in Table~\ref{tab:gap_analysis}, \textbf{6 of the 7 specified capabilities} were obstructed by configuration data silos:
+\begin{enumerate}\itemsep=0.5pt
+    \item \textbf{Classified \& OEM Siloing:} Application code resided in Git, while sensor/weapon Interface Control Documents (ICDs) and hardware core pinnings resided in isolated shipyard commissioning archives.
+    \item \textbf{Format Fragmentation:} QoS contracts were split across XML profiles, C++ pragmas, and startup scripts.
+    \item \textbf{Absence of CMDB APIs:} Enterprise asset databases were structured for manual inventory audits rather than automated CI/CD querying.
+\end{enumerate}
 
 \section{Related Work}
 
 \noindent\textbf{Architecture Conformance \& Reflexion Models:}
-Murphy, Notkin, and Sullivan~\cite{murphy2001} pioneered Software Reflexion Models to compare architectural designs against extracted source-code call graphs. Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion. Terra and Valente~\cite{terra2014} introduced dependency constraint languages. SaaG targets distributed pub/sub middleware, deriving runtime failure dependencies from asynchronous DDS topic interactions and core bindings in naval mission systems.
+Murphy et al.~\cite{murphy2001} pioneered Software Reflexion Models to compare designs against extracted source-code call graphs. Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion. Terra and Valente~\cite{terra2014} introduced dependency constraint languages. SaaG targets distributed pub/sub middleware, deriving runtime failure dependencies from asynchronous DDS topic interactions and core bindings in naval mission systems.
 
 \vspace{2pt}
 \noindent\textbf{Configuration Error Detection:}
@@ -419,7 +424,6 @@ Policy engines (ArchUnit, OPA-Gatekeeper) enforce static rules on manifests. Kri
 \section{Conclusion \& Future Work}
 
 We presented \textbf{SaaG}, an architectural digital model for pre-deployment verification and CI/CD gating in Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG statically audits DDS QoS contracts, CPU core allocations, topic continuity, and dependency cycles. Benchmarks across 5 ADVENT operational profiles (from ADVENT Martı MPA at 0.125\,s to the 66-node LHD Flagship at 1.152\,s) demonstrate that verification requires $\le 1.15$\,s ($<0.22\%$ of an automated build). An 18-month retrospective study shows that SaaG statically prevents 73.7\% of historical middleware incidents. Our analysis demonstrates that graph analysis is computationally cheap, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
-
 
 \noindent\textbf{Future Work:} We are developing automated ICD harvesters to bridge configuration data ingestion blockers, expanding delta-aware gating across multi-ship task group pipelines, and exploring LLM-assisted remediation proposals subject to mandatory human-in-the-loop safety reviews under naval software assurance guidelines.
 
