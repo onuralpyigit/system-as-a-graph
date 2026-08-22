@@ -235,32 +235,32 @@ Modern naval combat suites deploy across diverse physical and operational domain
 * **Surface Combatant Core (Milgem CMS / ADVENT Kalyon):** Comprehensive multi-warfare suite (AAW, ASuW, ASW, EW) deployed on corvettes and frigates across 21 tactical console nodes ($|V|=3,254, |E|=11,460$).
 * **Task Group Command Flagship (LHD CMS):** Fleet flagship suite (such as L400 TCG Anadolu) featuring large-scale multi-link gateway centers, joint operations planning, and 66 physical operator consoles and tactical server chassis ($|V|=2,775, |E|=9,620$).
 
-Across all platform scales, subsystems rely on the OMG DDS 1.4 pub/sub middleware backbone to facilitate real-time sensor-to-shooter coordination and Network Enabled Capability (NEC).
+Across all platform scales, subsystems rely on **Genieware** publish/subscribe middleware to facilitate real-time sensor-to-shooter coordination and Network Enabled Capability (NEC).
 
 ### 4.2 Continuous Verification & Pipeline Gating Workflow
 
 SaaG operates directly within continuous integration runners (Jenkins, GitLab CI) upon every merge request:
 1. **Descriptor Ingestion & Candidate Isolation:** The pipeline extracts candidate unit descriptors, IDL schemas, topic binding specifications, and node affinity masks. It generates an isolated candidate multigraph $G_{u'}$.
 2. **Failure-Dependency Projection:** Inverted failure edges ($B \xrightarrow{\text{DEPENDS\_ON}} A$) are computed along with hierarchical criticality weights.
-3. **Multi-Policy Rule Evaluation:** The verification engine evaluates DDS RxO contracts, core pinning bounds, topic connectivity, and SCC cycles.
+3. **Multi-Policy Rule Evaluation:** The verification engine evaluates pub/sub QoS contracts, core pinning bounds, topic connectivity, and SCC cycles.
 4. **Delta-Aware Gating:** The runner checks new violations against the baseline register and waiver list, returning Exit 0 (Pass) or Exit 1 (Fail).
 
 ### 4.3 Evaluation on Representative Architectural Misconfiguration Scenarios
 
-To validate the verification engine across mission-critical middleware failure modes without relying on restricted proprietary records, we evaluate SaaG against four representative classes of architectural misconfigurations:
+To validate the verification engine across mission-critical middleware failure modes without relying on restricted proprietary records, we evaluate SaaG against representative classes of architectural misconfigurations:
 
-1. **Weapon Assignment Channel QoS Incompatibility (Scenario A - S1 Critical):** A candidate update alters the DDS durability policy of a remote weapon assignment topic (`weapon.assignment.cmd`) from `TRANSIENT_LOCAL` to `VOLATILE` while the subscriber remains `TRANSIENT_LOCAL`. In OMG DDS, this contract mismatch prevents endpoint matching, silently dropping fire commands. SaaG detects this incompatibility statically during graph lifting in $<0.05$\,s.
+1. **Weapon Assignment Channel QoS Incompatibility (Scenario A - S1 Critical):** A candidate update alters the durability policy of a remote weapon assignment topic (`weapon.assignment.cmd`) from `TRANSIENT_LOCAL` to `VOLATILE` while the subscriber remains `TRANSIENT_LOCAL`. In pub/sub middleware (Genieware/DDS), this contract mismatch prevents endpoint matching, silently dropping fire commands. SaaG detects this incompatibility statically during graph lifting in $<0.05$\,s.
 2. **Operator Console (OPCON) Multi-Core Pinning Contention (Scenario B - S1 Critical):** A multi-sensor track fusion daemon binds processing threads to CPU cores 0–3, conflicting with a co-located 3D tactical display server bound to cores 2–5. Under heavy track loads, mutual preemption causes scheduling jitter exceeding hard 25\,ms display deadlines. SaaG identifies the colliding CPU affinity masks on host nodes.
 3. **Orphaned Tactical Data Link (TDL) Forwarding Channels (Scenario C - S2 High):** A refactored Link 16 J-series forwarding topic is left without active subscriber endpoints, silently breaking cross-platform track dissemination. SaaG detects the disconnected topic endpoint ($|S(t)|=0$).
 4. **Engagement Planning Dependency Cycles (Scenario D - S2 High):** Transitive package dependencies between a Force-Wide Weapon/Sensor Allocation (WASA) planner and a threat evaluation module form a closed cycle ($A \to B \to C \to A$), leading to initialization deadlocks during OPCON startup. Tarjan's SCC algorithm isolates the cycle in linear time ($O(|V|+|E|)$).
 
 | Scenario Class | Injected Architectural Fault | Severity | Detected Rule | Verification Time |
 |---|---|:---:|---|:---:|
-| **Scenario A** | Durability mismatch on `weapon.assignment.cmd` (`VOLATILE` vs `TRANSIENT_LOCAL`) | S1 | DDS RxO Conformance | 0.048\,s |
+| **Scenario A** | Durability mismatch on `weapon.assignment.cmd` (`VOLATILE` vs `TRANSIENT_LOCAL`) | S1 | Pub/Sub RxO Match | 0.048\,s |
 | **Scenario B** | CPU core overlap (cores 2–3) between track fusion and tactical display | S1 | Core Pinning Conformance | 0.052\,s |
 | **Scenario C** | Orphaned Link 16 forwarding topic without active subscribers | S2 | Topic Continuity Audit | 0.038\,s |
 | **Scenario D** | Cyclic dependency between WASA engagement planner and threat evaluation | S2 | Tarjan SCC Cycle Detector | 0.041\,s |
-| **Scenario E** | Security `PARTITION` mismatch between primary and redundant sensor gateways | S1 | Static DDS Pre-Condition | 0.039\,s |
+| **Scenario E** | Security `PARTITION` mismatch between primary and redundant sensor gateways | S1 | Middleware Pre-Condition | 0.039\,s |
 
 *Table 3: Pre-deployment verification performance across representative naval middleware misconfiguration scenarios.*
 
@@ -303,14 +303,14 @@ Total Pipeline Overhead: 1.152 s (<0.22% of 9-minute automated build)
 #### Scaling Dynamics & Physical Node Distribution Impact
 The benchmark results reveal two key architectural dynamics:
 
-1. **Dominance of Graph Construction:** Across all evaluated operational platforms, Graph Construction accounts for **98.4\% to 99.6\% of total wall-clock time**, whereas pure Rule Auditing executes in merely **2 to 14 milliseconds** ($0.002$--$0.014$\,s). Once the multigraph $G_{u'}$ is assembled in memory, static policy evaluations (Tarjan SCC cycle detection, DDS RxO matrix checking, and CPU pinning scans) are computationally negligible.
+1. **Dominance of Graph Construction:** Across all evaluated operational platforms, Graph Construction accounts for **98.4\% to 99.6\% of total wall-clock time**, whereas pure Rule Auditing executes in merely **2 to 14 milliseconds** ($0.002$--$0.014$\,s). Once the multigraph $G_{u'}$ is assembled in memory, static policy evaluations (Tarjan SCC cycle detection, pub/sub RxO matrix checking, and CPU pinning scans) are computationally negligible.
 2. **Impact of Physical Host Node Distribution:** A critical insight emerges from comparing **LHD CMS** (2,775 components across 66 physical nodes) and **Milgem CMS / Kalyon** (3,254 components across 21 physical nodes). Although Milgem has more total software components, the LHD Flagship profile exhibits higher graph construction latency (1.138\,s vs 0.757\,s). This behavior is driven by the quadratic complexity of dependency lifting across the **66 physical OPCON consoles and server nodes**: evaluating pairwise process co-location edges (`broker_to_broker`, `node_to_node`, `node_to_broker`, and cross-chassis core-pinning bounds) scales with the physical node topology density ($O(k^2)$ per host across 66 nodes).
 3. **Single-Node Embedded Performance:** For single-node tactical units (ADVENT Martı with 1,498 components: 0.125\,s; ADVENT Rota with 2,192 components: 0.435\,s), the absence of inter-node routing and cross-console lifting allows verification to complete in well under 0.5 seconds.
 
 The theoretical complexity of individual verification checks confirms their scalability:
 * Tarjan's SCC cycle detection: $O(|V| + |E|)$.
 * Core allocation & pinning clash check: $O(k^2)$ per host node, where $k$ is the number of co-located processes ($k \ll |V|$).
-* DDS RxO contract matching: $O(|P(t)| \cdot |S(t)|)$ per topic $t$.
+* Pub/Sub RxO contract matching: $O(|P(t)| \cdot |S(t)|)$ per topic $t$.
 
 ---
 
@@ -334,7 +334,7 @@ Table 5 summarizes the 7 verification capabilities specified with system archite
 
 | Specified Verification Capability | Prototype Status (SaaG-P) | Primary Operational Blocker |
 |---|---|---|
-| **1. Endpoint-Level DDS RxO Conformance** | Partially Realized (Topic-level) | **Data Ingestion:** Endpoint-level IDL XML descriptors stored in siloed vendor tools |
+| **1. Endpoint-Level Pub/Sub RxO Conformance** | Partially Realized (Topic-level) | **Data Ingestion:** Endpoint-level IDL XML descriptors stored in siloed vendor tools |
 | **2. Field-Level Payload Schema Alignment** | Partially Realized (Topic string match) | **Data Ingestion:** Third-party sensor/weapon ICD AST parser not integrated into build agent |
 | **3. Hardware Core Pinning Non-Overlap** | Partially Realized (Core capacity flag) | **Data Ingestion:** OS core-binding scripts reside outside application source repos |
 | **4. OS Memory & Kernel Parameter Audit** | Partially Realized (Config requirement) | **Data Ingestion:** Target deployment host profiles not accessible via CMDB API |
@@ -374,8 +374,7 @@ Kritzinger et al. [7] established the foundational taxonomy distinguishing digit
 
 ## 8. Conclusion & Evolution Toward Runtime Digital Shadows
 
-We presented **SaaG (System as a Graph)**, an architectural digital model for pre-deployment verification and CI/CD gating in mission-critical Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG statically audits DDS QoS contracts, CPU core allocations, topic continuity, and dependency cycles before software reaches operational platforms. Benchmarks across 5 ADVENT operational profiles (from ADVENT Martı MPA and ADVENT Rota USVs to the Milgem/Kalyon Frigate profile with 3,254 components) demonstrate that verification requires $\approx 1$\,s ($<0.2\%$ of an automated build). An 18-month retrospective study shows that SaaG statically prevents 73.7\% of historical middleware incidents. Our analysis demonstrates that graph analysis is computationally cheap, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
-
+We presented **SaaG (System as a Graph)**, an architectural digital model framework for pre-deployment verification and CI/CD gating in mission-critical Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG statically audits publish/subscribe QoS contracts, CPU core allocations, topic continuity, and dependency cycles before software reaches operational platforms. Benchmarks across 5 operational ADVENT profiles (from single-node embedded units like ADVENT Martı MPA at 0.125\,s and ADVENT Rota USVs to the 66-node LHD Flagship at 1.152\,s) demonstrate that verification requires $\le 1.15$\,s ($<0.22\%$ of an automated build), while reliably catching critical misconfigurations across representative fault scenarios. Our analysis demonstrates that graph analysis is computationally lightweight, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
 
 **Future Work:** We are developing automated ICD harvesters to bridge configuration data ingestion blockers, expanding delta-aware gating across multi-ship task group pipelines, and exploring LLM-assisted remediation proposals subject to mandatory human-in-the-loop safety reviews under naval software assurance guidelines.
 
