@@ -38,7 +38,7 @@ Across these platforms, ADVENT CMS comprises over **155 external system integrat
 ```
   +-----------------------------------------------------------------------------------+
   |                            Naval CMS Data Sources                                 |
-  |  [Weapon/Sensor ICDs]  [Source Repos]  [TDL Matrix Config]  [OPCON Node Specs]    |
+  |  [Weapon/Sensor ICDs]  [Source Repos]  [Platform Configs]  [Node Specs]    |
   +-----------------------------------------------------------------------------------+
                                            |
                                            v
@@ -70,7 +70,7 @@ Across these platforms, ADVENT CMS comprises over **155 external system integrat
 
 When a candidate software build is submitted for release into an operational naval platform, conventional CI/CD pipelines evaluate unit and module tests in isolation. Consequently, critical architectural misconfigurations slip through:
 
-* **Hardware CPU Core Contention on OPCONs:** Latency-critical track fusion daemons or fire control calculators inadvertently pinned to overlapping CPU core affinity masks with non-real-time GUI renderers or background loggers on multi-core tactical consoles.
+* **Hardware CPU Core Contention on Nodes:** Latency-critical track fusion daemons or fire control calculators inadvertently pinned to overlapping CPU core affinity masks with non-real-time GUI renderers or background loggers on multi-core tactical consoles.
 * **Middleware QoS Contract Incompatibilities:** Incompatible Request/Offered (RxO) Quality-of-Service contracts on mission-critical channels. For instance, a remote weapon assignment subscriber requesting `TRANSIENT_LOCAL` durability bound to a fire control publisher offering only `VOLATILE`. In pub/sub middleware like Genieware and DDS, endpoints with incompatible QoS contracts never match, so data never flows; the middleware signals this through incompatible QoS status notifications, but these are rarely trapped in operational code, making the failure effectively silent.
 * **Silent Tactical Topic Disconnections:** Software units publishing to or consuming from topics with schema definitions that diverge across platform releases, or refactored TDL forwarding topics left with zero active subscribers.
 * **Circular Package Dependencies:** Transitive dependency cycles between weapon allocation planners (WASA) and threat evaluation modules that manifest as initialization deadlocks during OPCON console start-up.
@@ -100,15 +100,15 @@ This paper makes the following contributions:
 
 ## 2. The Architectural Digital Model: Formulation and Graph Derivation
 
-SaaG models the distributed naval CMS middleware topology as a formal, attributed, weighted directed multigraph:
+SaaG adopts and operationalizes the formal graph modeling foundation established by Yigit and Buzluca [20] for distributed publish-subscribe systems. We formalize the distributed naval CMS middleware topology as an attributed, weighted directed multigraph:
 $$G = (V, E, \tau_V, \tau_E, w_V, w_E)$$
 
 ### 2.1 Entity Classes ($V$) and Structural Relations ($E_{\text{structural}}$)
 
 The vertex set $V$ is partitioned into five distinct entity types ($\tau_V: V \to \mathcal{T}_v$):
 * **Applications ($V_{\text{app}}$):** Executable CMS software binaries (e.g., radar track fusion gateway `track-fusion-gw`, threat evaluation service `threat-eval-srv`, WASA engagement planner `wasa-allocator`, tactical display server `geodisplay-srv`, operator console client `opcon-ui`, Link 16 parser `advlink-l16`, USV autonomy controller `rota-autonomy`).
-* **Brokers ($V_{\text{broker}}$):** DDS discovery domains and message routing daemons facilitating inter-node tactical communication.
-* **Topics ($V_{\text{topic}}$):** Typed DDS pub/sub communication channels carrying domain payloads (e.g., `tactical.tracks`, `weapon.assignment.cmd`, `threat.eval.result`, `link16.jseries`, `sensor.radar.plots`, `mine.qroutes`).
+* **Brokers ($V_{\text{broker}}$):** Genieware discovery domains, routing daemons, and middleware gateways facilitating inter-node tactical communication.
+* **Topics ($V_{\text{topic}}$):** Typed publish/subscribe communication channels carrying domain payloads (e.g., `tactical.tracks`, `weapon.assignment.cmd`, `threat.eval.result`, `link16.jseries`, `sensor.radar.plots`, `mine.qroutes`).
 * **Infrastructure Nodes ($V_{\text{node}}$):** Physical OPCON console workstations, ruggedized VME/VPX server chassis, and mission computers characterized by available CPU core capacity $C(v_p)$ and memory bounds.
 * **Libraries ($V_{\text{lib}}$):** Shared dynamic libraries, STANAG 4586 parsers, coordinate conversion routines, tactical math libraries, and NATO symbology decoders.
 
@@ -124,7 +124,7 @@ Six structural edge types ($\tau_E: E_{\text{structural}} \to \mathcal{T}_e$) ar
 
 In pub/sub middleware, data messages flow from publisher to subscriber ($A \to B$). However, **structural failure dependency points in the exact opposite direction ($B \xrightarrow{\text{DEPENDS\_ON}} A$)**: if Publisher $A$ (e.g., radar tracker) fails or produces corrupt messages, Subscriber $B$ (e.g., fire control calculator) is starved or degraded; conversely, if Subscriber $B$ crashes, Publisher $A$ continues unaffected.
 
-To enable dependency analysis, SaaG projects logical `DEPENDS_ON` edges from structural topology:
+Building upon the dependency analysis methodology of Yigit and Buzluca [20], SaaG projects logical `DEPENDS_ON` edges from structural topology:
 
 | Rule | Dependency Class | Derivation Pattern | Edge Weight $w(e)$ |
 |---|---|---|---|
@@ -173,9 +173,9 @@ SaaG enforces static compliance rules across $G_{u'}$. In accordance with our mo
 
 | Policy / Rule | Prototype (SaaG-P) | Specified Target (SaaG-D) | Target Middleware Check |
 |---|:---:|:---:|---|
-| **DDS RxO QoS Matching** | ● | ● | Durability & Reliability Compatibility ($O \ge R$) |
-| **DDS Static Pre-Conditions** | ● | ● | `PARTITION` (Task Force / Security boundary) & `DOMAIN_ID` match |
-| **Extended DDS RxO** | ○ | ● | `DEADLINE`, `LIVELINESS`, `OWNERSHIP`, `LATENCY_BUDGET` |
+| **Pub/Sub RxO QoS Matching** | ● | ● | Durability & Reliability Compatibility ($O \ge R$) |
+| **Middleware Static Pre-Conditions** | ● | ● | `PARTITION` (Security/Mission boundary) & `DOMAIN_ID` match |
+| **Extended Pub/Sub RxO** | ○ | ● | `DEADLINE`, `LIVELINESS`, `OWNERSHIP`, `LATENCY_BUDGET` |
 | **CPU Core Allocation** | ● | ● | Process core count $\le C(v_p)$ per tactical host node |
 | **CPU Core Non-Overlap** | ○ | ● | Pairwise non-overlapping CPU pin masks ($\text{Cores}(u_i) \cap \text{Cores}(u_j) = \emptyset$) |
 | **Topic Continuity & Leaks** | ● | ● | Orphaned tactical topics ($|P(t)| = 0 \lor |S(t)| = 0$) |
@@ -188,7 +188,7 @@ SaaG enforces static compliance rules across $G_{u'}$. In accordance with our mo
 
 ```
 +-------------------------------------------------------------------------------+
-| OMG DDS 1.4 RxO Matching Contract:                                            |
+| Pub/Sub Middleware (Genieware / DDS) RxO Matching Contract:                   |
 |   RELIABILITY:      Offered >= Requested  (BEST_EFFORT < RELIABLE)            |
 |   DURABILITY:       Offered >= Requested  (VOLATILE < TRANSIENT_LOCAL <       |
 |                                            TRANSIENT < PERSISTENT)            |
@@ -204,7 +204,7 @@ SaaG enforces static compliance rules across $G_{u'}$. In accordance with our mo
 
 To integrate cleanly with military system safety standards (MIL-STD-882E and naval software integrity levels), rule violations are categorized into four severity levels (S1–S4), decoupled from message transport priority:
 
-* **S1 (Critical Severity — Catastrophic / Safety Critical):** Architectural flaws that cause complete loss of safety-critical functions (e.g., DDS RxO mismatch on weapon assignment or primary radar tracking channels, CPU over-allocation on fire control servers).
+* **S1 (Critical Severity — Catastrophic / Safety Critical):** Architectural flaws that cause complete loss of safety-critical functions (e.g., pub/sub RxO mismatch on weapon assignment or primary radar tracking channels, CPU over-allocation on fire control servers).
 * **S2 (High Severity — Critical / Mission Essential):** Severe defects with localized redundancy or secondary mitigation (e.g., orphaned tactical data link topics, circular dependencies among core WASA engagement planning units).
 * **S3 (Medium Severity — Marginal / Operational):** Non-critical configuration anomalies (e.g., unassigned transport priority hints, best-effort auxiliary sensor stream topic leaks).
 * **S4 (Low Severity / Informational):** Style and maintenance warnings (e.g., deprecated utility library versions, non-standard topic naming).
@@ -359,7 +359,7 @@ Six of the seven specified capabilities were obstructed by configuration data si
 ## 7. Related Work
 
 ### 7.1 Architecture Conformance & Reflexion Models
-Software architecture conformance checking verifies that an implementation matches its intended design. Murphy, Notkin, and Sullivan [9] pioneered Software Reflexion Models to compare high-level architectural models against extracted source-code call graphs. Perry and Wolf [10] and de Silva and Balasubramaniam [11] characterized architectural erosion in evolving systems. Terra and Valente [12] introduced dependency constraint languages to enforce structural boundaries. While these techniques analyze compile-time source dependencies, SaaG targets distributed pub/sub middleware, deriving runtime failure dependencies from asynchronous DDS topic interactions and hardware core bindings in naval mission systems.
+Software architecture conformance checking verifies that an implementation matches its intended design. Murphy, Notkin, and Sullivan [9] pioneered Software Reflexion Models to compare high-level architectural models against extracted source-code call graphs. Perry and Wolf [10] and de Silva and Balasubramaniam [11] characterized architectural erosion in evolving systems. Terra and Valente [12] introduced dependency constraint languages to enforce structural boundaries. Yigit and Buzluca [20] formulated graph-based dependency analysis for critical components in publish-subscribe systems. SaaG builds upon these foundations and operationalizes an architectural digital model for pre-deployment CI/CD gating in naval combat management systems.
 
 ### 7.2 Configuration Error Detection in Distributed Systems
 Configuration errors represent a leading cause of distributed system outages. Xu and Zhou [13] provide a comprehensive taxonomy of systems approaches for tackling configuration faults. Tang et al. [14] describe holistic configuration management systems at internet scale. Huang et al. [15] developed ConfValley to validate cloud configurations using declarative logic constraints. SaaG extends configuration verification to safety-critical naval combat pub/sub systems, coupling DDS QoS contract matching with military safety assurance levels (MIL-STD-882E).
@@ -402,3 +402,4 @@ We presented **SaaG (System as a Graph)**, an architectural digital model for pr
 17. E. Gamma, R. Helm, R. Johnson, and J. Vlissides. *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley, 1994.
 18. F. Tao, H. Zhang, A. Liu, and A. Y. C. Nee. Digital twin in industry: State-of-the-art. *IEEE Transactions on Industrial Informatics*, 15(4):2405–2415, 2019. https://doi.org/10.1109/TII.2018.2873186
 19. J. Humble and D. Farley. *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley, 2010.
+20. I. O. Yigit and F. Buzluca. A Graph-Based Dependency Analysis Method for Identifying Critical Components in Distributed Publish-Subscribe Systems. *IEEE Access*, 2024. https://doi.org/10.1109/ACCESS.2024 (https://ieeexplore.ieee.org/document/11315354)

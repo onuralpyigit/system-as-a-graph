@@ -108,27 +108,30 @@ Across these platforms, ADVENT CMS comprises over \textbf{155 external system in
 
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[node distance=0.55cm, font=\sf\scriptsize, >=stealth]
-  \tikzstyle{block} = [draw, fill=blue!5, rectangle, rounded corners, minimum width=\columnwidth-0.3cm, minimum height=0.40cm, align=center]
-  \tikzstyle{subblock} = [draw, fill=green!5, rectangle, rounded corners, minimum width=0.46\columnwidth, minimum height=0.45cm, align=center]
-  \tikzstyle{dashedblock} = [draw, dashed, fill=gray!10, rectangle, rounded corners, minimum width=0.46\columnwidth, minimum height=0.45cm, align=center]
-  
-  \node (sources) [block] {\textbf{Naval CMS Data Sources}\\ \textit{[Weapon/Sensor ICDs] \; [Source Repos] \; [TDL Matrix] \; [OPCON Specs]}};
-  \node (msd) [block, below=of sources] {\textbf{Model Setup Data Generation (SaaG-MSD)}\\ \textit{Ingestion, Metadata Tagging \& Schema Validation}};
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[node distance=0.48cm, font=\sf\scriptsize, >=stealth]
+  \tikzstyle{block} = [draw=blue!70!black, fill=blue!6, rectangle, rounded corners=2pt, minimum width=0.96\columnwidth, minimum height=0.42cm, align=center, line width=0.6pt]
+  \tikzstyle{subblock} = [draw=teal!70!black, fill=teal!6, rectangle, rounded corners=2pt, minimum width=0.46\columnwidth, minimum height=0.50cm, align=center, line width=0.6pt]
+  \tikzstyle{dashedblock} = [draw=gray!70!black, dashed, fill=gray!8, rectangle, rounded corners=2pt, minimum width=0.46\columnwidth, minimum height=0.50cm, align=center, line width=0.6pt]
+  \tikzstyle{gateblock} = [draw=green!60!black, fill=green!6, rectangle, rounded corners=2pt, minimum width=0.96\columnwidth, minimum height=0.42cm, align=center, line width=0.7pt]
+
+  \node (sources) [block] {\textbf{Naval CMS Configuration Sources}\\ \textit{[Weapon/Sensor ICDs] \; [Source Repos] \; [Genieware Topics] \; [OPCON Specs]}};
+  \node (msd) [block, below=of sources] {\textbf{Model Setup Data Generation (SaaG-MSD)}\\ \textit{Descriptor Ingestion, Metadata Tagging \& Schema Validation}};
   \node (csm) [block, below=of msd] {\textbf{Core System Model Engine (SaaG-CSM)}\\ \textit{Candidate Isolation $G_{u'} = (V', E')$ \& Multigraph $G = (V, E, \tau_V, \tau_E, w_V, w_E)$}};
   
-  \node (vae) [subblock, below left=0.45cm and -0.1cm of csm] {\textbf{Verification Engine (SaaG-VAE)}\\ \textit{Pub/Sub QoS Rules \& Core Pinning}};
-  \node (frd) [dashedblock, below right=0.45cm and -0.1cm of csm] {\textbf{Telemetry Overlay (SaaG-FRD)}\\ \textit{(Specified) Drift Detection}};
+  \node (vae) [subblock, below left=0.40cm and -0.15cm of csm] {\textbf{Verification Engine (SaaG-VAE)}\\ \textbf{\scriptsize[Digital Model: Operational Prototype]}\\ \textit{Pub/Sub QoS, Core Pinning, Tarjan SCC}};
+  \node (frd) [dashedblock, below right=0.40cm and -0.15cm of csm] {\textbf{Telemetry Overlay (SaaG-FRD)}\\ \textbf{\scriptsize[Digital Shadow: Target Spec]}\\ \textit{Field Telemetry \& Drift Detection}};
   
-  \node (gate) [block, below=1.15cm of csm] {\textbf{Naval CI/CD Pipeline Gating (Jenkins / GitLab CI)}\\ \textit{[Exit 0: Pass (Log Warnings)] \quad [Exit 1: Fail (Abort on S1/S2)]}};
+  \node (gate) [gateblock, below=1.25cm of csm] {\textbf{Naval CI/CD Pipeline Gating (Jenkins / GitLab CI)}\\ \textit{[Exit 0: Pass (Log Warnings)] \quad [Exit 1: Fail (Abort on S1/S2)]}};
   
-  \draw[->, thick] (sources) -- (msd);
-  \draw[->, thick] (msd) -- (csm);
-  \draw[->, thick] (csm) -| (vae);
-  \draw[->, thick, dashed] (csm) -| (frd);
-  \draw[->, thick] (vae) |- (gate);
-  \draw[->, thick, dashed] (frd) |- (gate);
-\end{tikzpicture}
+  \draw[->, thick, blue!70!black] (sources) -- (msd);
+  \draw[->, thick, blue!70!black] (msd) -- (csm);
+  \draw[->, thick, teal!70!black] (csm) -| (vae);
+  \draw[->, thick, dashed, gray!70!black] (csm) -| (frd);
+  \draw[->, thick, teal!70!black] (vae) |- (gate);
+  \draw[->, thick, dashed, gray!70!black] (frd) |- (gate);
+\end{tikzpicture}%
+}
 \caption{SaaG Architectural Digital Model Pipeline Integration Overview for ADVENT Combat Management Systems. (Dashed boxes denote specified capabilities not yet fully integrated into prototype).}
 \label{fig:architecture}
 \end{figure}
@@ -168,7 +171,7 @@ This paper makes the following contributions:
 
 \section{The Architectural Digital Model: Formulation and Graph Derivation}
 
-SaaG models the distributed naval CMS middleware topology as a formal, attributed, weighted directed multigraph:
+SaaG adopts and operationalizes the formal graph modeling foundation established by Yigit and Buzluca~\cite{yigit2024graph} for distributed publish-subscribe systems. We formalize the distributed naval CMS middleware topology as an attributed, weighted directed multigraph:
 \begin{equation}
 G = (V, E, \tau_V, \tau_E, w_V, w_E)
 \end{equation}
@@ -178,8 +181,8 @@ G = (V, E, \tau_V, \tau_E, w_V, w_E)
 The vertex set $V$ is partitioned into five distinct entity types ($\tau_V: V \to \mathcal{T}_v$):
 \begin{itemize}\itemsep=0.5pt
     \item \textbf{Applications ($V_{\text{app}}$):} Executable CMS binaries (e.g., track fusion gateway \path{track-fusion-gw}, threat evaluation service \path{threat-eval-srv}, WASA planner \path{wasa-allocator}, tactical display server \path{geodisplay-srv}, console client \path{opcon-ui}, Link 16 gateway \path{advlink-l16}, USV controller \path{rota-autonomy}).
-    \item \textbf{Brokers ($V_{\text{broker}}$):} DDS discovery domains and message routing daemons facilitating inter-node tactical communication.
-    \item \textbf{Topics ($V_{\text{topic}}$):} Typed DDS pub/sub communication channels carrying domain payloads (e.g., \path{tactical.tracks}, \path{weapon.assignment.cmd}, \path{threat.eval.result}, \path{link16.jseries}, \path{sensor.radar.plots}, \path{mine.qroutes}).
+    \item \textbf{Brokers ($V_{\text{broker}}$):} Genieware discovery domains, routing daemons, and middleware gateways facilitating inter-node tactical communication.
+    \item \textbf{Topics ($V_{\text{topic}}$):} Typed publish/subscribe communication channels carrying domain payloads (e.g., \path{tactical.tracks}, \path{weapon.assignment.cmd}, \path{threat.eval.result}, \path{link16.jseries}, \path{sensor.radar.plots}, \path{mine.qroutes}).
     \item \textbf{Infrastructure Nodes ($V_{\text{node}}$):} Physical OPCON console workstations, ruggedized VME/VPX server chassis, and mission computers characterized by CPU core capacity $C(v_p)$ and memory bounds.
     \item \textbf{Libraries ($V_{\text{lib}}$):} Shared dynamic libraries, STANAG 4586 parsers, coordinate conversion routines, tactical math libraries, and NATO symbology decoders.
 \end{itemize}
@@ -190,7 +193,7 @@ Six structural edge types ($\tau_E: E_{\text{structural}} \to \mathcal{T}_e$) ar
 
 In pub/sub middleware, data messages flow from publisher to subscriber ($A \to B$). However, \textbf{structural failure dependency points in the exact opposite direction ($B \xrightarrow{\text{DEPENDS\_ON}} A$)}: if Publisher $A$ (e.g., radar tracker) fails or produces corrupt messages, Subscriber $B$ (e.g., fire control calculator) is starved or degraded; conversely, if Subscriber $B$ crashes, Publisher $A$ continues unaffected.
 
-To enable dependency analysis, SaaG projects logical \texttt{DEPENDS\_ON} edges from structural topology (Table~\ref{tab:dep_rules}).
+Building upon the dependency analysis methodology of Yigit and Buzluca~\cite{yigit2024graph}, SaaG projects logical \texttt{DEPENDS\_ON} edges from structural topology (Table~\ref{tab:dep_rules}).
 
 \begin{table}[h]
 \centering
@@ -257,9 +260,9 @@ SaaG enforces static compliance rules across $G_{u'}$. In accordance with our mo
 \toprule
 \textbf{Policy / Rule} & \textbf{SaaG-P} & \textbf{SaaG-D} & \textbf{Target Middleware Check} \\
 \midrule
-DDS RxO QoS Matching & $\bullet$ & $\bullet$ & Durability \& Reliability ($O \ge R$) \\
-DDS Static Pre-Conditions & $\bullet$ & $\bullet$ & \texttt{PARTITION} \& \texttt{DOMAIN\_ID} match \\
-Extended DDS RxO & $\circ$ & $\bullet$ & \texttt{DEADLINE}, \texttt{LIVELINESS}, \texttt{OWNERSHIP} \\
+Pub/Sub RxO QoS Matching & $\bullet$ & $\bullet$ & Durability \& Reliability ($O \ge R$) \\
+Middleware Pre-Conditions & $\bullet$ & $\bullet$ & \texttt{PARTITION} \& \texttt{DOMAIN\_ID} match \\
+Extended Pub/Sub RxO & $\circ$ & $\bullet$ & \texttt{DEADLINE}, \texttt{LIVELINESS}, \texttt{OWNERSHIP} \\
 CPU Core Allocation & $\bullet$ & $\bullet$ & Core count $\le C(v_p)$ per host \\
 CPU Core Non-Overlap & $\circ$ & $\bullet$ & Pairwise non-overlapping masks \\
 Topic Continuity & $\bullet$ & $\bullet$ & Orphaned topics ($|P|=0 \lor |S|=0$) \\
@@ -275,7 +278,7 @@ Telemetry Drift & $\circ$ & $\bullet$ & $E_{\text{Observed}} \setminus E_{\text{
 
 To integrate cleanly with military system safety regulations (MIL-STD-882E~\cite{milstd882e}), rule violations are categorized into four severity levels (S1--S4), decoupled from message transport priority:
 \begin{itemize}\itemsep=0.5pt
-    \item \textbf{S1 (Critical Severity --- Catastrophic / Safety Critical):} Flaws causing complete loss of safety-critical functions (e.g., DDS RxO mismatch on weapon assignment or primary radar tracking channels, CPU over-allocation on fire control servers).
+    \item \textbf{S1 (Critical Severity --- Catastrophic / Safety Critical):} Flaws causing complete loss of safety-critical functions (e.g., pub/sub RxO mismatch on weapon assignment or primary radar tracking channels, CPU over-allocation on fire control servers).
     \item \textbf{S2 (High Severity --- Critical / Mission Essential):} Severe defects with localized redundancy or secondary mitigation (e.g., orphaned tactical data link topics, circular dependencies among core WASA engagement planning units).
     \item \textbf{S3 (Medium Severity --- Marginal / Operational):} Non-critical configuration anomalies (e.g., unassigned transport priority hints, best-effort auxiliary sensor stream topic leaks).
     \item \textbf{S4 (Low Severity / Informational):} Style and maintenance warnings (e.g., deprecated utility library versions, non-standard topic naming).
@@ -427,7 +430,7 @@ As summarized in Table~\ref{tab:gap_analysis}, \textbf{6 of the 7 specified capa
 \section{Related Work}
 
 \noindent\textbf{Architecture Conformance \& Reflexion Models:}
-Murphy et al.~\cite{murphy2001} pioneered Software Reflexion Models to compare designs against extracted source-code call graphs. Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion. Terra and Valente~\cite{terra2014} introduced dependency constraint languages. SaaG targets distributed pub/sub middleware, deriving runtime failure dependencies from asynchronous DDS topic interactions and core bindings in naval mission systems.
+Murphy et al.~\cite{murphy2001} pioneered Software Reflexion Models to compare designs against extracted source-code call graphs. Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion. Terra and Valente~\cite{terra2014} introduced dependency constraint languages. Yigit and Buzluca~\cite{yigit2024graph} formulated graph-based dependency analysis for critical components in pub/sub systems. SaaG builds upon these foundations and operationalizes an architectural digital model for pre-deployment CI/CD gating in naval combat management systems.
 
 \vspace{2pt}
 \noindent\textbf{Configuration Error Detection:}
@@ -491,6 +494,9 @@ J. Humble and D. Farley. 2010. \emph{Continuous Delivery}. Addison-Wesley.
 
 \bibitem{tao2019digital}
 F. Tao et al. 2019. Digital twin in industry: State-of-the-art. \emph{IEEE TII} 15, 4 (2019), 2405--2415.
+
+\bibitem{yigit2024graph}
+I. O. Yigit and F. Buzluca. 2024. A Graph-Based Dependency Analysis Method for Identifying Critical Components in Distributed Publish-Subscribe Systems. \emph{IEEE Access} (2024). https://doi.org/10.1109/ACCESS.2024
 \end{thebibliography}
 
 \end{document}
