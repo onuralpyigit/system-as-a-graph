@@ -37,8 +37,8 @@ Across these platforms, ADVENT CMS comprises over **155 external system integrat
 
 ```
   +-----------------------------------------------------------------------------------+
-  |                            Naval CMS Data Sources                                 |
-  |  [Weapon/Sensor ICDs]  [Source Repos]  [Platform Configs]  [Node Specs]    |
+  |                              CMS Data Sources                                     |
+  |  [Weapon/Sensor ICDs]  [Source Repos]  [Platform Configs]  [Node Specs]           |
   +-----------------------------------------------------------------------------------+
                                            |
                                            v
@@ -57,7 +57,7 @@ Across these platforms, ADVENT CMS comprises over **155 external system integrat
   +-------------------------------------------+   : - - - - - - - - - - - - - - - - - :
   | Verification & Analysis Engine (SaaG-VAE) |   |  Telemetry Overlay (SaaG-FRD)     |
   | - Pub/Sub QoS Rules & Core Pinning Rules  |   |  - Architectural Drift Detection  |
-  | - Dependency Derivation (Tarjan SCC)      |   |  - Static vs Observed Edge Diff   |
+  | - Dependency Derivation                   |   |  - Static vs Observed Edge Diff   |
   +-------------------------------------------+   : - - - - - - - - - - - - - - - - - :
                         \                                     /
                          v                                   v
@@ -66,7 +66,7 @@ Across these platforms, ADVENT CMS comprises over **155 external system integrat
   |      [Exit 0: Pass (Log Warnings)]        [Exit 1: Fail (Abort on S1/S2)]         |
   +-----------------------------------------------------------------------------------+
 ```
-*Figure 1: SaaG Architectural Digital Model Pipeline Integration Overview for ADVENT Combat Management Systems. (Dashed boxes denote specified capabilities not yet fully integrated into the deployed prototype).*
+*Figure 1: Architectural Digital Model Pipeline Integration Overview for ADVENT Combat Management Systems. (Dashed boxes denote specified capabilities not yet fully integrated into the deployed prototype).*
 
 When a candidate software build is submitted for release into an operational naval platform, conventional CI/CD pipelines evaluate unit and module tests in isolation. Consequently, critical architectural misconfigurations slip through:
 
@@ -77,16 +77,19 @@ When a candidate software build is submitted for release into an operational nav
 
 Provisioning full target hardware testbeds (physical multi-console Combat Information Centers [CIC], real sensor/weapon simulators, and multi-ship test ranges) for every candidate release is prohibitively expensive, logistically complex, and slow. Leaving architectural defects to be discovered during shipyard commissioning, harbor acceptance tests (HAT), or sea acceptance tests (SAT) leads to massive project delays and severe safety risks.
 
-### 1.2 The Architectural Digital Model Paradigm & Digital Twin Taxonomy
+### 1.2 The Architectural Digital Model Paradigm & Dual Operational Usages
 
-To eliminate this pre-deployment gap, we developed **System as a Graph (SaaG)**. Rather than relying on heavyweight runtime testbeds, SaaG constructs a static graph model of the target combat system topology directly from candidate build artifacts and interface descriptors.
+To eliminate this pre-deployment gap and manage system complexity across the lifecycle, we developed **System as a Graph (SaaG)**. Rather than relying on heavyweight runtime testbeds, SaaG constructs an attributed graph model of the target combat system topology directly from software configuration descriptors and interface contracts.
 
 In accordance with the digital twin classification of Kritzinger et al. [7]:
 * A **Digital Model** has no automated bidirectional data exchange with the physical system; the digital representation is constructed from static configuration artifacts.
 * A **Digital Shadow** incorporates an automated one-way data flow from the physical/runtime environment to the digital model.
 * A **Digital Twin** provides fully automated bidirectional synchronization between physical and digital spaces.
 
-Under this taxonomy, our operational prototype (**SaaG-P**) is strictly an *architectural digital model*—reconstructed fresh for each candidate build to verify design conformance prior to deployment. The dynamic runtime counterpart (**SaaG-D**), which includes field telemetry ingestion and design-versus-observed drift detection, represents the target *digital shadow* specification.
+Under this taxonomy, our operational framework is strictly an *architectural digital model*—reconstructed deterministically from configuration artifacts. In naval engineering practice, the architectural digital model serves two complementary operational usages:
+
+1. **Pre-Deployment Verification & CI/CD Gating (Forward Gating Mode):** Statically evaluating candidate software release builds ($G_{u'}$) against military safety standards and middleware contracts within continuous integration pipelines, preventing non-conforming configurations from reaching integration testbeds or fielded vessels.
+2. **Architectural Improvement & Refactoring of Existing Platforms (Modernization & Diagnostic Mode):** Statically analyzing and optimizing existing operational platforms. Combat system architects query the digital model to identify architectural technical debt, isolate circular dependency cycles across legacy packages, discover high-criticality bottleneck components, prune orphaned topics and dead library dependencies, and perform "what-if" impact analyses before executing complex system-wide refactorings.
 
 ### 1.3 Key Contributions & Empirical Findings
 
@@ -94,7 +97,7 @@ This paper makes the following contributions:
 
 1. **Naval CMS Architectural Model & Requirements Baseline (§2):** A formal directed multigraph representation ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$) capturing 5 entity classes, 6 structural relations, and 6 failure-dependency projection rules that explicitly map the downstream propagation of architectural risk in pub/sub naval combat systems.
 2. **CI/CD Pipeline Gating & Architectural Verification Methodology (§3, §4):** A two-stage deployment gate operating on standard CI runners with a defined safety severity rubric (S1–S4) aligned with military safety frameworks (MIL-STD-882E). We demonstrate static pre-deployment verification across representative mission-critical pub/sub misconfiguration scenarios (QoS mismatches, CPU core contention, topic continuity breaks, circular dependencies).
-3. **Verification Complexity & Industrial Bottleneck Analysis (§5, §6):** Empirical benchmarks across 5 scaling operational naval platform profiles (1,498 to 3,254 components; 1 to 66 nodes) based on ADVENT CMS platform lines (Martı, Ufuk, Rota, Kalyon/Milgem, LHD Flagship), demonstrating that static verification executes in 0.125\,s (Martı), 0.410\,s (Ufuk), 0.435\,s (Rota), 0.760\,s (Milgem frigate), and 1.152\,s (LHD flagship with 66 nodes, P95 1.161\,s), consuming $<0.22\%$ of a 9-minute build. We analyze why physical node distribution drives graph lifting complexity, and document an industrial gap analysis demonstrating that 6 of 7 specified verification capabilities are blocked by configuration data acquisition across defense engineering silos, not by graph analysis complexity.
+3. **Verification Complexity & Industrial Bottleneck Analysis (§5, §6):** Empirical benchmarks across 5 scaling operational naval platform profiles (1,498 to 3,254 components; 1 to 66 nodes) based on ADVENT CMS platform lines (Martı, Ufuk, Rota, Kalyon/Milgem, LHD Flagship), demonstrating that static verification executes in 0.125\,s (Martı), 0.410\,s (Ufuk), 0.435\,s (Rota), 0.760\,s (Milgem frigate), and 1.152\,s (LHD flagship with 66 nodes, P95 1.161\,s), consuming $<0.22\%$ of a 9-minute build.
 
 ---
 
@@ -106,11 +109,11 @@ $$G = (V, E, \tau_V, \tau_E, w_V, w_E)$$
 ### 2.1 Entity Classes ($V$) and Structural Relations ($E_{\text{structural}}$)
 
 The vertex set $V$ is partitioned into five distinct entity types ($\tau_V: V \to \mathcal{T}_v$):
-* **Applications ($V_{\text{app}}$):** Executable CMS software binaries (e.g., radar track fusion gateway `track-fusion-gw`, threat evaluation service `threat-eval-srv`, WASA engagement planner `wasa-allocator`, tactical display server `geodisplay-srv`, operator console client `opcon-ui`, Link 16 parser `advlink-l16`, USV autonomy controller `rota-autonomy`).
-* **Brokers ($V_{\text{broker}}$):** Genieware discovery domains, routing daemons, and middleware gateways facilitating inter-node tactical communication.
-* **Topics ($V_{\text{topic}}$):** Typed publish/subscribe communication channels carrying domain payloads (e.g., `tactical.tracks`, `weapon.assignment.cmd`, `threat.eval.result`, `link16.jseries`, `sensor.radar.plots`, `mine.qroutes`).
-* **Infrastructure Nodes ($V_{\text{node}}$):** Physical OPCON console workstations, ruggedized VME/VPX server chassis, and mission computers characterized by available CPU core capacity $C(v_p)$ and memory bounds.
-* **Libraries ($V_{\text{lib}}$):** Shared dynamic libraries, STANAG 4586 parsers, coordinate conversion routines, tactical math libraries, and NATO symbology decoders.
+* **Applications ($V_{\text{app}}$):** Executable CMS software binaries.
+* **Brokers ($V_{\text{broker}}$):** Broker services facilitating CMS communication.
+* **Topics ($V_{\text{topic}}$):** Typed publish/subscribe communication channels carrying data payloads.
+* **Infrastructure Nodes ($V_{\text{node}}$):** Physical OPCON console workstations, ruggedized VME/VPX server chassis, and mission computers.
+* **Libraries ($V_{\text{lib}}$):** Shared dynamic libraries.
 
 Six structural edge types ($\tau_E: E_{\text{structural}} \to \mathcal{T}_e$) are extracted directly from configuration descriptors:
 1. `PUBLISHES_TO` $\subseteq (V_{\text{app}} \cup V_{\text{lib}}) \times V_{\text{topic}}$
@@ -155,11 +158,43 @@ SaaG assigns criticality weights $w(v) \in [0, 1]$ across all entities via an ex
    * Library Fan-Out Amplification: $w(l) = \min\left(1.0, \; \text{base\_w} \cdot (1 + \gamma \cdot \log_2(1 + DG_{\text{in}}(l)))\right)$, where $\text{base\_w} = 0.20$, $\gamma = 0.15$, and $DG_{\text{in}}(l)$ is the in-degree of library $l$.
    * Node: $w(n) = \max_{v \text{ RUNS\_ON } n} w(v)$
 
-*Sensitivity Analysis:* A sensitivity sweep varying $\beta \in [0.70, 0.95]$ and altering QoS component weights by $\pm 25\%$ shows that the relative criticality ranking of top-$10\%$ safety-critical components exhibits a rank correlation $\rho > 0.96$, confirming that the ordering is robust to minor weight adjustments.
-
 ### 2.4 Process-Isolated Candidate Digital Models for Concurrent CI/CD Builds
 
 During concurrent CI/CD pipeline builds, SaaG instantiates an isolated candidate graph $G_{u'} = (V', E')$ by substituting candidate unit version $u'$ into the baseline platform inventory, guaranteeing baseline immutability.
+
+### 2.5 Operational Usages of the Architectural Digital Model
+
+The architectural digital model serves two vital, complementary functions across the naval combat system lifecycle:
+
+```
++-----------------------------------------------------------------------------------------------+
+|                            ARCHITECTURAL DIGITAL MODEL USAGES                                 |
++---------------------------------------------------------------+-------------------------------+
+| 1. PRE-DEPLOYMENT VERIFICATION & CI/CD GATING                 | 2. ARCHITECTURAL IMPROVEMENT  |
+|    (Forward Release Protection)                               |    & REFACTORING OF PLATFORMS |
++---------------------------------------------------------------+-------------------------------+
+| - Automated gating in Jenkins/GitLab CI runners               | - Cycle untangling & SCC loop |
+| - Candidate graph isolation G_u'                              |   resolution across legacy pkgs|
+| - Fail-closed enforcement on S1/S2 violations                 | - Criticality hotspot & SPOF  |
+| - Delta-aware gating against Waiver Register                  |   identification (w(v), fanin)|
+| - Instant feedback to developers (<1.2 s)                     | - Dead topic & zombie library |
+|                                                               |   pruning (|P|=0, |S|=0)      |
+|                                                               | - Host CPU core rebalancing   |
+|                                                               | - "What-If" refactoring sims  |
++---------------------------------------------------------------+-------------------------------+
+```
+
+#### 2.5.1 Pre-Deployment Verification & Pipeline Gating (Forward Mode)
+In continuous delivery, the digital model acts as an automated quality gate. When developers submit a merge request, SaaG constructs the candidate multigraph $G_{u'}$ and verifies it against the static rule catalog (§3). Violations are evaluated differentially against the baseline: candidate builds are blocked if $\text{Violations}(G_{u'}) \setminus \text{Violations}(G_{\text{baseline}}) \neq \emptyset$. This ensures that no new architectural flaws (e.g., QoS contract mismatches, CPU affinity overlaps, orphaned channels) are introduced into operational release baselines.
+
+#### 2.5.2 Architectural Improvement, Technical Debt Discovery & Refactoring (Diagnostic Mode)
+Beyond gating new builds, the digital model provides system architects with deep, systemic visibility into existing, fielded naval platforms to drive continuous modernization and technical debt reduction:
+
+1. **Cycle Untangling & Modularity Refactoring:** By running Tarjan's Strongly Connected Components (SCC) algorithm across the global baseline graph $G_{\text{baseline}}$, architects detect and isolate complex dependency cycles spanning legacy subsystems (e.g., feedback loops between WASA engagement planning and threat evaluation). The digital model extracts the exact cyclic subgraph, enabling architects to refactor coupled packages into clean, unidirectional layered architectures.
+2. **Criticality Hotspots & Single Point of Failure (SPOF) Discovery:** By combining topological fan-out with the intrinsic criticality formula ($w(v)$), the digital model highlights over-burdened broker gateways, monolithic topics carrying disproportionate tactical load, and shared libraries with extreme in-degrees ($DG_{\text{in}}$). Architects use these rankings to prioritize modular decoupling, introduce broker redundancy, and decompose overloaded data channels.
+3. **Dead Topic, Schema Drift & Zombie Dependency Pruning:** In long-lived naval systems evolving over decades, legacy topics and obsolete library linkages accumulate. SaaG identifies orphaned topics where $|P(t)| = 0$ or $|S(t)| = 0$, as well as unreferenced dynamic libraries ($DG_{\text{in}}(l) = 0$). This allows engineering teams to systematically clean up dead configurations and prevent silent schema drift across multi-ship baselines.
+4. **Hardware CPU Core & Workload Rebalancing:** Evaluating global core-allocation maps across physical tactical console hosts allows architects to resolve processor hotspots and rebalance real-time tactical threads versus non-real-time background daemons across multi-core processors.
+5. **"What-If" Architecture Simulation & Refactoring Impact Analysis:** Architects can formulate proposed refactoring operations directly on the digital model (e.g., migrating a sensor fusion daemon to another computing node, altering a topic durability contract from `VOLATILE` to `TRANSIENT_LOCAL`, or replacing a shared tactical math library) before making source code modifications. The model recomputes dependency paths, failure propagation cones, and criticality distributions in $<1.2$\,s, allowing architects to validate the safety and structural integrity of proposed changes before implementation.
 
 ---
 
@@ -174,8 +209,6 @@ SaaG enforces static compliance rules across $G_{u'}$. In accordance with our mo
 | Policy / Rule | Prototype (SaaG-P) | Specified Target (SaaG-D) | Target Middleware Check |
 |---|:---:|:---:|---|
 | **Pub/Sub RxO QoS Matching** | ● | ● | Durability & Reliability Compatibility ($O \ge R$) |
-| **Middleware Static Pre-Conditions** | ● | ● | `PARTITION` (Security/Mission boundary) & `DOMAIN_ID` match |
-| **Extended Pub/Sub RxO** | ○ | ● | `DEADLINE`, `LIVELINESS`, `OWNERSHIP`, `LATENCY_BUDGET` |
 | **CPU Core Allocation** | ● | ● | Process core count $\le C(v_p)$ per tactical host node |
 | **CPU Core Non-Overlap** | ○ | ● | Pairwise non-overlapping CPU pin masks ($\text{Cores}(u_i) \cap \text{Cores}(u_j) = \emptyset$) |
 | **Topic Continuity & Leaks** | ● | ● | Orphaned tactical topics ($|P(t)| = 0 \lor |S(t)| = 0$) |
@@ -185,20 +218,6 @@ SaaG enforces static compliance rules across $G_{u'}$. In accordance with our mo
 | **Telemetry Drift Overlay** | ○ | ● | $E_{\text{Observed}} \setminus E_{\text{Designed}}$ via field logs |
 
 *Table 2: Verification rules catalog (● Implemented in Prototype; ○ Specified in Target Architecture).*
-
-```
-+-------------------------------------------------------------------------------+
-| Pub/Sub Middleware (Genieware / DDS) RxO Matching Contract:                   |
-|   RELIABILITY:      Offered >= Requested  (BEST_EFFORT < RELIABLE)            |
-|   DURABILITY:       Offered >= Requested  (VOLATILE < TRANSIENT_LOCAL <       |
-|                                            TRANSIENT < PERSISTENT)            |
-|   DEADLINE:         Offered Period <= Requested Period                        |
-|   LIVELINESS:       Offered Kind >= Requested Kind, Lease <= Requested Lease   |
-|   OWNERSHIP:        Offered Kind == Requested Kind (SHARED vs EXCLUSIVE)      |
-|   DOMAIN_ID:        Offered ID == Requested ID                                |
-|   PARTITION:        Offered Partition Name == Requested Partition Name        |
-+-------------------------------------------------------------------------------+
-```
 
 ### 3.2 Severity Rubric & Alignment with Military Safety Standards (MIL-STD-882E)
 
@@ -229,11 +248,11 @@ To assess the practical applicability of SaaG pre-deployment verification in an 
 ### 4.1 Multi-Domain Combat System Architecture & Platform Profiles
 
 Modern naval combat suites deploy across diverse physical and operational domains, as reflected in the public product tree of HAVELSAN ADVENT CMS:
-* **Airborne Command & Control (ADVENT Martı):** Deployed on Maritime Patrol Aircraft (MPA), helicopters, and naval UAVs, handling airborne radar, sonobuoy acoustic processing, and tactical data link relays with tight embedded single-node footprints ($|V|=1,498, |E|=4,824$).
-* **Coastal Surveillance & C2 Station (ADVENT Ufuk):** Land-based multi-sensor compilation center integrating coastal radar networks, AIS, ADS-B, and electro-optical surveillance across 23 distributed server nodes ($|V|=2,174, |E|=7,142$).
-* **Unmanned & Autonomous Systems (ADVENT Rota):** Mission Management System for unmanned surface, underwater, and aerial platforms (USV/UUV/UAV) supporting STANAG 4586 compliance and autonomous payload control ($|V|=2,192, |E|=6,980$).
-* **Surface Combatant Core (Milgem CMS / ADVENT Kalyon):** Comprehensive multi-warfare suite (AAW, ASuW, ASW, EW) deployed on corvettes and frigates across 21 tactical console nodes ($|V|=3,254, |E|=11,460$).
-* **Task Group Command Flagship (LHD CMS):** Fleet flagship suite (such as L400 TCG Anadolu) featuring large-scale multi-link gateway centers, joint operations planning, and 66 physical operator consoles and tactical server chassis ($|V|=2,775, |E|=9,620$).
+* **Airborne Command & Control (ADVENT Martı):** Deployed on Maritime Patrol Aircraft (MPA), helicopters, and naval UAVs, handling airborne radar, sonobuoy acoustic processing, and tactical data link relays with tight embedded single-node footprints.
+* **Coastal Surveillance & C2 Station (ADVENT Ufuk):** Land-based multi-sensor compilation center integrating coastal radar networks, AIS, ADS-B, and electro-optical surveillance across distributed server nodes.
+* **Unmanned & Autonomous Systems (ADVENT Rota):** Mission Management System for unmanned surface, underwater, and aerial platforms (USV/UUV/UAV) supporting STANAG 4586 compliance and autonomous payload control.
+* **Surface Combatant Core (Milgem CMS / ADVENT Kalyon):** Comprehensive multi-warfare suite (AAW, ASuW, ASW, EW) deployed on corvettes and frigates across tactical console nodes.
+* **Task Group Command Flagship (LHD CMS):** Fleet flagship suite (such as L400 TCG Anadolu) featuring large-scale multi-link gateway centers, joint operations planning, and physical operator consoles and tactical server chassis.
 
 Across all platform scales, subsystems rely on **Genieware** publish/subscribe middleware to facilitate real-time sensor-to-shooter coordination and Network Enabled Capability (NEC).
 
@@ -242,25 +261,25 @@ Across all platform scales, subsystems rely on **Genieware** publish/subscribe m
 SaaG operates directly within continuous integration runners (Jenkins, GitLab CI) upon every merge request:
 1. **Descriptor Ingestion & Candidate Isolation:** The pipeline extracts candidate unit descriptors, IDL schemas, topic binding specifications, and node affinity masks. It generates an isolated candidate multigraph $G_{u'}$.
 2. **Failure-Dependency Projection:** Inverted failure edges ($B \xrightarrow{\text{DEPENDS\_ON}} A$) are computed along with hierarchical criticality weights.
-3. **Multi-Policy Rule Evaluation:** The verification engine evaluates pub/sub QoS contracts, core pinning bounds, topic connectivity, and SCC cycles.
+3. **Multi-Policy Rule Evaluation:** The verification engine evaluates pub/sub QoS contracts, core pinning bounds, topic connectivity, and dependency cycles.
 4. **Delta-Aware Gating:** The runner checks new violations against the baseline register and waiver list, returning Exit 0 (Pass) or Exit 1 (Fail).
 
 ### 4.3 Evaluation on Representative Architectural Misconfiguration Scenarios
 
 To validate the verification engine across mission-critical middleware failure modes without relying on restricted proprietary records, we evaluate SaaG against representative classes of architectural misconfigurations:
 
-1. **Weapon Assignment Channel QoS Incompatibility (Scenario A - S1 Critical):** A candidate update alters the durability policy of a remote weapon assignment topic (`weapon.assignment.cmd`) from `TRANSIENT_LOCAL` to `VOLATILE` while the subscriber remains `TRANSIENT_LOCAL`. In pub/sub middleware (Genieware/DDS), this contract mismatch prevents endpoint matching, silently dropping fire commands. SaaG detects this incompatibility statically during graph lifting in $<0.05$\,s.
+1. **Weapon Assignment Channel QoS Incompatibility (Scenario A - S1 Critical):** A candidate update alters the durability policy of a remote weapon assignment topic from `TRANSIENT_LOCAL` to `VOLATILE` while the subscriber remains `TRANSIENT_LOCAL`. In pub/sub middleware (Genieware/DDS), this contract mismatch prevents endpoint matching, silently dropping fire commands. SaaG detects this incompatibility statically during graph lifting in $<0.05$\,s.
 2. **Operator Console (OPCON) Multi-Core Pinning Contention (Scenario B - S1 Critical):** A multi-sensor track fusion daemon binds processing threads to CPU cores 0–3, conflicting with a co-located 3D tactical display server bound to cores 2–5. Under heavy track loads, mutual preemption causes scheduling jitter exceeding hard 25\,ms display deadlines. SaaG identifies the colliding CPU affinity masks on host nodes.
 3. **Orphaned Tactical Data Link (TDL) Forwarding Channels (Scenario C - S2 High):** A refactored Link 16 J-series forwarding topic is left without active subscriber endpoints, silently breaking cross-platform track dissemination. SaaG detects the disconnected topic endpoint ($|S(t)|=0$).
 4. **Engagement Planning Dependency Cycles (Scenario D - S2 High):** Transitive package dependencies between a Force-Wide Weapon/Sensor Allocation (WASA) planner and a threat evaluation module form a closed cycle ($A \to B \to C \to A$), leading to initialization deadlocks during OPCON startup. Tarjan's SCC algorithm isolates the cycle in linear time ($O(|V|+|E|)$).
 
-| Scenario Class | Injected Architectural Fault | Severity | Detected Rule | Verification Time |
-|---|---|:---:|---|:---:|
-| **Scenario A** | Durability mismatch on `weapon.assignment.cmd` (`VOLATILE` vs `TRANSIENT_LOCAL`) | S1 | Pub/Sub RxO Match | 0.048\,s |
-| **Scenario B** | CPU core overlap (cores 2–3) between track fusion and tactical display | S1 | Core Pinning Conformance | 0.052\,s |
-| **Scenario C** | Orphaned Link 16 forwarding topic without active subscribers | S2 | Topic Continuity Audit | 0.038\,s |
-| **Scenario D** | Cyclic dependency between WASA engagement planner and threat evaluation | S2 | Tarjan SCC Cycle Detector | 0.041\,s |
-| **Scenario E** | Security `PARTITION` mismatch between primary and redundant sensor gateways | S1 | Middleware Pre-Condition | 0.039\,s |
+| Scenario Class | Injected Architectural Fault | Severity | Detected Rule |
+|---|---|:---:|---|
+| **Scenario A** | Durability mismatch on `weapon.assignment.cmd` (`VOLATILE` vs `TRANSIENT_LOCAL`) | S1 | Pub/Sub RxO Match | 
+| **Scenario B** | CPU core overlap (cores 2–3) between track fusion and tactical display | S1 | Core Pinning Conformance | 
+| **Scenario C** | Orphaned Link 16 forwarding topic without active subscribers | S2 | Topic Continuity Audit | 
+| **Scenario D** | Cyclic dependency between WASA engagement planner and threat evaluation | S2 | Tarjan SCC Cycle Detector | 
+| **Scenario E** | Security `PARTITION` mismatch between primary and redundant sensor gateways | S1 | Middleware Pre-Condition | 
 
 *Table 3: Pre-deployment verification performance across representative naval middleware misconfiguration scenarios.*
 
@@ -281,7 +300,7 @@ We evaluated SaaG verification latency across 5 scaling operational profiles mod
 
 ### 5.2 Verification Latency & Complexity Breakdown
 
-| Platform Profile | Operational Domain | Total Components | Graph Construction (s) | Rule Auditing (s) | Total Mean (s) | P95 Latency (s) |
+| Platform Profile | Operational Domain | Total Components | Graph Construction (s) | Graph Analysis (s) | Total Mean (s) | P95 Latency (s) |
 |---|---|---:|---:|---:|---:|---:|
 | **ADVENT Martı** | Air C2 / MPA | 1,498 | 0.123 ± 0.020 | 0.002 ± 0.000 | **0.125 ± 0.020** | 0.150 |
 | **ADVENT Ufuk** | Coastal C2 Station | 2,174 | 0.406 ± 0.017 | 0.003 ± 0.000 | **0.410 ± 0.017** | 0.435 |
@@ -295,7 +314,7 @@ We evaluated SaaG verification latency across 5 scaling operational profiles mod
 Execution Latency Breakdown (LHD CMS Task Group Flagship Profile - 2,775 Components, 66 Nodes):
 =============================================================================================
 [====================================================>        ]  98.8%  Graph Construction (1.138 s)
-[=>                                                           ]   1.2%  Rule Auditing & SCC (0.014 s)
+[=>                                                           ]   1.2%  Graph Analysis (0.014 s)
 =============================================================================================
 Total Pipeline Overhead: 1.152 s (<0.22% of 9-minute automated build)
 ```
@@ -303,7 +322,7 @@ Total Pipeline Overhead: 1.152 s (<0.22% of 9-minute automated build)
 #### Scaling Dynamics & Physical Node Distribution Impact
 The benchmark results reveal two key architectural dynamics:
 
-1. **Dominance of Graph Construction:** Across all evaluated operational platforms, Graph Construction accounts for **98.4\% to 99.6\% of total wall-clock time**, whereas pure Rule Auditing executes in merely **2 to 14 milliseconds** ($0.002$--$0.014$\,s). Once the multigraph $G_{u'}$ is assembled in memory, static policy evaluations (Tarjan SCC cycle detection, pub/sub RxO matrix checking, and CPU pinning scans) are computationally negligible.
+1. **Dominance of Graph Construction:** Across all evaluated operational platforms, Graph Construction accounts for **98.4\% to 99.6\% of total wall-clock time**, whereas Graph Analysis executes in merely **2 to 14 milliseconds** ($0.002$--$0.014$\,s). Once the multigraph $G_{u'}$ is assembled in memory, static policy evaluations (Tarjan SCC cycle detection, pub/sub RxO matrix checking, and CPU pinning scans) are computationally negligible.
 2. **Impact of Physical Host Node Distribution:** A critical insight emerges from comparing **LHD CMS** (2,775 components across 66 physical nodes) and **Milgem CMS / Kalyon** (3,254 components across 21 physical nodes). Although Milgem has more total software components, the LHD Flagship profile exhibits higher graph construction latency (1.138\,s vs 0.757\,s). This behavior is driven by the quadratic complexity of dependency lifting across the **66 physical OPCON consoles and server nodes**: evaluating pairwise process co-location edges (`broker_to_broker`, `node_to_node`, `node_to_broker`, and cross-chassis core-pinning bounds) scales with the physical node topology density ($O(k^2)$ per host across 66 nodes).
 3. **Single-Node Embedded Performance:** For single-node tactical units (ADVENT Martı with 1,498 components: 0.125\,s; ADVENT Rota with 2,192 components: 0.435\,s), the absence of inter-node routing and cross-console lifting allows verification to complete in well under 0.5 seconds.
 
@@ -374,7 +393,9 @@ Kritzinger et al. [7] established the foundational taxonomy distinguishing digit
 
 ## 8. Conclusion & Evolution Toward Runtime Digital Shadows
 
-We presented **SaaG (System as a Graph)**, an architectural digital model framework for pre-deployment verification and CI/CD gating in mission-critical Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG statically audits publish/subscribe QoS contracts, CPU core allocations, topic continuity, and dependency cycles before software reaches operational platforms. Benchmarks across 5 operational ADVENT profiles (from single-node embedded units like ADVENT Martı MPA at 0.125\,s and ADVENT Rota USVs to the 66-node LHD Flagship at 1.152\,s) demonstrate that verification requires $\le 1.15$\,s ($<0.22\%$ of an automated build), while reliably catching critical misconfigurations across representative fault scenarios. Our analysis demonstrates that graph analysis is computationally lightweight, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
+We presented **SaaG (System as a Graph)**, an architectural digital model framework for pre-deployment verification, CI/CD gating, and continuous architectural refactoring in mission-critical Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG fulfills two complementary roles across the naval software lifecycle: (1) **Forward Gating**, automatically auditing candidate releases against publish/subscribe QoS contracts, CPU core allocations, topic continuity, and dependency cycles in $<1.2$\,s within CI/CD pipelines; and (2) **Diagnostic Refactoring**, providing combat system architects with global graph analytics to untangle circular package dependencies, resolve criticality bottlenecks, prune legacy topic debt, and simulate "what-if" refactorings before modifying existing operational platforms.
+
+Benchmarks across 5 operational ADVENT profiles (from single-node embedded units like ADVENT Martı MPA at 0.125\,s and ADVENT Rota USVs to the 66-node LHD Flagship at 1.152\,s) demonstrate that verification requires $\le 1.15$\,s ($<0.22\%$ of an automated build), while reliably catching critical misconfigurations across representative fault scenarios. Our analysis demonstrates that graph analysis is computationally lightweight, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
 
 **Future Work:** We are developing automated ICD harvesters to bridge configuration data ingestion blockers, expanding delta-aware gating across multi-ship task group pipelines, and exploring LLM-assisted remediation proposals subject to mandatory human-in-the-loop safety reviews under naval software assurance guidelines.
 
@@ -401,4 +422,4 @@ We presented **SaaG (System as a Graph)**, an architectural digital model framew
 17. E. Gamma, R. Helm, R. Johnson, and J. Vlissides. *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley, 1994.
 18. F. Tao, H. Zhang, A. Liu, and A. Y. C. Nee. Digital twin in industry: State-of-the-art. *IEEE Transactions on Industrial Informatics*, 15(4):2405–2415, 2019. https://doi.org/10.1109/TII.2018.2873186
 19. J. Humble and D. Farley. *Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation*. Addison-Wesley, 2010.
-20. I. O. Yigit and F. Buzluca. A Graph-Based Dependency Analysis Method for Identifying Critical Components in Distributed Publish-Subscribe Systems. *IEEE Access*, 2024. https://doi.org/10.1109/ACCESS.2024 (https://ieeexplore.ieee.org/document/11315354)
+20. I. O. Yigit and F. Buzluca. A Graph-Based Dependency Analysis Method for Identifying Critical Components in Distributed Publish-Subscribe Systems. *IEEE Access*, 2025. https://doi.org/10.1109/RASSE64831.2025.11315354

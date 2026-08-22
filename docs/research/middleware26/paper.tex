@@ -147,9 +147,9 @@ When a candidate software build is submitted for release into an operational nav
 
 Provisioning full target hardware testbeds (physical multi-console Combat Information Centers [CIC], real sensor/weapon simulators, and multi-ship test ranges) for every candidate release is prohibitively expensive, logistically complex, and slow. Leaving architectural defects to be discovered during shipyard commissioning, harbor acceptance tests (HAT), or sea acceptance tests (SAT) leads to massive project delays and severe safety risks.
 
-\subsection{The Architectural Digital Model Paradigm \& Digital Twin Taxonomy}
+\subsection{The Architectural Digital Model Paradigm \& Dual Operational Usages}
 
-To eliminate this pre-deployment gap, we developed \textbf{System as a Graph (SaaG)}. Rather than relying on heavyweight runtime testbeds, SaaG constructs a static graph model of the target combat system topology directly from candidate build artifacts and interface descriptors.
+To eliminate this pre-deployment gap and manage system complexity across the lifecycle, we developed \textbf{System as a Graph (SaaG)}. Rather than relying on heavyweight runtime testbeds, SaaG constructs an attributed graph model of the target combat system topology directly from configuration artifacts and interface contracts.
 
 In accordance with the digital twin classification of Kritzinger et al.~\cite{kritzinger2018}:
 \begin{itemize}\itemsep=0.5pt
@@ -158,7 +158,7 @@ In accordance with the digital twin classification of Kritzinger et al.~\cite{kr
     \item A \textbf{Digital Twin} provides fully automated bidirectional synchronization between physical and digital spaces.
 \end{itemize}
 
-Under this taxonomy, our operational prototype (\textbf{SaaG-P}) is strictly an \emph{architectural digital model}---reconstructed fresh for each candidate build to verify design conformance prior to deployment. The dynamic runtime counterpart (\textbf{SaaG-D}), which includes field telemetry ingestion and design-versus-observed drift detection, represents the target \emph{digital shadow} specification.
+Under this taxonomy, our operational framework is strictly an \emph{architectural digital model}---reconstructed deterministically from configuration artifacts. In naval engineering practice, the architectural digital model serves two complementary operational usages: (1) \textbf{Pre-Deployment Verification \& CI/CD Gating}, preventing non-conforming builds ($G_{u'}$) from reaching integration testbeds; and (2) \textbf{Architectural Improvement \& Refactoring of Existing Platforms}, enabling architects to detect circular dependency cycles, discover criticality bottlenecks, prune dead topic configurations, and perform ``what-if'' impact simulations across fielded combat systems.
 
 \subsection{Key Industrial Contributions \& Empirical Findings}
 
@@ -171,7 +171,7 @@ This paper makes the following contributions:
 
 \section{The Architectural Digital Model: Formulation and Graph Derivation}
 
-SaaG adopts and operationalizes the formal graph modeling foundation established by Yigit and Buzluca~\cite{yigit2024graph} for distributed publish-subscribe systems. We formalize the distributed naval CMS middleware topology as an attributed, weighted directed multigraph:
+SaaG adopts and operationalizes the formal graph modeling foundation established by Yigit and Buzluca~\cite{yigit2025graph} for distributed publish-subscribe systems. We formalize the distributed naval CMS middleware topology as an attributed, weighted directed multigraph:
 \begin{equation}
 G = (V, E, \tau_V, \tau_E, w_V, w_E)
 \end{equation}
@@ -193,7 +193,7 @@ Six structural edge types ($\tau_E: E_{\text{structural}} \to \mathcal{T}_e$) ar
 
 In pub/sub middleware, data messages flow from publisher to subscriber ($A \to B$). However, \textbf{structural failure dependency points in the exact opposite direction ($B \xrightarrow{\text{DEPENDS\_ON}} A$)}: if Publisher $A$ (e.g., radar tracker) fails or produces corrupt messages, Subscriber $B$ (e.g., fire control calculator) is starved or degraded; conversely, if Subscriber $B$ crashes, Publisher $A$ continues unaffected.
 
-Building upon the dependency analysis methodology of Yigit and Buzluca~\cite{yigit2024graph}, SaaG projects logical \texttt{DEPENDS\_ON} edges from structural topology (Table~\ref{tab:dep_rules}).
+Building upon the dependency analysis methodology of Yigit and Buzluca~\cite{yigit2025graph}, SaaG projects logical \texttt{DEPENDS\_ON} edges from structural topology (Table~\ref{tab:dep_rules}).
 
 \begin{table}[h]
 \centering
@@ -239,9 +239,19 @@ SaaG assigns criticality weights $w(v) \in [0, 1]$ across all entities via an ex
     where $\text{base\_w} = 0.20$, $\gamma = 0.15$, and $DG_{\text{in}}(l)$ is the in-degree of library $l$.
 \end{enumerate}
 
-\subsection{Process-Isolated Candidate Digital Models for CI/CD Builds}
+\subsection{Operational Usages: Pipeline Gating and Platform Refactoring}
 
-During concurrent CI/CD pipeline builds, SaaG instantiates an isolated candidate graph $G_{u'} = (V', E')$ by substituting candidate unit version $u'$ into the baseline platform inventory, guaranteeing baseline immutability.
+The architectural digital model serves two complementary functions across the naval combat system lifecycle:
+
+\noindent\textbf{1. Pre-Deployment Verification \& Pipeline Gating (Forward Mode):} During concurrent CI/CD pipeline builds, SaaG instantiates an isolated candidate graph $G_{u'} = (V', E')$ by substituting candidate unit version $u'$ into the baseline platform inventory, guaranteeing baseline immutability. The runner audits $G_{u'}$ against static middleware rules (\S3) in $<1.2$\,s, enforcing fail-closed gating on safety-critical S1/S2 violations.
+
+\noindent\textbf{2. Architectural Improvement \& Platform Refactoring (Diagnostic Mode):} Beyond release gating, system architects query the global digital model ($G_{\text{baseline}}$) to drive systemic refactoring and technical debt reduction across fielded platforms:
+\begin{itemize}\itemsep=0.5pt
+    \item \emph{Cycle Untangling:} Tarjan's SCC algorithm extracts cyclic subgraphs across legacy packages (e.g., WASA allocation vs threat evaluation loops), guiding architects in decoupling monolithic dependencies into clean layered abstractions.
+    \item \emph{Criticality Hotspot Discovery:} Combining topology fan-out with intrinsic weights ($w(v)$) pinpoints overloaded brokers and high-fanout topics requiring architectural replication or channel decomposition.
+    \item \emph{Dead Topic \& Schema Drift Pruning:} Auditing orphaned topics ($|P(t)|=0$ or $|S(t)|=0$) and unreferenced libraries ($DG_{\text{in}}(l)=0$) enables systemic cleanup of accumulated legacy technical debt.
+    \item \emph{``What-If'' Refactoring Simulation:} Architects simulate proposed structural changes (e.g., migrating applications across hosts, altering QoS durability from \texttt{VOLATILE} to \texttt{TRANSIENT\_LOCAL}) directly on the graph model, verifying system-wide safety and latency impact prior to modifying production source code.
+\end{itemize}
 
 \section{Model-Driven Verification Rules \& CI/CD Pipeline Gating}
 
@@ -430,7 +440,7 @@ As summarized in Table~\ref{tab:gap_analysis}, \textbf{6 of the 7 specified capa
 \section{Related Work}
 
 \noindent\textbf{Architecture Conformance \& Reflexion Models:}
-Murphy et al.~\cite{murphy2001} pioneered Software Reflexion Models to compare designs against extracted source-code call graphs. Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion. Terra and Valente~\cite{terra2014} introduced dependency constraint languages. Yigit and Buzluca~\cite{yigit2024graph} formulated graph-based dependency analysis for critical components in pub/sub systems. SaaG builds upon these foundations and operationalizes an architectural digital model for pre-deployment CI/CD gating in naval combat management systems.
+Murphy et al.~\cite{murphy2001} pioneered Software Reflexion Models to compare designs against extracted source-code call graphs. Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion. Terra and Valente~\cite{terra2014} introduced dependency constraint languages. Yigit and Buzluca~\cite{yigit2025graph} formulated graph-based dependency analysis for critical components in pub/sub systems. SaaG builds upon these foundations and operationalizes an architectural digital model for pre-deployment CI/CD gating in naval combat management systems.
 
 \vspace{2pt}
 \noindent\textbf{Configuration Error Detection:}
@@ -442,7 +452,9 @@ Policy engines (ArchUnit, OPA-Gatekeeper) enforce static rules on manifests. Kri
 
 \section{Conclusion \& Evolution Toward Runtime Digital Shadows}
 
-We presented \textbf{SaaG}, an architectural digital model framework for pre-deployment verification and CI/CD gating in Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG statically audits publish/subscribe QoS contracts, CPU core allocations, topic continuity, and dependency cycles. Benchmarks across 5 ADVENT operational profiles (from ADVENT Martı MPA at 0.125\,s to the 66-node LHD Flagship at 1.152\,s) demonstrate that verification requires $\le 1.15$\,s ($<0.22\%$ of an automated build), while reliably catching critical misconfigurations across representative fault scenarios. Our analysis demonstrates that graph analysis is computationally lightweight, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
+We presented \textbf{SaaG}, an architectural digital model framework for pre-deployment verification, CI/CD gating, and continuous architectural refactoring in mission-critical Naval Combat Management Systems (ADVENT CMS). Operating on an attributed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$), SaaG fulfills two complementary roles across the naval software lifecycle: (1) \textbf{Forward Gating}, automatically auditing candidate releases against publish/subscribe QoS contracts, CPU core allocations, topic continuity, and dependency cycles in $<1.2$\,s within CI/CD pipelines; and (2) \textbf{Diagnostic Refactoring}, providing combat system architects with global graph analytics to untangle circular package dependencies, resolve criticality bottlenecks, prune legacy topic debt, and simulate ``what-if'' refactorings before modifying existing operational platforms.
+
+Benchmarks across 5 operational ADVENT profiles (from single-node embedded units like ADVENT Martı MPA at 0.125\,s and ADVENT Rota USVs to the 66-node LHD Flagship at 1.152\,s) demonstrate that verification requires $\le 1.15$\,s ($<0.22\%$ of an automated build), while reliably catching critical misconfigurations across representative fault scenarios. Our analysis demonstrates that graph analysis is computationally lightweight, whereas configuration data acquisition across defense engineering silos is the primary practical hurdle.
 
 \noindent\textbf{Future Work:} We are developing automated ICD harvesters to bridge configuration data ingestion blockers, expanding delta-aware gating across multi-ship task group pipelines, and exploring LLM-assisted remediation proposals subject to mandatory human-in-the-loop safety reviews under naval software assurance guidelines.
 
@@ -495,8 +507,8 @@ J. Humble and D. Farley. 2010. \emph{Continuous Delivery}. Addison-Wesley.
 \bibitem{tao2019digital}
 F. Tao et al. 2019. Digital twin in industry: State-of-the-art. \emph{IEEE TII} 15, 4 (2019), 2405--2415.
 
-\bibitem{yigit2024graph}
-I. O. Yigit and F. Buzluca. 2024. A Graph-Based Dependency Analysis Method for Identifying Critical Components in Distributed Publish-Subscribe Systems. \emph{IEEE Access} (2024). https://doi.org/10.1109/ACCESS.2024
+\bibitem{yigit2025graph}
+I. O. Yigit and F. Buzluca. 2025. A Graph-Based Dependency Analysis Method for Identifying Critical Components in Distributed Publish-Subscribe Systems. \emph{IEEE Access} (2025). https://doi.org/10.1109/RASSE64831.2025.11315354
 \end{thebibliography}
 
 \end{document}
