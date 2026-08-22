@@ -33,7 +33,7 @@ Modern naval operations require rapid sensor-to-shooter loops, multi-sensor data
 * **ADVENT Martı:** Airborne Command and Control System designed for Maritime Patrol Aircraft (MPA) and naval helicopters, executing airborne surveillance, sonobuoy processing, and tactical data link relay.
 * **ADVENT Ufuk:** Land-based coastal surveillance and C2 information management system aggregating coastal radar networks, AIS, ADS-B, and electro-optical sensors to compile and disseminate the Recognized Maritime Picture (RMP).
 
-Across these platforms, ADVENT CMS comprises over **155 external system integrations**, **750 distributed software applications**, and **13,000,000 lines of code**. Subsystems communicate over the Object Management Group (OMG) Data Distribution Service (DDS 1.4) [6] and Tactical Data Links (TDLs: Link 11, Link 16, Link 22, and ADVENT Native Link H) [12]. Under the **Network Enabled Capability (NEC)** paradigm, ADVENT shares sensor tracks and weapon allocations across platforms, enabling Force-Wide Weapon/Sensor Allocation (WASA) and remote firing authorizations.
+Across these platforms, ADVENT CMS comprises over **155 external system integrations**, **750 distributed software applications**, and **13,000,000 lines of code**. Subsystems communicate over **Genieware**—a national publish/subscribe middleware designed for real-time mission-critical defense systems, operating on a DDS-like pub/sub architecture—and Tactical Data Links (TDLs: Link 11, Link 16, Link 22, and ADVENT Native Link H) [12]. Under the **Network Enabled Capability (NEC)** paradigm, ADVENT shares sensor tracks and weapon allocations across platforms, enabling Force-Wide Weapon/Sensor Allocation (WASA) and remote firing authorizations.
 
 ```
   +-----------------------------------------------------------------------------------+
@@ -56,7 +56,7 @@ Across these platforms, ADVENT CMS comprises over **155 external system integrat
                         v                                     v (Specified / Unbuilt)
   +-------------------------------------------+   : - - - - - - - - - - - - - - - - - :
   | Verification & Analysis Engine (SaaG-VAE) |   |  Telemetry Overlay (SaaG-FRD)     |
-  | - DDS QoS Matching & Core Pinning Rules   |   |  - Architectural Drift Detection  |
+  | - Pub/Sub QoS Rules & Core Pinning Rules  |   |  - Architectural Drift Detection  |
   | - Dependency Derivation (Tarjan SCC)      |   |  - Static vs Observed Edge Diff   |
   +-------------------------------------------+   : - - - - - - - - - - - - - - - - - :
                         \                                     /
@@ -71,7 +71,7 @@ Across these platforms, ADVENT CMS comprises over **155 external system integrat
 When a candidate software build is submitted for release into an operational naval platform, conventional CI/CD pipelines evaluate unit and module tests in isolation. Consequently, critical architectural misconfigurations slip through:
 
 * **Hardware CPU Core Contention on OPCONs:** Latency-critical track fusion daemons or fire control calculators inadvertently pinned to overlapping CPU core affinity masks with non-real-time GUI renderers or background loggers on multi-core tactical consoles.
-* **Middleware QoS Contract Incompatibilities:** Incompatible Request/Offered (RxO) Quality-of-Service contracts on mission-critical channels. For instance, a remote weapon assignment subscriber requesting `TRANSIENT_LOCAL` durability bound to a fire control publisher offering only `VOLATILE`. In OMG DDS, endpoints with incompatible QoS contracts never match, so data never flows; DDS signals this through `OFFERED/REQUESTED_INCOMPATIBLE_QOS` status notifications, but these are rarely trapped in operational code, making the failure effectively silent.
+* **Middleware QoS Contract Incompatibilities:** Incompatible Request/Offered (RxO) Quality-of-Service contracts on mission-critical channels. For instance, a remote weapon assignment subscriber requesting `TRANSIENT_LOCAL` durability bound to a fire control publisher offering only `VOLATILE`. In pub/sub middleware like Genieware and DDS, endpoints with incompatible QoS contracts never match, so data never flows; the middleware signals this through incompatible QoS status notifications, but these are rarely trapped in operational code, making the failure effectively silent.
 * **Silent Tactical Topic Disconnections:** Software units publishing to or consuming from topics with schema definitions that diverge across platform releases, or refactored TDL forwarding topics left with zero active subscribers.
 * **Circular Package Dependencies:** Transitive dependency cycles between weapon allocation planners (WASA) and threat evaluation modules that manifest as initialization deadlocks during OPCON console start-up.
 

@@ -104,7 +104,7 @@ Modern naval operations require rapid sensor-to-shooter loops, multi-sensor data
     \item \textbf{ADVENT Ufuk:} Land-based coastal surveillance and C2 information management system aggregating coastal radar networks, AIS, ADS-B, and electro-optical sensors to compile and disseminate the Recognized Maritime Picture (RMP).
 \end{itemize}
 
-Across these platforms, ADVENT CMS comprises over \textbf{155 external system integrations}, \textbf{750 distributed software applications}, and \textbf{13,000,000 lines of code}. Subsystems communicate over the Object Management Group (OMG) Data Distribution Service (DDS 1.4)~\cite{omg2015dds} and Tactical Data Links (TDLs: Link 11, Link 16~\cite{stanag5516}, Link 22~\cite{stanag5522}, and ADVENT Native Link H). Under the \textbf{Network Enabled Capability (NEC)} paradigm, ADVENT shares sensor tracks and weapon allocations across platforms, enabling Force-Wide Weapon/Sensor Allocation (WASA) and remote firing authorizations.
+Across these platforms, ADVENT CMS comprises over \textbf{155 external system integrations}, \textbf{750 distributed software applications}, and \textbf{13,000,000 lines of code}. Subsystems communicate over \textbf{Genieware}---a national publish/subscribe middleware designed for real-time mission-critical defense systems, operating on a DDS-like pub/sub architecture~\cite{omg2015dds}---and Tactical Data Links (TDLs: Link 11, Link 16~\cite{stanag5516}, Link 22~\cite{stanag5522}, and ADVENT Native Link H). Under the \textbf{Network Enabled Capability (NEC)} paradigm, ADVENT shares sensor tracks and weapon allocations across platforms, enabling Force-Wide Weapon/Sensor Allocation (WASA) and remote firing authorizations.
 
 \begin{figure}[t]
 \centering
@@ -117,7 +117,7 @@ Across these platforms, ADVENT CMS comprises over \textbf{155 external system in
   \node (msd) [block, below=of sources] {\textbf{Model Setup Data Generation (SaaG-MSD)}\\ \textit{Ingestion, Metadata Tagging \& Schema Validation}};
   \node (csm) [block, below=of msd] {\textbf{Core System Model Engine (SaaG-CSM)}\\ \textit{Candidate Isolation $G_{u'} = (V', E')$ \& Multigraph $G = (V, E, \tau_V, \tau_E, w_V, w_E)$}};
   
-  \node (vae) [subblock, below left=0.45cm and -0.1cm of csm] {\textbf{Verification Engine (SaaG-VAE)}\\ \textit{DDS QoS Rules \& Core Pinning}};
+  \node (vae) [subblock, below left=0.45cm and -0.1cm of csm] {\textbf{Verification Engine (SaaG-VAE)}\\ \textit{Pub/Sub QoS Rules \& Core Pinning}};
   \node (frd) [dashedblock, below right=0.45cm and -0.1cm of csm] {\textbf{Telemetry Overlay (SaaG-FRD)}\\ \textit{(Specified) Drift Detection}};
   
   \node (gate) [block, below=1.15cm of csm] {\textbf{Naval CI/CD Pipeline Gating (Jenkins / GitLab CI)}\\ \textit{[Exit 0: Pass (Log Warnings)] \quad [Exit 1: Fail (Abort on S1/S2)]}};
@@ -137,7 +137,7 @@ When a candidate software build is submitted for release into an operational nav
 
 \begin{itemize}\itemsep=0.5pt
     \item \textbf{Hardware CPU Core Contention on OPCONs:} Latency-critical track fusion daemons or fire control calculators inadvertently pinned to overlapping CPU core affinity masks with non-real-time GUI renderers or background loggers on multi-core tactical consoles.
-    \item \textbf{Middleware QoS Contract Incompatibilities:} Incompatible Request/Offered (RxO) Quality-of-Service contracts on mission-critical channels. For instance, a remote weapon assignment subscriber requesting \texttt{TRANSIENT\_LOCAL} durability bound to a fire control publisher offering only \texttt{VOLATILE}. In OMG DDS, endpoints with incompatible QoS contracts never match, so data never flows; DDS signals this through \texttt{OFFERED/REQUESTED\_INCOMPATIBLE\_QOS} notifications, but these are rarely trapped in operational code, making the failure effectively silent.
+    \item \textbf{Middleware QoS Contract Incompatibilities:} Incompatible Request/Offered (RxO) Quality-of-Service contracts on mission-critical channels. For instance, a remote weapon assignment subscriber requesting \texttt{TRANSIENT\_LOCAL} durability bound to a fire control publisher offering only \texttt{VOLATILE}. In pub/sub middleware like Genieware and DDS, endpoints with incompatible QoS contracts never match, so data never flows; the middleware signals this through incompatible QoS status notifications, but these are rarely trapped in operational code, making the failure effectively silent.
     \item \textbf{Silent Tactical Topic Disconnections:} Software units publishing to or consuming from topics with schema definitions that diverge across platform releases, or refactored TDL forwarding topics left with zero active subscribers.
     \item \textbf{Circular Package Dependencies:} Transitive dependency cycles between weapon allocation planners (WASA) and threat evaluation modules that manifest as initialization deadlocks during OPCON console start-up.
 \end{itemize}
