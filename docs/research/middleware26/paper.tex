@@ -3,7 +3,6 @@
 \usepackage{booktabs} % For formal tables
 \usepackage{amsmath}
 \usepackage{amsfonts}
-\usepackage{amssymb}
 \usepackage{microtype}
 \usepackage{array}
 \usepackage{multirow}
@@ -180,11 +179,11 @@ G = (V, E, \tau_V, \tau_E, w_V, w_E)
 
 The vertex set $V$ is partitioned into five distinct entity types ($\tau_V: V \to \mathcal{T}_v$):
 \begin{itemize}\itemsep=0.5pt
-    \item \textbf{Applications ($V_{\text{app}}$):} Executable CMS binaries (e.g., track fusion gateway \path{track-fusion-gw}, threat evaluation service \path{threat-eval-srv}, WASA planner \path{wasa-allocator}, tactical display server \path{geodisplay-srv}, console client \path{opcon-ui}, Link 16 gateway \path{advlink-l16}, USV controller \path{rota-autonomy}).
-    \item \textbf{Brokers ($V_{\text{broker}}$):} Genieware discovery domains, routing daemons, and middleware gateways facilitating inter-node tactical communication.
-    \item \textbf{Topics ($V_{\text{topic}}$):} Typed publish/subscribe communication channels carrying domain payloads (e.g., \path{tactical.tracks}, \path{weapon.assignment.cmd}, \path{threat.eval.result}, \path{link16.jseries}, \path{sensor.radar.plots}, \path{mine.qroutes}).
-    \item \textbf{Infrastructure Nodes ($V_{\text{node}}$):} Physical OPCON console workstations, ruggedized VME/VPX server chassis, and mission computers characterized by CPU core capacity $C(v_p)$ and memory bounds.
-    \item \textbf{Libraries ($V_{\text{lib}}$):} Shared dynamic libraries, STANAG 4586 parsers, coordinate conversion routines, tactical math libraries, and NATO symbology decoders.
+    \item \textbf{Applications ($V_{\text{app}}$):} Executable CMS software binaries.
+    \item \textbf{Brokers ($V_{\text{broker}}$):} Broker services facilitating CMS communication.
+    \item \textbf{Topics ($V_{\text{topic}}$):} Typed publish/subscribe communication channels carrying data payloads.
+    \item \textbf{Infrastructure Nodes ($V_{\text{node}}$):} Physical OPCON console workstations, ruggedized VME/VPX server chassis, and mission computers.
+    \item \textbf{Libraries ($V_{\text{lib}}$):} Shared dynamic libraries.
 \end{itemize}
 
 Six structural edge types ($\tau_E: E_{\text{structural}} \to \mathcal{T}_e$) are extracted directly from configuration descriptors: \texttt{PUBLISHES\_TO}, \texttt{SUBSCRIBES\_TO}, \texttt{ROUTES}, \texttt{RUNS\_ON}, \texttt{CONNECTS\_TO}, and \texttt{USES}.
@@ -384,7 +383,7 @@ We evaluated SaaG verification latency across 5 scaling operational profiles mod
 \setlength{\tabcolsep}{2.2pt}
 \begin{tabularx}{\columnwidth}{l X r r r r r}
 \toprule
-\textbf{Platform} & \textbf{Domain} & \textbf{Comp.} & \textbf{Graph (s)} & \textbf{Rules (s)} & \textbf{Total (s)} & \textbf{P95} \\
+\textbf{Platform} & \textbf{Domain} & \textbf{Comp.} & \textbf{Graph (s)} & \textbf{Analysis (s)} & \textbf{Total (s)} & \textbf{P95} \\
 \midrule
 Martı & Air C2 & 1,498 & 0.123 & 0.002 & \textbf{0.125} & 0.150 \\
 Ufuk & Coastal C2 & 2,174 & 0.406 & 0.003 & \textbf{0.410} & 0.435 \\
@@ -399,7 +398,7 @@ Milgem & Frigate & 3,254 & 0.757 & 0.003 & \textbf{0.760} & 0.780 \\
 
 The benchmark results in Table~\ref{tab:latency} demonstrate two central insights:
 \begin{itemize}\itemsep=0.5pt
-    \item \textbf{Dominance of Graph Construction:} Graph construction accounts for \textbf{98.4\% to 99.6\% of total wall-clock time} across all platforms, while pure rule auditing executes in merely \textbf{2 to 14 milliseconds} ($0.002$--$0.014$\,s).
+    \item \textbf{Dominance of Graph Construction:} Graph construction accounts for \textbf{98.4\% to 99.6\% of total wall-clock time} across all platforms, while pure graph analysis executes in merely \textbf{2 to 14 milliseconds} ($0.002$--$0.014$\,s).
     \item \textbf{Impact of Physical Node Topology:} Comparing LHD CMS (2,775 components, 66 physical nodes) and Milgem CMS (3,254 components, 21 physical nodes) reveals that node count significantly impacts graph lifting. Evaluating pairwise colocation and routing dependencies across 66 OPCON consoles and server blades incurs $O(k^2)$ lifting overhead per host node, resulting in 1.152\,s latency on LHD compared to 0.760\,s on Milgem.
 \end{itemize}
 Across all operational configurations, total pipeline gating latency remains $\le 1.15$\,s ($<0.22\%$ of a typical 9-minute automated build).
