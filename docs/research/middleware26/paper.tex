@@ -39,7 +39,7 @@
 
 \begin{document}
 
-\title[Middleware-Centric Architectural Digital Model for Naval CMS]{A Middleware-Centric Architectural Digital Model for Pre-Deployment Verification and CI/CD Gating in Naval Combat Management Systems (Industry Track)}
+\title[Middleware-Centric Architectural Digital Model for Naval CMS]{A Middleware-Centric Architectural Digital Model for Pre-Deployment Verification and CI/CD Gating in Naval Combat Management Systems [Industry Track]}
 
 \author{Ibrahim Onuralp Yigit}
 \affiliation{%
@@ -63,35 +63,33 @@
   \city{Istanbul}
   \country{Turkiye}
 }
-\email{mcaliskan@havelsan.com.tr}
+\email{mccaliskan@havelsan.com.tr}
+
+\author{Emre Karagoz}
+\affiliation{%
+  \institution{Software Development Center, TNRCC}
+  \city{Istanbul}
+  \country{Turkiye}
+}
+\email{karagoz.e5926@dzkk.tsk.tr}
+
+\author{Omer Kursat Ucarer}
+\affiliation{%
+  \institution{Software Development Center, TNRCC}
+  \city{Istanbul}
+  \country{Turkiye}
+}
+\email{ucarer.o1595@dzkk.tsk.tr}
 
 \begin{abstract}
-Modern mission-critical Naval Combat Management Systems (CMS), such as HAVELSAN's combat-proven ADVENT CMS, are distributed real-time systems built on publish/subscribe middleware, integrating hundreds of applications across operator consoles, radar trackers, weapon controllers, and tactical data links. Their most severe integration defects are non-local architectural misconfigurations: incompatible Quality-of-Service (QoS) contracts on hard-deadline weapon assignment channels, overlapping CPU core affinity masks, orphaned tactical topics, and circular package dependencies. Such defects survive unit and component testing and surface only during shipyard integration or sea trials.
+Modern mission-critical Naval Combat Management Systems (CMS) are distributed real-time systems built on publish/subscribe middleware, integrating hundreds of applications across operator consoles, radar trackers, weapon controllers, and tactical data links. Their most severe integration defects are non-local architectural misconfigurations: incompatible Quality-of-Service (QoS) contracts on hard-deadline weapon assignment channels, overlapping CPU core affinity masks, orphaned tactical topics, and circular package dependencies. Such defects survive unit and component testing and surface only during shipyard integration or sea trials.
 
-We report on \emph{System as a Graph} (SaaG), an architectural digital model for pre-deployment verification and CI/CD gating. Reconstructed from candidate release descriptors rather than runtime synchronization, SaaG builds an attributed typed multigraph ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$) over applications, brokers, topics, processing nodes, and shared libraries; derives asymmetric failure-dependency projections from pub/sub topology ($B \xrightarrow{\text{DEPENDS\_ON}} A$); and gates the pipeline on static rule violations ranked by a severity rubric adapted from MIL-STD-882E.
+We report on \emph{System as a Graph} (SaaG), an architectural digital model for pre-deployment verification and CI/CD gating. Reconstructed from candidate release descriptors rather than runtime synchronization, SaaG builds an attributed typed multigraph over applications, brokers, topics, processing nodes, and shared libraries; derives asymmetric failure-dependency projections from pub/sub topology; and gates the pipeline on static rule violations ranked by a severity rubric adapted from MIL-STD-882E\cite{MILSTD882E}.
 
-Our central industrial finding is clear: graph analysis is not the computational bottleneck. Across five scaling operational naval platform profiles (1,498 to 3,254 components across up to 66 distributed nodes), static verification executes in 0.125\,s on a single-node airborne profile and 1.152\,s on the 66-node flagship profile (P95 1.161\,s), representing under 0.22\% of a typical 9-minute automated build pipeline. The rule catalog targets pub/sub misconfiguration classes that would otherwise surface only on physical testbeds. However, an industrial gap analysis reveals that of seven verification capabilities specified with naval combat system architects, six remain constrained by configuration-data acquisition across defense engineering silos rather than by algorithmic limits. We report the framework architecture, multi-scale verification latency, the misconfiguration classes the catalog targets, and practical lessons from building the prototype inside a defense engineering organization.
+Our central industrial finding is clear: graph analysis is not the computational bottleneck. Across five scaling operational naval platform profiles, static verification executes in 0.125\,s on a single-node airborne profile and 1.152\,s on the 66-node flagship profile (P95 1.161\,s), representing under 0.22\% of a typical 9-minute automated build pipeline. The rule catalog targets pub/sub misconfiguration classes that would otherwise surface only on physical testbeds. We report the framework architecture, multi-scale verification latency, the misconfiguration classes the catalog targets, and practical lessons from building the prototype inside a defense engineering organization.
 \end{abstract}
 
-\begin{CCSXML}
-<ccs2012>
-   <concept>
-       <concept_id>10010520.10010575.10010577</concept_id>
-       <concept_desc>Computer systems organization~Reliability</concept_desc>
-       <concept_significance>500</concept_significance>
-   </concept>
-   <concept>
-       <concept_id>10011007.10011074.10011099.10011102</concept_id>
-       <concept_desc>Software and its engineering~Software defect analysis</concept_desc>
-       <concept_significance>500</concept_significance>
-   </concept>
-</ccs2012>
-\end{CCSXML}
-
-\ccsdesc[500]{Computer systems organization~Reliability}
-\ccsdesc[500]{Software and its engineering~Software defect analysis}
-
-\keywords{Naval Combat Management Systems (CMS), ADVENT CMS, SaaG Framework, Architectural Digital Model, Middleware Verification, Pub/Sub QoS Contracts, CI/CD Gating, CPU Core Pinning, Static Rule Auditing, OMG DDS, MIL-STD-882E, Network Enabled Capability (NEC)}
+\keywords{Naval Combat Management Systems, Architectural Digital Model, Middleware Verification, QoS, CI/CD Gating, Static Rule Auditing}
 
 \maketitle
 
@@ -99,11 +97,9 @@ Our central industrial finding is clear: graph analysis is not the computational
 
 Continuous Integration and Continuous Delivery (CI/CD) pipelines have fundamentally transformed software engineering by automating compilation, testing, and artifact generation~\cite{humble2010}. In naval defense systems, modern Combat Management Systems (CMS) have evolved from monolithic mainframes into modular, distributed, open-architecture systems governed by high-performance publish/subscribe (pub/sub) middleware~\cite{omg2015dds}.
 
-\subsection{The Pre-Deployment Verification Gap in Naval Combat Systems}
+\subsection{The Pre-Deployment Verification Gap in Naval Combat Systems} 
 
-Modern naval operations require rapid sensor-to-shooter loops, multi-sensor data fusion, coordinated weapon assignment, and seamless cross-platform interoperability. Built to fulfill these demands, \textbf{ADVENT CMS} (developed by \textbf{HAVELSAN} in cooperation with the Turkish Naval Forces Research Center Command---ARMERKOM~\cite{advent2022}) represents a state-of-the-art naval combat suite spanning a wide product tree: \textbf{ADVENT Kalyon} and \textbf{Milgem CMS} for surface combatants (frigates, corvettes, MCM vessels) handling multi-threat warfare (AAW, ASuW, ASW, EW); \textbf{LHD CMS} for amphibious assault flagships (e.g., L400 TCG Anadolu), providing task group command, multi-link gateway centers, and unmanned vehicle control; \textbf{ADVENT Rota}, a mission management system for USV/UUV/UAV platforms with STANAG 4586 compliance~\cite{stanag4586}; \textbf{ADVENT Mart\i}, an airborne C2 system for maritime patrol aircraft and naval helicopters; and \textbf{ADVENT Ufuk}, a land-based coastal surveillance and C2 system compiling the Recognized Maritime Picture.
-
-Across these platforms, ADVENT CMS comprises over \textbf{155 external system integrations}, \textbf{750 distributed software applications}, and \textbf{13,000,000 lines of code}. Subsystems communicate over \textbf{Genieware}, a national publish/subscribe middleware for real-time mission-critical defense systems. Genieware adopts the OMG DDS~\cite{omg2015dds} data-centric model and its Request/Offered (RxO) contract semantics for the \texttt{RELIABILITY}, \texttt{DURABILITY}, \texttt{PARTITION}, and \texttt{DOMAIN\_ID} policies---precisely the policies our rules evaluate---so we use DDS terminology throughout and the rules of \S3 apply unchanged to DDS deployments. Genieware diverges in its discovery and wire protocol, which our static model does not represent. Platforms also interoperate over Tactical Data Links (TDLs: Link 11, Link 16~\cite{stanag5516}, Link 22~\cite{stanag5522}, and ADVENT Native Link H). Under the \textbf{Network Enabled Capability (NEC)} paradigm, ADVENT shares sensor tracks and weapon allocations across platforms, enabling Force-Wide Weapon/Sensor Allocation (WASA) and remote firing authorizations.
+Modern naval operations require rapid sensor-to-shooter loops, multi-sensor data fusion, coordinated weapon assignment, and seamless cross-platform interoperability. Built to fulfill these demands, a modern naval combat management system (CMS) developed by \textbf{HAVELSAN} in cooperation with the Turkish Naval Forces Research Center Command (\textbf{ARMERKOM}) represents a state-of-the-art combat suite spanning multiple operational domains. These deployments support surface combatants, amphibious assault platforms, unmanned systems, airborne maritime assets, and coastal surveillance infrastructures, addressing mission areas such as anti-air warfare (AAW), anti-surface warfare (ASuW), anti-submarine warfare (ASW), electronic warfare (EW), task group coordination, mission management, and common operational picture generation. Across these platforms, the CMS ecosystem comprises hundreds of distributed software applications and numerous external system integrations. Subsystems communicate through a real-time publish/subscribe middleware designed for mission-critical distributed systems. This middleware adopts the OMG DDS~\cite{omg2015dds} data-centric communication model and its Request/Offered (RxO) contract semantics for policies including \texttt{RELIABILITY}, \texttt{DURABILITY}, \texttt{PARTITION}, and \texttt{DOMAIN\_ID}---precisely the policies evaluated by our verification rules. Consequently, DDS terminology is used throughout this paper, and the rules of \S3 apply directly to deployments following DDS-compatible communication semantics. Platform interoperability is further supported through standard tactical data links such as Link 11, Link 16~\cite{stanag5516}, and Link 22~\cite{stanag5522}, alongside proprietary operational networking solutions. Under the \textbf{Network Enabled Capability (NEC)} paradigm, participating platforms exchange sensor tracks, tactical information, and engagement-related data to enable coordinated force-level decision making and resource allocation.
 
 \begin{figure}[t]
 \centering
@@ -131,7 +127,7 @@ Across these platforms, ADVENT CMS comprises over \textbf{155 external system in
   \draw[->, thick, dashed, gray!70!black] (frd) |- (gate);
 \end{tikzpicture}%
 }
-\caption{SaaG pipeline integration for ADVENT CMS. Dashed boxes are specified, not yet built.}
+\caption{SaaG pipeline integration for a distributed naval combat management system. Dashed boxes are specified, not yet built.}
 \label{fig:architecture}
 \end{figure}
 
@@ -150,8 +146,8 @@ The digital twin classification of Kritzinger et al.~\cite{kritzinger2018} disti
 This paper makes the following contributions:
 \begin{enumerate}\itemsep=0.5pt
     \item \textbf{Naval CMS Architectural Model Baseline (\S2):} A formal directed multigraph representation ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$) capturing 5 entity classes, 6 structural relations, and 6 failure-dependency projection rules that explicitly map the downstream propagation of architectural risk in pub/sub naval combat systems.
-    \item \textbf{CI/CD Pipeline Gating \& Verification Methodology (\S3, \S4):} A two-stage deployment gate operating on standard CI runners with a defined safety severity rubric (S1--S4) adapted from MIL-STD-882E~\cite{milstd882e}. We characterize the mission-critical pub/sub misconfiguration classes the rule catalog targets (QoS mismatches, CPU core contention, topic continuity breaks, circular dependencies) and state which are covered by rules implemented in the prototype.
-    \item \textbf{Verification Complexity \& Industrial Bottleneck Analysis (\S5, \S6):} Benchmarks across 5 naval platform profiles (1,498--3,254 components; 1--66 nodes) modeled on ADVENT platform lines show gate latency of 0.125--1.152\,s, under 0.22\% of a 9-minute build, with node distribution rather than component count driving cost. We document that 6 of 7 specified verification capabilities are blocked by configuration data acquisition across defense engineering silos, not by algorithmic complexity.
+    \item \textbf{CI/CD Pipeline Gating \& Verification Methodology (\S3, \S4):} A two-stage deployment gate operating on standard CI runners with a defined safety severity rubric (S1--S4) adapted from MIL-STD-882E. We characterize the mission-critical pub/sub misconfiguration classes the rule catalog targets (QoS mismatches, CPU core contention, topic continuity breaks, circular dependencies) and state which are covered by rules implemented in the prototype.
+    \item \textbf{Verification Complexity \& Industrial Bottleneck Analysis (\S5, \S6):} Benchmarks across five industrial-scale naval platform profiles (1,498--3,254 components; 1--66 nodes) representative of modern combat management system deployments show gate latency of 0.125--1.152\,s, under 0.22\% of a 9-minute build, with node distribution rather than component count driving cost. We document that 6 of 7 specified verification capabilities are blocked by configuration data acquisition across defense engineering silos, not by algorithmic complexity.
 \end{enumerate}
 
 \section{The Architectural Digital Model: Formulation and Graph Derivation}
@@ -255,7 +251,7 @@ Telemetry Drift & $\circ$ & $\bullet$ & $E_{\text{Observed}} \setminus E_{\text{
 
 \subsection{Severity Rubric \& Alignment with Military Safety Standards (MIL-STD-882E)}
 
-MIL-STD-882E~\cite{milstd882e} classifies the severity of \emph{mishap consequences}, not of static configuration defects, so we \emph{adapt} rather than adopt its four-level scale: each violation is assigned the severity of the worst credible mishap it could contribute to, given the criticality of the channels and hosts it affects. Severity is deliberately decoupled from message transport priority, since a \texttt{LOW}-priority channel may still gate a safety-critical function:
+MIL-STD-882E classifies the severity of \emph{mishap consequences}, not of static configuration defects, so we \emph{adapt} rather than adopt its four-level scale: each violation is assigned the severity of the worst credible mishap it could contribute to, given the criticality of the channels and hosts it affects. Severity is deliberately decoupled from message transport priority, since a \texttt{LOW}-priority channel may still gate a safety-critical function:
 \begin{itemize}\itemsep=0.5pt
     \item \textbf{S1 (Critical Severity --- Catastrophic / Safety Critical):} Flaws causing complete loss of safety-critical functions (e.g., pub/sub RxO mismatch on weapon assignment or primary radar tracking channels, CPU over-allocation on fire control servers).
     \item \textbf{S2 (High Severity --- Critical / Mission Essential):} Severe defects with localized redundancy or secondary mitigation (e.g., orphaned tactical data link topics, circular dependencies among core WASA engagement planning units).
@@ -275,13 +271,7 @@ Standard CI runners treat non-zero exit codes as build failures. On safety-criti
 \subsubsection{Delta-Aware Gating \& Waiver Register}
 In legacy naval codebases carrying pre-existing technical debt, an absolute gate blocks every build if baseline violations exist. SaaG supports \emph{delta-aware gating}: candidate builds are blocked only if $\text{Violations}(G_{u'}) \setminus \text{Violations}(G_{\text{baseline}}) \neq \emptyset$. Known legacy violations are managed via a Chief Architect-approved \emph{Waiver Register} with cryptographic signatures and expiration dates.
 
-\section{Multi-Scale Naval Platform Architectures \& Verification Methodology}
-
-To assess the practical applicability of SaaG pre-deployment verification in an operational naval combat systems environment, we model the architectural scales and middleware configurations across five major ADVENT platform families (\textbf{ADVENT Martı}, \textbf{ADVENT Ufuk}, \textbf{ADVENT Rota}, \textbf{ADVENT Kalyon / Milgem CMS}, and \textbf{LHD CMS Flagship}).
-
-\subsection{Multi-Domain Combat System Architecture \& Platform Profiles}
-
-Modern naval combat suites deploy across diverse physical and operational domains, as reflected in the public ADVENT product tree. \textbf{Martı} is an airborne C2 fit for maritime patrol aircraft, helicopters, and naval UAVs, handling airborne radar, sonobuoy acoustic processing, and data link relay in a tight single-node footprint ($|V|=1{,}498$, $|E|=4{,}824$). \textbf{Ufuk} is a land-based multi-sensor compilation center integrating coastal radar, AIS, ADS-B, and electro-optical surveillance across 23 server nodes ($|V|=2{,}174$, $|E|=7{,}142$). \textbf{Rota} is the mission management system for USV/UUV/UAV platforms with STANAG 4586 compliance~\cite{stanag4586} ($|V|=2{,}192$, $|E|=6{,}980$). \textbf{Milgem CMS / Kalyon} is the multi-warfare surface combatant suite (AAW, ASuW, ASW, EW) across 21 console nodes ($|V|=3{,}254$, $|E|=11{,}460$). \textbf{LHD CMS} is the task group flagship fit (e.g., L400 TCG Anadolu) with multi-link gateway centers and joint operations planning over 66 consoles and server chassis ($|V|=2{,}775$, $|E|=9{,}620$).
+\section{Multi-Scale Naval Platform Architectures \& Verification Methodology} To assess the practical applicability of SaaG pre-deployment verification in an operational defense-system environment, we model the architectural scales and middleware configurations of five representative platform profiles spanning airborne, coastal surveillance, unmanned, surface-combatant, and task-group command domains. \subsection{Multi-Domain Combat System Architecture \& Platform Profiles} Modern combat-system ecosystems are deployed across diverse physical and operational domains. To capture this diversity, we construct five representative platform profiles covering airborne command-and-control, land-based surveillance, autonomous systems, surface combatants, and large-scale command platforms. The \textbf{Airborne C2 Profile} represents maritime patrol aircraft, helicopters, and airborne unmanned platforms that integrate radar processing, acoustic sensing, and tactical data-link relay within a compact single-node deployment ($|V|=1{,}498$, $|E|=4{,}824$). The \textbf{Coastal Surveillance Profile} represents multi-sensor maritime picture compilation centers integrating radar, AIS, ADS-B, and electro-optical surveillance across distributed infrastructure ($|V|=2{,}174$, $|E|=7{,}142$) deployed on 23 server nodes. The \textbf{Autonomous Systems Profile} represents mission-management architectures for unmanned surface, underwater, and aerial vehicles, including interoperability requirements aligned with STANAG 4586~\cite{stanag4586} ($|V|=2{,}192$, $|E|=6{,}980$). The \textbf{Surface Combatant Profile} represents multi-warfare combat management deployments supporting anti-air, anti-surface, anti-submarine, and electronic warfare functions across distributed operator consoles ($|V|=3{,}254$, $|E|=11{,}460$). The \textbf{Command Platform Profile} represents task-group and joint-operations command environments with multi-link coordination and planning capabilities spanning 66 consoles and server chassis ($|V|=2{,}775$, $|E|=9{,}620$).
 
 Across all platform scales, subsystems rely on \textbf{Genieware} publish/subscribe middleware to facilitate real-time sensor-to-shooter coordination and Network Enabled Capability (NEC).
 
@@ -322,29 +312,11 @@ E & \texttt{PARTITION} mismatch on sensor gateway & S1 & Middleware Pre-Cond. & 
 
 \subsection{Multi-Scale Naval Platform Benchmarking Setup}
 
-\noindent\emph{Profile provenance.} We evaluate latency on five profiles whose \emph{scale parameters}---application, topic, node, and library counts, and the QoS and fan-out distributions used to populate them---were elicited from architects of the corresponding ADVENT platform lines. The topologies themselves are generated, not exported from fielded systems, for the release-restriction reason given in \S6; the profiles therefore reproduce the size and shape of the real deployments but not their contents. They span 184--318 applications, 1,219--2,831 topics, 40--110 libraries, and 1--66 nodes, giving $|V|$ from 1,498 (Martı) to 3,254 (Milgem) and $|E|$ from 4,824 to 11,460. Absolute latencies should be read as characteristic of this scale class rather than as measurements of a specific ship.
+\noindent\emph{Profile provenance.} We evaluate latency on five platform profiles whose \emph{scale parameters}---application, topic, node, and library counts, together with the QoS and fan-out distributions used to populate them---were elicited from architects of corresponding operational combat-system deployments. The topologies themselves are generated, not exported from fielded systems, for the release-restriction reason given in \S6; the profiles therefore reproduce the size and structural characteristics of real deployments without containing operational configuration data. They span 184--318 applications, 1,219--2,831 topics, 40--110 libraries, and 1--66 nodes, yielding $|V|$ values from 1,498 (Airborne C2 Profile) to 3,254 (Surface Combatant Profile) and $|E|$ values from 4,824 to 11,460. Absolute latencies should therefore be interpreted as representative of this deployment scale rather than as measurements of any specific platform.
 
 \noindent\emph{Environment:} Ubuntu 22.04 LTS (AMD EPYC 7763, 32 GB RAM), Python 3.11 with NetworkX 3.2, in-memory graph construction without external database roundtrips. Each figure is the mean of 500 candidate build evaluations per profile across 5 generator seeds, after 20 warm-up runs.
 
-\begin{table}[b]
-\centering
-\caption{Gate Execution Latency Across 5 ADVENT CMS Profiles ($N=500$).}
-\label{tab:latency}
-\small
-\setlength{\tabcolsep}{2.2pt}
-\begin{tabularx}{\columnwidth}{X r r r r r r}
-\toprule
-\textbf{Platform} & \textbf{Nodes} & \textbf{Comp.} & \textbf{Constr.} & \textbf{Anal.} & \textbf{Total} & \textbf{P95} \\
- & & & (s) & (s) & (s) & (s) \\
-\midrule
-Martı (Air C2) & 1 & 1,498 & 0.123 & 0.002 & \textbf{0.125} & 0.150 \\
-Ufuk (Coastal C2) & 23 & 2,174 & 0.406 & 0.003 & \textbf{0.410} & 0.435 \\
-Rota (USV/UxV) & 1 & 2,192 & 0.430 & 0.005 & \textbf{0.435} & 0.450 \\
-LHD CMS (Flagship) & 66 & 2,775 & 1.138 & 0.014 & \textbf{1.152} & 1.161 \\
-Milgem (Frigate) & 21 & 3,254 & 0.757 & 0.003 & \textbf{0.760} & 0.780 \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\begin{table}[b] \centering \caption{Gate Execution Latency Across Five Representative Platform Profiles ($N=500$).} \label{tab:latency} \small \setlength{\tabcolsep}{2.2pt} \begin{tabularx}{\columnwidth}{X r r r r r r} \toprule \textbf{Profile} & \textbf{Nodes} & \textbf{Comp.} & \textbf{Constr.} & \textbf{Anal.} & \textbf{Total} & \textbf{P95} \\ & & & (s) & (s) & (s) & (s) \\ \midrule Airborne C2 Profile & 1 & 1,498 & 0.123 & 0.002 & \textbf{0.125} & 0.150 \\ Coastal Surveillance Profile & 23 & 2,174 & 0.406 & 0.003 & \textbf{0.410} & 0.435 \\ Autonomous Systems Profile & 1 & 2,192 & 0.430 & 0.005 & \textbf{0.435} & 0.450 \\ Command Platform Profile & 66 & 2,775 & 1.138 & 0.014 & \textbf{1.152} & 1.161 \\ Surface Combatant Profile & 21 & 3,254 & 0.757 & 0.003 & \textbf{0.760} & 0.780 \\ \bottomrule \end{tabularx} \end{table}
 
 \begin{table*}[t]
 \centering
@@ -370,8 +342,8 @@ Milgem (Frigate) & 21 & 3,254 & 0.757 & 0.003 & \textbf{0.760} & 0.780 \\
 
 The benchmark results in Table~\ref{tab:latency} demonstrate two central insights:
 \begin{itemize}\itemsep=0.5pt
-    \item \textbf{Dominance of Graph Construction:} Graph construction accounts for \textbf{98.4\% to 99.6\% of total wall-clock time} across all platforms, while pure graph analysis executes in merely \textbf{2 to 14 milliseconds} ($0.002$--$0.014$\,s).
-    \item \textbf{Component Count Does Not Predict Cost:} LHD CMS is measurably slower than Milgem CMS (1.152\,s vs 0.760\,s) despite having \emph{fewer} components (2,775 vs 3,254), the two differing chiefly in node count (66 vs 21). Construction cost therefore tracks how a deployment is distributed across hosts rather than raw component count, because dependency lifting materializes node-level edges from hosted application pairs. We report this as an observation: we have not isolated the dominant term by profiling, and the per-host $O(k^2)$ colocation bound ($k$ = co-located processes, $k \ll |V|$) is a worst case that does not by itself explain the gap, since LHD averages fewer processes per host than Milgem.
+\item \textbf{Dominance of Graph Construction:} Graph construction accounts for \textbf{98.4\% to 99.6\% of total wall-clock time} across all platform profiles, while pure graph analysis executes in merely \textbf{2 to 14 milliseconds} ($0.002$--$0.014$\,s). \item \textbf{Component Count Does Not Predict Cost:} The \emph{Command Platform Profile} is measurably slower than the \emph{Surface Combatant Profile} (1.152\,s vs 0.760\,s) despite having fewer components (2,775 vs 3,254), the two differing chiefly in node count (66 vs 21). Construction cost therefore tracks how a deployment is distributed across hosts rather than raw component count, because dependency lifting materializes node-level edges from hosted application pairs. We report this as an observation: we have not isolated the dominant term by profiling, and the per-host $O(k^2)$ colocation bound ($k$ = co-located processes, $k \ll |V|$) is a worst case that does not by itself explain the gap, since the Command Platform Profile averages fewer processes per host than the Surface Combatant Profile.
+
 \end{itemize}
 Across all operational configurations, total pipeline gating latency remains $\le 1.15$\,s ($<0.22\%$ of a typical 9-minute automated build).
 
@@ -397,61 +369,9 @@ Three limitations bound these results. First, effectiveness is characterized by 
 
 \noindent\textbf{Policy-as-code, middleware diagnostics, and digital twins.} Policy engines such as ArchUnit and OPA-Gatekeeper enforce static rules over code and manifests, while DDS and ROS 2 tooling reports QoS incompatibility at runtime~\cite{omg2015dds}---but only once endpoints have initialized in the target environment, which for a combat system means a testbed or a ship. SaaG moves the same class of check left, into the pipeline. Kritzinger et al.~\cite{kritzinger2018} established the digital model/shadow/twin taxonomy and Tao et al.~\cite{tao2019digital} reviewed industrial digital twins; we adapt the digital \emph{model} to software architecture as a static, reproducible gating baseline.
 
-\section{Conclusion}
+\section{Conclusion} 
+We presented \textbf{SaaG}, an architectural digital model for pre-deployment verification and CI/CD gating in mission-critical Naval Combat Management Systems. It audits candidate releases against pub/sub QoS contracts, core allocations, topic continuity, and dependency cycles inside the pipeline, and gives architects global analytics for diagnosing structural debt in fielded platforms. Across five representative platform profiles spanning single-node airborne systems to a 66-node command platform, gating costs $\le 1.15$\,s---under 0.22\% of an automated build---so graph analysis is not the constraint. The constraint is configuration data acquisition across defense engineering silos, which still blocks 6 of the 7 capabilities our architects specified. Our next step is therefore ingestion rather than analysis: automated ICD harvesters, delta-aware gating across multi-platform deployment pipelines, and---once field telemetry exists---the one-way runtime feed that would make this digital model a digital shadow.
 
-We presented \textbf{SaaG}, an architectural digital model for pre-deployment verification and CI/CD gating in mission-critical Naval Combat Management Systems. It audits candidate releases against pub/sub QoS contracts, core allocations, topic continuity, and dependency cycles inside the pipeline, and gives architects global analytics for diagnosing structural debt in fielded platforms. Across 5 ADVENT profiles spanning single-node airborne units to a 66-node flagship, gating costs $\le 1.15$\,s---under 0.22\% of an automated build---so graph analysis is not the constraint. The constraint is configuration data acquisition across defense engineering silos, which still blocks 6 of the 7 capabilities our architects specified. Our next step is therefore ingestion rather than analysis: automated ICD harvesters, delta-aware gating across multi-ship task group pipelines, and---once field telemetry exists---the one-way runtime feed that would make this digital model a digital shadow.
-
-\begin{thebibliography}{18}
-\bibitem{advent2022}
-ARMERKOM / HAVELSAN. 2022. \emph{ADVENT Combat Management System: Architectural Principles and Operational Capabilities}. Technical Whitepaper, HAVELSAN Inc.
-
-\bibitem{milstd882e}
-Department of Defense. 2012. \emph{System Safety (MIL-STD-882E)}. DoD Standard Practice.
-
-\bibitem{stanag4586}
-NATO Standardization Office. 2017. \emph{STANAG 4586: Standard Interfaces of UAV Control System (UCS) for NATO UAV Interoperability}, Edition 4.
-
-\bibitem{stanag5516}
-NATO Standardization Office. 2020. \emph{STANAG 5516: Tactical Data Exchange - Link 16}, Edition 8.
-
-\bibitem{stanag5522}
-NATO Standardization Office. 2021. \emph{STANAG 5522: Tactical Data Exchange - Link 22}, Edition 3.
-
-\bibitem{omg2015dds}
-Object Management Group (OMG). 2015. \emph{Data Distribution Service (DDS) Specification}, Version 1.4.
-
-\bibitem{kritzinger2018}
-W. Kritzinger et al. 2018. Digital Twin in manufacturing: A categorical literature review. \emph{IFAC-PapersOnLine} 51, 11 (2018), 1016--1022.
-
-\bibitem{murphy2001}
-G. C. Murphy, D. Notkin, and K. J. Sullivan. 2001. Software reflexion models. \emph{IEEE TSE} 27, 4 (2001), 364--380.
-
-\bibitem{perry1992}
-D. E. Perry and A. L. Wolf. 1992. Foundations for the study of software architecture. \emph{ACM SIGSOFT SEN} 17, 4 (1992), 40--52.
-
-\bibitem{desilva2012}
-L. de Silva and D. Balasubramaniam. 2012. Controlling software architecture erosion. \emph{JSS} 85, 1 (2012), 132--151.
-
-\bibitem{terra2014}
-R. Terra and M. T. Valente. 2014. A dependency constraint language. \emph{SPE} 44, 9 (2014), 1073--1094.
-
-\bibitem{xu2015}
-T. Xu and Y. Zhou. 2015. Systems approaches to tackling configuration errors. \emph{ACM CSUR} 47, 4 (2015), 70.
-
-\bibitem{tang2015}
-C. Tang et al. 2015. Holistic configuration management at Facebook. In \emph{ACM SOSP '15}. 328--343.
-
-\bibitem{huang2015}
-P. Huang et al. 2015. ConfValley: Validating system configurations. In \emph{ACM EuroSys '15}. Article 4.
-
-\bibitem{humble2010}
-J. Humble and D. Farley. 2010. \emph{Continuous Delivery}. Addison-Wesley.
-
-\bibitem{tao2019digital}
-F. Tao et al. 2019. Digital twin in industry: State-of-the-art. \emph{IEEE TII} 15, 4 (2019), 2405--2415.
-
-\bibitem{yigit2025graph}
-I. O. Yigit and F. Buzluca. 2025. A Graph-Based Dependency Analysis Method for Identifying Critical Components in Distributed Publish-Subscribe Systems. In \emph{IEEE Int. Conf. on Recent Advances in Systems Science and Engineering (RASSE)}. https://doi.org/10.1109/RASSE64831.2025.11315354
-\end{thebibliography}
+\bibliographystyle{IEEEtran} \bibliography{references}
 
 \end{document}
