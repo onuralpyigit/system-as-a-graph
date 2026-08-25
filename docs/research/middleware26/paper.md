@@ -31,49 +31,40 @@ Continuous Integration and Continuous Delivery (CI/CD) pipelines have fundamenta
 
 Modern naval operations require rapid sensor-to-shooter loops, multi-sensor fusion, coordinated weapon assignment, and cross-platform interoperability. A modern naval combat management system (CMS) developed by **HAVELSAN** with the Turkish Naval Forces Research Center Command (**ARMERKOM**) spans these domains, supporting surface combatants, amphibious platforms, unmanned systems, and airborne maritime assets (Section 4 details the corresponding platform profiles). Across these platforms, the CMS ecosystem comprises hundreds of distributed applications integrated through a proprietary real-time publish/subscribe middleware that adopts the OMG DDS [5] data-centric model and its Request/Offered (RxO) contract semantics for policies including `RELIABILITY`, `DURABILITY`, `PARTITION`, and `DOMAIN_ID`—precisely the policies our verification rules evaluate; DDS terminology is therefore used throughout, and the rules of §3 apply directly to DDS-compatible deployments. Interoperability is further supported via standard tactical data links—Link 11 [15], Link 16 [3], Link 22 [4]—and proprietary operational networking under the **Network Enabled Capability (NEC)** paradigm, where platforms exchange tracks and tactical data for force-level decision making.
 
-```mermaid
-flowchart TD
-    subgraph Sources["Naval CMS Configuration Sources"]
-        S["Weapon/Sensor ICDs | Source Repos | Middleware Topics | Operator Control UI Specs"]
-    end
-
-    subgraph MSD["Model Setup Data Generation (SaaG-MSD)"]
-        M["Descriptor Ingestion, Metadata Tagging & Schema Validation"]
-    end
-
-    subgraph CSM["Core System Model Engine (SaaG-CSM)"]
-        C["Candidate Isolation G_u' = (V', E') & Multigraph G = (V, E, τ_V, τ_E, w_V, w_E)"]
-    end
-
-    subgraph VAE["Verification Engine (SaaG-VAE) [Digital Model: Operational Prototype]"]
-        V["Pub/Sub QoS, Core Pinning, Tarjan SCC"]
-    end
-
-    subgraph FRD["Telemetry Overlay (SaaG-FRD) [Digital Shadow: Target Spec]"]
-        F["Field Telemetry & Drift Detection"]
-    end
-
-    subgraph Gate["Naval CI/CD Pipeline Gating (Jenkins / GitLab CI)"]
-        G["Exit 0: Pass (Log Warnings) | Exit 1: Fail (Abort on S1/S2)"]
-    end
-
-    S --> M
-    M --> C
-    C --> V
-    C -.-> F
-    V --> G
-    F -.-> G
-
-    classDef default fill:#f9fbfd,stroke:#2b5797,stroke-width:1px;
-    classDef highlight fill:#eaf4fc,stroke:#1a3b70,stroke-width:1.5px;
-    classDef target fill:#f5f5f5,stroke:#888,stroke-dasharray: 5 5;
-    classDef gateStyle fill:#eef9ee,stroke:#2e7d32,stroke-width:1.5px;
-    class S,M,C highlight;
-    class V highlight;
-    class F target;
-    class G gateStyle;
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                           Naval CMS Configuration Sources                            │
+│     [Weapon/Sensor ICDs]   [Source Repos]   [Middleware Topics]   [OPCON Specs]      │
+└──────────────────────────────────────────┬───────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                        Model Setup Data Generation (SaaG-MSD)                        │
+│              Descriptor Ingestion, Metadata Tagging & Schema Validation              │
+└──────────────────────────────────────────┬───────────────────────────────────────────┘
+                                           │
+                                           ▼
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                         Core System Model Engine (SaaG-CSM)                          │
+│    Candidate Isolation Gu' = (V', E') & Multigraph G = (V, E, τ_V, τ_E, w_V, w_E)    │
+└────────────────────┬──────────────────────────────────────────┆──────────────────────┘
+                     │                                          ┆
+                     ▼                                          ▼
+┌─────────────────────────────────────────┐   + - - - - - - - - - - - - - - - - - - - - +
+│      Verification Engine (SaaG-VAE)     │   :      Telemetry Overlay (SaaG-FRD)      :
+│  [Digital Model: Operational Prototype] │   :     [Digital Shadow: Target Spec]      :
+│  Pub/Sub QoS, Core Pinning, Tarjan SCC  │   :   Field Telemetry & Drift Detection    :
+└────────────────────┬────────────────────┘   + - - - - - - - - - - - - - - - - - - - - +
+                     │                                          ┆
+                     └─────────────────────┬────────────────────┘
+                                           │
+                                           ▼
+┌──────────────────────────────────────────────────────────────────────────────────────┐
+│                  Naval CI/CD Pipeline Gating (Jenkins / GitLab CI)                   │
+│          [Exit 0: Pass (Log Warnings)]     [Exit 1: Fail (Abort on S1/S2)]           │
+└──────────────────────────────────────────────────────────────────────────────────────┘
 ```
-*Figure 1: SaaG pipeline integration for a distributed naval combat management system. Dashed paths/boxes are specified for target integration, not yet built.*
+*Figure 1: SaaG pipeline integration for a distributed naval combat management system. Solid boxes and paths represent the operational prototype pipeline (Digital Model); dashed boxes and paths represent the specified field telemetry overlay (Digital Shadow), not yet built.*
 
 When a candidate build is submitted for release, CI/CD pipelines evaluate unit and module tests in isolation, so non-local architectural misconfigurations slip through: latency-critical track fusion daemons are pinned to CPU core masks overlapping non-real-time GUI renderers; endpoints are bound with incompatible Request/Offered (RxO) QoS contracts—a weapon assignment subscriber requesting `TRANSIENT_LOCAL` durability against a fire control publisher offering only `VOLATILE`—so they never match and data never flows, and the incompatible-QoS status is rarely trapped, making the failure effectively silent; refactored TDL forwarding topics are left with zero subscribers; and transitive dependency cycles between weapon allocation planners and threat evaluation modules surface as initialization deadlocks during operator control console start-up.
 
