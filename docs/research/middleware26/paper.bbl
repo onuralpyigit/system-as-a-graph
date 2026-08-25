@@ -21,7 +21,7 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
-\bibitem{MILSTD882E}
+\bibitem{milstd882e}
 {Department of Defense}, ``System safety (mil-std-882e),'' U.S. Department of
   Defense, DoD Standard Practice, 2012.
 
@@ -33,9 +33,13 @@ J.~Humble and D.~Farley, \emph{Continuous Delivery}.\hskip 1em plus 0.5em minus
 {Object Management Group (OMG)}, ``Data distribution service (dds)
   specification,'' 2015, version 1.4.
 
+\bibitem{stanag5511}
+{NATO Standardization Office}, \emph{STANAG 5511: Tactical Data Exchange --
+  Link 11}, Std., 2019, edition 3.
+
 \bibitem{stanag5516}
-{NATO Standardization Office}, \emph{STANAG 5516: Tactical Data Exchange --
-  Link 16}, Std., 2020, edition 8.
+------, \emph{STANAG 5516: Tactical Data Exchange -- Link 16}, Std., 2020,
+  edition 8.
 
 \bibitem{stanag5522}
 ------, \emph{STANAG 5522: Tactical Data Exchange -- Link 22}, Std., 2021,

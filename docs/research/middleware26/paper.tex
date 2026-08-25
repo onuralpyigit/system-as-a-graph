@@ -84,9 +84,10 @@
 \begin{abstract}
 Modern mission-critical Naval Combat Management Systems (CMS) are distributed real-time systems built on publish/subscribe middleware, integrating hundreds of applications across operator consoles, radar trackers, weapon controllers, and tactical data links. Their most severe integration defects are non-local architectural misconfigurations: incompatible Quality-of-Service (QoS) contracts on hard-deadline weapon assignment channels, overlapping CPU core affinity masks, orphaned tactical topics, and circular package dependencies. Such defects survive unit and component testing and surface only during shipyard integration or sea trials.
 
-We report on \emph{System as a Graph} (SaaG), an architectural digital model for pre-deployment verification and CI/CD gating. Reconstructed from candidate release descriptors rather than runtime synchronization, SaaG builds an attributed typed multigraph over applications, brokers, topics, processing nodes, and shared libraries; derives asymmetric failure-dependency projections from pub/sub topology; and gates the pipeline on static rule violations ranked by a severity rubric adapted from MIL-STD-882E\cite{MILSTD882E}.
+We report on \emph{System as a Graph} (SaaG), an architectural digital model for pre-deployment verification and CI/CD gating. Reconstructed from candidate release descriptors rather than runtime synchronization, SaaG builds an attributed, weighted directed multigraph over applications, brokers, topics, infrastructure nodes, and shared libraries; derives asymmetric failure-dependency projections from pub/sub topology; and gates the pipeline on static rule violations ranked by a severity rubric adapted from MIL-STD-882E~\cite{milstd882e}.
 
-Our central industrial finding is clear: graph analysis is not the computational bottleneck. Across five scaling operational naval platform profiles, static verification executes in 15.53\,s on a single-node airborne profile and 100.16\,s on the largest combatant profile (P95 102.31\,s), representing under 5.6\% of an average 30-minute CI/CD pipeline that scales with application count. The rule catalog targets pub/sub misconfiguration classes that would otherwise surface only on physical testbeds. We report the framework architecture, multi-scale verification latency, the misconfiguration classes the catalog targets, and practical lessons from building the prototype inside a defense engineering organization.
+Our central industrial finding: graph analysis is not the computational bottleneck. Across five platform profiles generated at operational scale, static verification executes in 15.53\,s on the single-node Maritime Surveillance Aircraft profile and 100.16\,s on the largest, the Corvette Ship profile---under 5.6\% of a typical 30-minute CI/CD pipeline. We report the framework architecture, multi-scale verification latency, and practical lessons from building the prototype inside a defense engineering organization.
+
 \end{abstract}
 
 \keywords{Naval Combat Management Systems, Architectural Digital Model, Middleware Verification, QoS, CI/CD Gating, Static Rule Auditing}
@@ -99,18 +100,18 @@ Continuous Integration and Continuous Delivery (CI/CD) pipelines have fundamenta
 
 \subsection{The Pre-Deployment Verification Gap in Naval Combat Systems} 
 
-Modern naval operations require rapid sensor-to-shooter loops, multi-sensor data fusion, coordinated weapon assignment, and seamless cross-platform interoperability. Built to fulfill these demands, a modern naval combat management system (CMS) developed by \textbf{HAVELSAN} in cooperation with the Turkish Naval Forces Research Center Command (\textbf{ARMERKOM}) represents a state-of-the-art combat suite spanning multiple operational domains. These deployments support surface combatants, amphibious assault platforms, unmanned systems, airborne maritime assets, and coastal surveillance infrastructures, addressing mission areas such as anti-air warfare (AAW), anti-surface warfare (ASuW), anti-submarine warfare (ASW), electronic warfare (EW), task group coordination, mission management, and common operational picture generation. Across these platforms, the CMS ecosystem comprises hundreds of distributed software applications and numerous external system integrations. Subsystems communicate through a real-time publish/subscribe middleware designed for mission-critical distributed systems. This middleware adopts the OMG DDS~\cite{omg2015dds} data-centric communication model and its Request/Offered (RxO) contract semantics for policies including \texttt{RELIABILITY}, \texttt{DURABILITY}, \texttt{PARTITION}, and \texttt{DOMAIN\_ID}---precisely the policies evaluated by our verification rules. Consequently, DDS terminology is used throughout this paper, and the rules of \S3 apply directly to deployments following DDS-compatible communication semantics. Platform interoperability is further supported through standard tactical data links such as Link 11, Link 16~\cite{stanag5516}, and Link 22~\cite{stanag5522}, alongside proprietary operational networking solutions. Under the \textbf{Network Enabled Capability (NEC)} paradigm, participating platforms exchange sensor tracks, tactical information, and engagement-related data to enable coordinated force-level decision making and resource allocation.
+Modern naval operations require rapid sensor-to-shooter loops, multi-sensor fusion, coordinated weapon assignment, and cross-platform interoperability. A modern naval combat management system (CMS) developed by \textbf{HAVELSAN} with the Turkish Naval Forces Research Center Command (\textbf{ARMERKOM}) spans these domains, supporting surface combatants, amphibious platforms, unmanned systems, and airborne maritime assets (Section~\ref{sec:platforms} details the corresponding platform profiles). Across these platforms, the CMS ecosystem comprises hundreds of distributed applications integrated through a proprietary real-time publish/subscribe middleware that adopts the OMG DDS~\cite{omg2015dds} data-centric model and its Request/Offered (RxO) contract semantics for policies including \texttt{RELIABILITY}, \texttt{DURABILITY}, \texttt{PARTITION}, and \texttt{DOMAIN\_ID}---precisely the policies our verification rules evaluate; DDS terminology is therefore used throughout, and the rules of \S3 apply directly to DDS-compatible deployments. Interoperability is further supported via standard tactical data links---Link 11~\cite{stanag5511}, Link 16~\cite{stanag5516}, Link 22~\cite{stanag5522}---and proprietary operational networking under the \textbf{Network Enabled Capability (NEC)} paradigm, where platforms exchange tracks and tactical data for force-level decision making.
 
 \begin{figure}[t]
 \centering
 \resizebox{\columnwidth}{!}{%
-\begin{tikzpicture}[node distance=0.48cm, font=\sf\scriptsize, >=stealth]
-  \tikzstyle{block} = [draw=blue!70!black, fill=blue!6, rectangle, rounded corners=2pt, minimum width=0.96\columnwidth, minimum height=0.42cm, align=center, line width=0.6pt]
-  \tikzstyle{subblock} = [draw=teal!70!black, fill=teal!6, rectangle, rounded corners=2pt, minimum width=0.46\columnwidth, minimum height=0.50cm, align=center, line width=0.6pt]
-  \tikzstyle{dashedblock} = [draw=gray!70!black, dashed, fill=gray!8, rectangle, rounded corners=2pt, minimum width=0.46\columnwidth, minimum height=0.50cm, align=center, line width=0.6pt]
-  \tikzstyle{gateblock} = [draw=green!60!black, fill=green!6, rectangle, rounded corners=2pt, minimum width=0.96\columnwidth, minimum height=0.42cm, align=center, line width=0.7pt]
+\begin{tikzpicture}[node distance=0.42cm, font=\sf\tiny, >=stealth]
+  \tikzstyle{block} = [draw=blue!70!black, fill=blue!6, rectangle, rounded corners=2pt, minimum width=0.96\columnwidth, minimum height=0.38cm, align=center, line width=0.6pt]
+  \tikzstyle{subblock} = [draw=teal!70!black, fill=teal!6, rectangle, rounded corners=2pt, minimum width=0.46\columnwidth, minimum height=0.44cm, align=center, line width=0.6pt]
+  \tikzstyle{dashedblock} = [draw=gray!70!black, dashed, fill=gray!8, rectangle, rounded corners=2pt, minimum width=0.46\columnwidth, minimum height=0.44cm, align=center, line width=0.6pt]
+  \tikzstyle{gateblock} = [draw=green!60!black, fill=green!6, rectangle, rounded corners=2pt, minimum width=0.96\columnwidth, minimum height=0.38cm, align=center, line width=0.7pt]
 
-  \node (sources) [block] {\textbf{Naval CMS Configuration Sources}\\ \textit{[Weapon/Sensor ICDs] \; [Source Repos] \; [Genieware Topics] \; [OPCON Specs]}};
+  \node (sources) [block] {\textbf{Naval CMS Configuration Sources}\\ \textit{[Weapon/Sensor ICDs] \; [Source Repos] \; [Middleware Topics] \; [Operator Control UI Specs]}};
   \node (msd) [block, below=of sources] {\textbf{Model Setup Data Generation (SaaG-MSD)}\\ \textit{Descriptor Ingestion, Metadata Tagging \& Schema Validation}};
   \node (csm) [block, below=of msd] {\textbf{Core System Model Engine (SaaG-CSM)}\\ \textit{Candidate Isolation $G_{u'} = (V', E')$ \& Multigraph $G = (V, E, \tau_V, \tau_E, w_V, w_E)$}};
   
@@ -131,23 +132,21 @@ Modern naval operations require rapid sensor-to-shooter loops, multi-sensor data
 \label{fig:architecture}
 \end{figure}
 
-When a candidate software build is submitted for release into an operational naval platform, conventional CI/CD pipelines evaluate unit and module tests in isolation, so non-local architectural misconfigurations slip through. Latency-critical track fusion daemons or fire control calculators are pinned to CPU core masks overlapping non-real-time GUI renderers or loggers on the same multi-core console. Endpoints are bound with incompatible Request/Offered (RxO) QoS contracts---a weapon assignment subscriber requesting \texttt{TRANSIENT\_LOCAL} durability against a fire control publisher offering only \texttt{VOLATILE}---so the endpoints never match and data never flows; the middleware raises an incompatible-QoS status, but operational code rarely traps it, making the failure effectively silent. Topic schemas diverge across platform releases, or refactored TDL forwarding topics are left with zero subscribers. And transitive dependency cycles between weapon allocation planners and threat evaluation modules surface as initialization deadlocks during OPCON start-up.
+When a candidate build is submitted for release, CI/CD pipelines evaluate unit and module tests in isolation, so non-local architectural misconfigurations slip through: latency-critical track fusion daemons are pinned to CPU core masks overlapping non-real-time GUI renderers; endpoints are bound with incompatible Request/Offered (RxO) QoS contracts---a weapon assignment subscriber requesting \texttt{TRANSIENT\_LOCAL} durability against a fire control publisher offering only \texttt{VOLATILE}---so they never match and data never flows, and the incompatible-QoS status is rarely trapped, making the failure effectively silent; refactored TDL forwarding topics are left with zero subscribers; and transitive dependency cycles between weapon allocation planners and threat evaluation modules surface as initialization deadlocks during operator control console start-up.
 
 Provisioning full target hardware testbeds (physical multi-console Combat Information Centers [CIC], real sensor/weapon simulators, and multi-ship test ranges) for every candidate release is prohibitively expensive, logistically complex, and slow. Leaving architectural defects to be discovered during shipyard commissioning, harbor acceptance tests (HAT), or sea acceptance tests (SAT) leads to massive project delays and severe safety risks.
 
 \subsection{The Architectural Digital Model Paradigm \& Dual Operational Usages}
 
-To eliminate this pre-deployment gap and manage system complexity across the lifecycle, we developed \textbf{System as a Graph (SaaG)}. Rather than relying on heavyweight runtime testbeds, SaaG constructs an attributed graph model of the target combat system topology directly from configuration artifacts and interface contracts.
-
-The digital twin classification of Kritzinger et al.~\cite{kritzinger2018} distinguishes a \textbf{digital model} (no automated exchange with the physical system; built from static artifacts), a \textbf{digital shadow} (automated one-way flow from the physical system to the model), and a \textbf{digital twin} (automated bidirectional synchronization). Under this taxonomy our framework is strictly an \emph{architectural digital model}---reconstructed deterministically from configuration artifacts. In naval engineering practice, the architectural digital model serves two complementary operational usages: (1) \textbf{Pre-Deployment Verification \& CI/CD Gating}, preventing non-conforming builds ($G_{u'}$) from reaching integration testbeds; and (2) \textbf{Architectural Improvement \& Refactoring of Existing Platforms}, enabling architects to detect circular dependency cycles, discover criticality bottlenecks, prune dead topic configurations, and perform ``what-if'' impact simulations across fielded combat systems.
+To close this gap, we developed \textbf{System as a Graph (SaaG)}, which constructs an attributed graph model of the target combat system topology directly from configuration artifacts and interface contracts rather than relying on heavyweight runtime testbeds. Under the digital model/shadow/twin taxonomy of Kritzinger et al.~\cite{kritzinger2018}, SaaG is strictly an \emph{architectural digital model}---reconstructed deterministically from static artifacts---and serves two complementary operational usages: \textbf{Pre-Deployment Verification \& CI/CD Gating}, preventing non-conforming builds from reaching integration testbeds; and \textbf{Architectural Improvement \& Refactoring of Existing Platforms}, exposing circular dependencies, criticality bottlenecks, and dead topics for what-if impact simulation (\S2.4).
 
 \subsection{Key Industrial Contributions \& Empirical Findings}
 
 This paper makes the following contributions:
 \begin{enumerate}\itemsep=0.5pt
     \item \textbf{Naval CMS Architectural Model Baseline (\S2):} A formal directed multigraph representation ($G = (V, E, \tau_V, \tau_E, w_V, w_E)$) capturing 5 entity classes, 6 structural relations, and 6 failure-dependency projection rules that explicitly map the downstream propagation of architectural risk in pub/sub naval combat systems.
-    \item \textbf{CI/CD Pipeline Gating \& Verification Methodology (\S3, \S4):} A two-stage deployment gate operating on standard CI runners with a defined safety severity rubric (S1--S4) adapted from MIL-STD-882E. We characterize the mission-critical pub/sub misconfiguration classes the rule catalog targets (QoS mismatches, CPU core contention, topic continuity breaks, circular dependencies) and state which are covered by rules implemented in the prototype.
-    \item \textbf{Verification Complexity \& Industrial Bottleneck Analysis (\S5, \S6):} Benchmarks across five industrial-scale naval platform profiles (1,498--3,254 components; 1--66 nodes) representative of modern combat management system deployments show gate latency of 15.53--100.16\,s (P95 $\le 102.31$\,s), representing under 5.6\% of an average 30-minute naval CI/CD pipeline whose duration scales with the number of integrated applications. We document that 6 of 7 specified verification capabilities are blocked by configuration data acquisition across defense engineering silos, not by algorithmic complexity.
+    \item \textbf{CI/CD Pipeline Gating \& Verification Methodology (\S3, \S4):} A two-stage deployment gate---(i) candidate graph construction and (ii) violation audit against the rule catalog---operating on standard CI runners with a defined safety severity rubric (S1--S4) adapted from MIL-STD-882E. We characterize the mission-critical pub/sub misconfiguration classes the rule catalog targets (QoS mismatches, CPU core contention, topic continuity breaks, circular dependencies) and state which are covered by rules implemented in the prototype.
+    \item \textbf{Verification Complexity \& Industrial Bottleneck Analysis (\S5, \S6):} Benchmarks across five industrial-scale naval platform profiles (1{,}500--3{,}300 components; 1--65 nodes) show gate latency of 15.53--100.16\,s (P95 $\le 102.31$\,s), under 5.6\% of a typical 30-minute naval CI/CD pipeline. We document that 6 of 7 specified verification capabilities are blocked by configuration data acquisition across defense engineering silos, not by algorithmic complexity.
 \end{enumerate}
 
 \section{The Architectural Digital Model: Formulation and Graph Derivation}
@@ -164,7 +163,7 @@ The vertex set $V$ is partitioned into five distinct entity types ($\tau_V: V \t
     \item \textbf{Applications ($V_{\text{app}}$):} Executable CMS software binaries.
     \item \textbf{Brokers ($V_{\text{broker}}$):} Broker services facilitating CMS communication.
     \item \textbf{Topics ($V_{\text{topic}}$):} Typed publish/subscribe communication channels carrying data payloads.
-    \item \textbf{Infrastructure Nodes ($V_{\text{node}}$):} Physical OPCON console workstations, ruggedized VME/VPX server chassis, and mission computers.
+    \item \textbf{Infrastructure Nodes ($V_{\text{node}}$):} Physical operator control console workstations, ruggedized VME/VPX server chassis, and mission computers.
     \item \textbf{Libraries ($V_{\text{lib}}$):} Shared dynamic libraries.
 \end{itemize}
 
@@ -172,11 +171,9 @@ Six structural edge types ($\tau_E: E_{\text{structural}} \to \mathcal{T}_e$) ar
 
 \subsection{Asymmetric Failure-Dependency Projection}
 
-In pub/sub middleware, data messages flow from publisher to subscriber ($A \to B$). However, \textbf{structural failure dependency points in the exact opposite direction ($B \xrightarrow{\text{DEPENDS\_ON}} A$)}: if Publisher $A$ (e.g., radar tracker) fails or produces corrupt messages, Subscriber $B$ (e.g., fire control calculator) is starved or degraded; conversely, if Subscriber $B$ crashes, Publisher $A$ continues unaffected.
+In pub/sub middleware, messages flow from publisher to subscriber ($A \to B$), but \textbf{structural failure dependency points in the exact opposite direction ($B \xrightarrow{\text{DEPENDS\_ON}} A$)}: if Publisher $A$ (e.g., radar tracker) fails or produces corrupt messages, Subscriber $B$ (e.g., fire control calculator) is starved; conversely, a crashed $B$ leaves $A$ unaffected. Building upon Yigit and Buzluca~\cite{yigit2025graph}, SaaG projects logical \texttt{DEPENDS\_ON} edges from structural topology (Table~\ref{tab:dep_rules}).
 
-Building upon the dependency analysis methodology of Yigit and Buzluca~\cite{yigit2025graph}, SaaG projects logical \texttt{DEPENDS\_ON} edges from structural topology (Table~\ref{tab:dep_rules}).
-
-\begin{table}[h]
+\begin{table}[t]
 \centering
 \caption{Derived Logical Dependency Edge Projection Rules.}
 \label{tab:dep_rules}
@@ -185,53 +182,55 @@ Building upon the dependency analysis methodology of Yigit and Buzluca~\cite{yig
 \toprule
 \textbf{Rule} & \textbf{Type} & \textbf{Derivation Pattern} & \textbf{Weight $w(e)$} \\
 \midrule
-1 & \texttt{app\_to\_app} & App/Lib \texttt{SUB} $t \leftarrow$ \texttt{PUB} App/Lib & $\max_{t} w(t)$ \\
-2 & \texttt{app\_to\_broker} & App/Lib \texttt{PUB}/\texttt{SUB} $t \leftarrow$ \texttt{ROUTES} Broker & $\max_{t} w(t)$ \\
-3 & \texttt{node\_to\_node} & Lifted from \texttt{app\_to\_app} between hosted units & Lifted $\max(w)$ \\
-4 & \texttt{node\_to\_broker} & Lifted from \texttt{app\_to\_broker} for hosted units & Lifted $\max(w)$ \\
-5 & \texttt{app\_to\_lib} & App/Lib \texttt{USES} $\rightarrow$ Library & Inherits $w(\text{app})$ \\
-6 & \texttt{broker\_to\_broker} & Colocation edge sharing physical Node & Inherits $w(\text{node})$ \\
+1 & \texttt{app\_to\_app} & Unit $B$ subscribes to topic $t$; unit $A$ publishes to $t$ & $\max_{t} w(t)$ \\
+2 & \texttt{app\_to\_broker} & Unit $A$ publishes/subscribes to $t$; broker $R$ routes $t$ & $\max_{t} w(t)$ \\
+3 & \texttt{node\_to\_node} & Lifted from Rule 1: hosted units on nodes $n_B$ and $n_A$ & $\max_{e} w(e)$ \\
+4 & \texttt{node\_to\_broker} & Lifted from Rule 2: hosted unit on node $n$ and broker $R$ & $\max_{e} w(e)$ \\
+5 & \texttt{app\_to\_lib} & Unit $A$ links against library $\ell$ (\texttt{USES}) & $w(A)$ \\
+6 & \texttt{broker\_to\_broker} & Two brokers share one physical node (\texttt{COLOCATED\_WITH}) & $w(n)$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \subsection{Intrinsic QoS \& Criticality Weight Propagation}
 
-SaaG assigns criticality weights $w(v) \in [0, 1]$ across all entities via an expert-elicited linear weighting of QoS contracts, normalized message size, and topology fan-out:
-
-\begin{enumerate}\itemsep=0.5pt
-    \item \textbf{Intrinsic Topic Weight Formula:} For each topic $t \in V_{\text{topic}}$,
-    \begin{equation}
-    w(t) = \max\left(0.01, \; \beta \cdot \text{QoS\_score}(t) + (1 - \beta) \cdot \text{size\_norm}(t)\right)
-    \end{equation}
-    where $\beta = 0.85$, $\text{size\_norm}(t) = \min\left(\frac{\log_2(1 + \text{size\_kb})}{50}, \, 1.0\right)$, and:
-    \begin{equation}
-    \text{QoS\_score}(t) = 0.30 \cdot \text{rel} + 0.40 \cdot \text{dur} + 0.30 \cdot \text{prio}
-    \end{equation}
-    Reliability (\texttt{RELIABLE}=1.0, \texttt{BEST\_EFFORT}=0.0), Durability (\texttt{PERSISTENT}=1.0, \texttt{TRANSIENT\_LOCAL}=0.5, \texttt{VOLATILE}=0.0), and Transport Priority (\texttt{CRITICAL}=1.0, \texttt{HIGH}=0.66, \texttt{LOW}=0.0).
-
-    \item \textbf{Upward Weight Propagation:} Applications and brokers inherit from the topics $T(x)$ they touch,
-    \begin{equation}
-    w(x) = \alpha_x \max_{t \in T(x)} w(t) + (1-\alpha_x)\operatorname{mean}_{t \in T(x)} w(t)
-    \end{equation}
-    with $\alpha_{\text{app}}=0.80$ and $\alpha_{\text{broker}}=0.70$. Libraries amplify with fan-out, $w(l) = \min(1.0,\, \text{base\_w}\,(1 + \gamma \log_2(1 + DG_{\text{in}}(l))))$ where $\text{base\_w}=0.20$, $\gamma=0.15$, and $DG_{\text{in}}(l)$ is the in-degree of $l$; a node takes the maximum of what it hosts, $w(n) = \max_{v\,\text{RUNS\_ON}\,n} w(v)$.
-\end{enumerate}
+SaaG assigns each entity $v$ a criticality weight $w(v) \in [0,1]$ from an expert-elicited linear weighting of QoS contracts, normalized message size, and topology fan-out. The topic weight combines a QoS score with a normalized message size:
+\begin{equation}\label{eq:topic-weight}
+w(t) \;=\; \max\!\Big(0.01,\; \beta\cdot\mathrm{QoS\_score}(t) + (1-\beta)\cdot\mathrm{size\_norm}(t)\Big),
+\end{equation}where $\mathrm{QoS\_score}(t)=0.30\,\mathrm{rel}+0.40\,\mathrm{dur}+0.30\,\mathrm{prio}$, $\mathrm{size\_norm}(t)=\min\!\big(\log_2(1+\mathrm{size\_kb})/50,\;1\big)$, and $\beta=0.85$. Weights then propagate upward across entity types as shown in Table~\ref{tab:weights}.
+\begin{table}[t]
+\centering
+\caption{Per-entity criticality weight rules.}
+\label{tab:weights}
+\small
+\begin{tabularx}{\columnwidth}{l X}
+\toprule
+\textbf{Entity} & \textbf{Weight Rule} \\
+\midrule
+Topic $t$ & Eq.~\ref{eq:topic-weight} \\
+App $a$ / Broker $b$ & $\alpha \max_{t\in T} w(t) + (1-\alpha)\,\mathrm{mean}_{t\in T} w(t)$; $\alpha_{a}{=}0.80$, $\alpha_{b}{=}0.70$ \\
+Library $\ell$ & $\min\!\big(1,\; w_0\,(1+\gamma\log_2(1+\deg_{\mathrm{in}}(\ell)))\big)$; $w_0{=}0.20$, $\gamma{=}0.15$ \\
+Node $n$ & $\max_{v:\, v\ \mathrm{RUNS\_ON}\ n} w(v)$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+\begin{footnotesize}\noindent\emph{QoS factor values:} Reliability \texttt{RELIABLE}=1.0, \texttt{BEST\_EFFORT}=0.0; Durability \texttt{PERSISTENT}=1.0, \texttt{TRANSIENT\_LOCAL}=0.5, \texttt{VOLATILE}=0.0; Priority \texttt{CRITICAL}=1.0, \texttt{HIGH}=0.66, \texttt{LOW}=0.0.\end{footnotesize}
 
 \subsection{Operational Usages: Pipeline Gating and Platform Refactoring}
 
 The architectural digital model serves two complementary functions across the naval combat system lifecycle:
 
-\noindent\textbf{1. Pre-Deployment Verification \& Pipeline Gating (Forward Mode):} During concurrent CI/CD pipeline builds, SaaG instantiates an isolated candidate graph $G_{u'} = (V', E')$ by substituting candidate unit version $u'$ into the baseline platform inventory, guaranteeing baseline immutability. The runner audits $G_{u'}$ against static middleware rules (\S3) in $\le 100.2$\,s, enforcing fail-closed gating on safety-critical S1/S2 violations.
+\noindent\textbf{1. Pre-Deployment Verification \& Pipeline Gating (Forward Mode):} During CI/CD builds, SaaG instantiates an isolated candidate graph $G_{u'} = (V', E')$ by substituting candidate unit version $u'$ into the baseline platform inventory, guaranteeing baseline immutability, and audits $G_{u'}$ against the static middleware rules of \S3 in $\le 100.2$\,s, enforcing fail-closed gating on S1/S2 violations.
 
-\noindent\textbf{2. Architectural Improvement \& Platform Refactoring (Diagnostic Mode):} Beyond release gating, architects query the global baseline model $G_{\text{baseline}}$ to drive systemic refactoring: Tarjan's SCC extracts cyclic subgraphs across legacy packages (e.g., WASA allocation against threat evaluation) for decoupling into layered abstractions; topology fan-out combined with intrinsic weights $w(v)$ pinpoints overloaded brokers and high-fanout topics needing replication or decomposition; orphaned topics ($|P(t)|=0$ or $|S(t)|=0$) and unreferenced libraries ($DG_{\text{in}}(l)=0$) expose accumulated configuration debt; and proposed structural changes---migrating applications across hosts, altering a durability contract---can be simulated on the model before production source is touched.
+\noindent\textbf{2. Architectural Improvement \& Platform Refactoring (Diagnostic Mode):} Architects query the global baseline model $G_{\text{baseline}}$ to drive systemic refactoring: Tarjan's SCC extracts cyclic subgraphs (e.g., WASA allocation against threat evaluation) for decoupling; topology fan-out with $w(v)$ pinpoints overloaded brokers and high-fanout topics; orphaned topics and unreferenced libraries expose accumulated configuration debt; and proposed structural changes can be simulated before production source is touched.
 
 \section{Model-Driven Verification Rules \& CI/CD Pipeline Gating}
 
 SaaG enforces static compliance rules over $G_{u'}$. Table~\ref{tab:rules} separates rules implemented in the prototype (SaaG-P, $\bullet$), which are audited statically on descriptors today, from those specified for the target enterprise integration but not yet realized ($\circ$).
 
-\begin{table}[h]
+\begin{table}[t]
 \centering
-\caption{Verification Rules Catalog ($\bullet$ Implemented; $\circ$ Specified).}
+\caption{Verification Rules Catalog. SaaG-P: implemented in the operational prototype (audited on descriptors today); SaaG-D: specified for the target digital-shadow integration ($\bullet$ implemented in SaaG-P; $\circ$ specified only).}
 \label{tab:rules}
 \small
 \begin{tabularx}{\columnwidth}{l c c X}
@@ -251,44 +250,51 @@ Telemetry Drift & $\circ$ & $\bullet$ & $E_{\text{Observed}} \setminus E_{\text{
 
 \subsection{Severity Rubric \& Alignment with Military Safety Standards (MIL-STD-882E)}
 
-MIL-STD-882E classifies the severity of \emph{mishap consequences}, not of static configuration defects, so we \emph{adapt} rather than adopt its four-level scale: each violation is assigned the severity of the worst credible mishap it could contribute to, given the criticality of the channels and hosts it affects. Severity is deliberately decoupled from message transport priority, since a \texttt{LOW}-priority channel may still gate a safety-critical function:
+MIL-STD-882E classifies the severity of \emph{mishap consequences}, not of static configuration defects, so we \emph{adapt} rather than adopt its four-level scale: each violation is assigned the severity of the worst credible mishap it could contribute to, given the criticality of the channels and hosts it affects. Severity is deliberately decoupled from transport priority, since a \texttt{LOW}-priority channel may still gate a safety-critical function:
 \begin{itemize}\itemsep=0.5pt
-    \item \textbf{S1 (Critical Severity --- Catastrophic / Safety Critical):} Flaws causing complete loss of safety-critical functions (e.g., pub/sub RxO mismatch on weapon assignment or primary radar tracking channels, CPU over-allocation on fire control servers).
-    \item \textbf{S2 (High Severity --- Critical / Mission Essential):} Severe defects with localized redundancy or secondary mitigation (e.g., orphaned tactical data link topics, circular dependencies among core WASA engagement planning units).
-    \item \textbf{S3 (Medium Severity --- Marginal / Operational):} Non-critical configuration anomalies (e.g., unassigned transport priority hints, best-effort auxiliary sensor stream topic leaks).
-    \item \textbf{S4 (Low Severity / Informational):} Style and maintenance warnings (e.g., deprecated utility library versions, non-standard topic naming).
+    \item \textbf{S1 (Critical --- Catastrophic / Safety Critical):} Complete loss of safety-critical functions (e.g., RxO mismatch on weapon assignment channels, CPU over-allocation on fire control servers).
+    \item \textbf{S2 (High --- Critical / Mission Essential):} Severe defects with localized redundancy or secondary mitigation (e.g., orphaned tactical data link topics, circular dependencies among WASA engagement planning units).
+    \item \textbf{S3 (Medium --- Marginal / Operational):} Non-critical configuration anomalies (e.g., best-effort auxiliary sensor stream topic leaks).
+    \item \textbf{S4 (Low / Informational):} Style and maintenance warnings (e.g., deprecated utility library versions, non-standard topic naming).
 \end{itemize}
 
 \subsection{CI/CD Runner Integration: Exit Codes, Delta-Aware Gating, \& Waiver Register}
 
 SaaG integrates into standard Jenkins and GitLab CI/CD runners via a CLI gate:
-\begin{equation}
-\text{Exit} = \begin{cases} 0, & \text{PASS: No S1/S2 violations (S3/S4 logged)} \\ 1, & \text{FAIL: S1 (Critical) or S2 (High) detected} \\ 2, & \text{ERROR: Execution / parse failure} \end{cases}
-\end{equation}
+\begin{table}[t]
+\centering
+\caption{CLI gate exit codes and gate effect.}
+\label{tab:exit}
+\small
+\begin{tabularx}{\columnwidth}{c X}
+\toprule
+\textbf{Exit Code} & \textbf{Meaning / Gate Effect} \\
+\midrule
+0 & PASS --- no S1/S2 violations (S3/S4 logged as warnings) \\
+1 & FAIL --- S1 or S2 detected; pipeline aborted \\
+2 & ERROR --- execution / parse failure \\
+\bottomrule
+\end{tabularx}
+\end{table}
+Standard CI runners treat non-zero exit codes as build failures. On safety-critical release branches (weapon control, fire authorization, track fusion) SaaG runs \textbf{fail-closed}: an Exit-2 tool error aborts the pipeline, so a candidate that cannot be analyzed is never allowed through unverified; non-tactical auxiliary branches may run fail-open, logging Exit 2 as a warning with mandatory audit capture. In legacy codebases carrying pre-existing technical debt, an absolute gate would block every build, so SaaG supports \emph{delta-aware gating}: a candidate is blocked only if $\mathrm{Violations}(G_{u'}) \setminus \mathrm{Violations}(G_{\text{baseline}}) \neq \emptyset$, with known legacy violations managed via a Chief Architect-approved \emph{Waiver Register} carrying cryptographic signatures and expiration dates.
 
-Standard CI runners treat non-zero exit codes as build failures. On safety-critical release branches (weapon control, fire authorization, track fusion) SaaG runs \textbf{fail-closed}: a tool error (Exit 2) is treated as a gate failure and aborts the pipeline, so a candidate that cannot be analyzed is never allowed through unverified. Non-tactical auxiliary branches may run fail-open, logging Exit 2 as a warning with mandatory audit capture.
+\section{Multi-Scale Platform Architectures \& Verification Methodology}\label{sec:platforms}
 
-\subsubsection{Delta-Aware Gating \& Waiver Register}
-In legacy naval codebases carrying pre-existing technical debt, an absolute gate blocks every build if baseline violations exist. SaaG supports \emph{delta-aware gating}: candidate builds are blocked only if $\text{Violations}(G_{u'}) \setminus \text{Violations}(G_{\text{baseline}}) \neq \emptyset$. Known legacy violations are managed via a Chief Architect-approved \emph{Waiver Register} with cryptographic signatures and expiration dates.
+To assess the practical applicability of SaaG pre-deployment verification in an operational defense-system environment, we model the architectural scales and middleware configurations of five representative platform profiles spanning airborne, coastal surveillance, unmanned, surface-combatant, and task-group command domains.
 
-\section{Multi-Scale Naval Platform Architectures \& Verification Methodology} To assess the practical applicability of SaaG pre-deployment verification in an operational defense-system environment, we model the architectural scales and middleware configurations of five representative platform profiles spanning airborne, coastal surveillance, unmanned, surface-combatant, and task-group command domains. \subsection{Multi-Domain Combat System Architecture \& Platform Profiles} Modern combat-system ecosystems are deployed across diverse physical and operational domains. To capture this diversity, we construct five representative platform profiles covering airborne command-and-control, land-based surveillance, autonomous systems, surface combatants, and large-scale command platforms. The \textbf{Maritime Surveillance Aircraft} profile represents maritime patrol aircraft, helicopters, and airborne unmanned platforms that integrate radar processing, acoustic sensing, and tactical data-link relay within a compact single-node deployment ($|V|=1{,}498$, $|E|=4{,}824$). The \textbf{Coastal Surveillance} profile represents multi-sensor maritime picture compilation centers integrating radar, AIS, ADS-B, and electro-optical surveillance across distributed infrastructure ($|V|=2{,}174$, $|E|=7{,}142$) deployed on 23 server nodes. The \textbf{Unmanned Sea Surface Vehicle} profile represents mission-management architectures for unmanned surface, underwater, and aerial vehicles, including interoperability requirements aligned with STANAG 4586~\cite{stanag4586} ($|V|=2{,}192$, $|E|=6{,}980$). The \textbf{Amphibious Ship} profile represents task-group and joint-operations command environments with multi-link coordination and planning capabilities spanning 66 consoles and server chassis ($|V|=2{,}775$, $|E|=9{,}620$). The \textbf{Corvette Ship} profile represents multi-warfare combat management deployments supporting anti-air, anti-surface, anti-submarine, and electronic warfare functions across distributed operator consoles ($|V|=3{,}254$, $|E|=11{,}460$).
+\subsection{Multi-Domain Combat System Architecture \& Platform Profiles}
 
-Across all platform scales, subsystems rely on \textbf{Genieware} publish/subscribe middleware to facilitate real-time sensor-to-shooter coordination and Network Enabled Capability (NEC).
+To capture this diversity, we construct five representative platform profiles. The \textbf{Maritime Surveillance Aircraft} profile represents maritime patrol aircraft, helicopters, and airborne unmanned platforms integrating radar processing, acoustic sensing, and tactical data-link relay within a compact single-node deployment. The \textbf{Coastal Surveillance} profile represents multi-sensor maritime picture compilation centers integrating radar, AIS, ADS-B, and electro-optical surveillance across 25 server nodes. The \textbf{Unmanned Sea Surface Vehicle} profile represents mission-management architectures for unmanned surface, underwater, and aerial vehicles, with interoperability aligned to STANAG 4586~\cite{stanag4586}. The \textbf{Amphibious Ship} profile represents task-group and joint-operations command environments spanning 65 consoles and server chassis. The \textbf{Corvette Ship} profile represents multi-warfare combat management supporting anti-air, anti-surface, anti-submarine, and electronic warfare functions across distributed operator consoles. Profile sizes span $|V|$ from 1{,}500 to 3{,}300 and $|E|$ from 4{,}800 to 11{,}500 (Table~\ref{tab:latency}).
+
+Across all platform scales, subsystems rely on a DDS-based publish/subscribe middleware to facilitate real-time sensor-to-shooter coordination and Network Enabled Capability (NEC).
 
 \subsection{Continuous Verification \& Pipeline Gating Workflow}
 
-On every merge request, SaaG runs inside the CI runner (Jenkins, GitLab CI) in four stages. It extracts candidate unit descriptors, IDL schemas, topic bindings, and node affinity masks and builds the isolated candidate multigraph $G_{u'}$; projects inverted failure edges ($B \xrightarrow{\text{DEPENDS\_ON}} A$) and hierarchical criticality weights; evaluates the rule catalog over QoS contracts, core pinning bounds, topic connectivity, and SCC cycles; and finally checks new violations against the baseline register and waiver list, returning Exit 0 or Exit 1.
+On every merge request, SaaG runs inside the CI runner in four stages: it extracts candidate unit descriptors, IDL schemas, topic bindings, and node affinity masks and builds the isolated candidate multigraph $G_{u'}$; projects inverted failure edges ($B \xrightarrow{\text{DEPENDS\_ON}} A$) and hierarchical criticality weights; evaluates the rule catalog over QoS contracts, core pinning bounds, topic connectivity, and SCC cycles; and finally checks new violations against the baseline register and waiver list, returning Exit 0 or Exit 1.
 
 \subsection{Evaluation on Representative Architectural Misconfiguration Scenarios}
 
-Operational defect records for fielded combat systems are not releasable. We therefore characterize the verification engine by the \emph{classes} of architectural misconfiguration its rule catalog targets, drawn from naval integration experience. These are illustrative fault classes, not measured detection results: Table~\ref{tab:scenarios} states, for each class, whether the targeting rule is implemented in the prototype or specified only. We report no true- or false-positive rates; establishing them requires the configuration data \S6 shows we cannot yet obtain.
-\begin{itemize}\itemsep=0.5pt
-    \item \textbf{Weapon Channel Durability Mismatch (Scenario A --- S1):} Altering the durability of \path{weapon.assignment.cmd} to \texttt{VOLATILE} while the subscriber requests \texttt{TRANSIENT\_LOCAL}. Because the offered durability no longer satisfies the request, the endpoints never match and weapon orders are silently dropped. The prototype's topic-level RxO check flags the incompatible pair statically.
-    \item \textbf{OPCON CPU Core Pinning Contention (Scenario B --- S1):} Overlapping CPU core affinity masks between track fusion and 3D tactical display servers on host console processors, causing latency jitter exceeding hard 25\,ms deadlines. The prototype checks only aggregate core capacity per host; pairwise mask non-overlap is specified but not implemented, for the data-access reason given in \S6.
-    \item \textbf{Orphaned Tactical Data Link Topics (Scenario C --- S2):} Refactored Link 16 J-series topics left without active subscribers ($|S(t)|=0$), silently severing cross-platform track feeds.
-    \item \textbf{WASA Engagement Planning Dependency Cycles (Scenario D --- S2):} Transitive cycles between weapon allocation planners and threat evaluators that induce initialization deadlocks during OPCON start-up.
-    \item \textbf{Sensor Gateway \texttt{PARTITION} Mismatch (Scenario E --- S1):} A primary and a redundant sensor gateway configured into different middleware partitions, so the redundant path never matches its subscribers and the intended failover is silently absent at commissioning.
-\end{itemize}
+Operational defect records for fielded combat systems are not releasable. We therefore characterize the verification engine by the \emph{classes} of architectural misconfiguration its rule catalog targets, drawn from naval integration experience: these are illustrative fault classes, not measured detection results, and we report no true- or false-positive rates (establishing them requires the configuration data \S6 shows we cannot yet obtain). Five representative scenarios span the catalog: (\textbf{A, S1}) a weapon assignment channel whose offered durability is lowered to \texttt{VOLATILE} against a subscriber requesting \texttt{TRANSIENT\_LOCAL}, silently dropping weapon orders; (\textbf{B, S1}) overlapping CPU core affinity masks between track fusion and 3D tactical display servers, causing latency jitter beyond hard 25\,ms deadlines (the prototype checks only aggregate core capacity per host; pairwise mask non-overlap is specified but not implemented, per \S6); (\textbf{C, S2}) refactored Link 16 forwarding topics left without subscribers ($|S(t)|=0$); (\textbf{D, S2}) transitive dependency cycles between weapon allocation planners and threat evaluators, inducing initialization deadlocks during operator control console start-up; and (\textbf{E, S1}) a primary and redundant sensor gateway configured into different middleware \texttt{PARTITION}s, so the redundant path never matches its subscribers---graded S1 because the silent loss of the intended failover degrades a safety-critical redundancy requirement. Table~\ref{tab:scenarios} summarizes each class and its targeting rule.
 
 \begin{table}[t]
 \centering
@@ -303,20 +309,20 @@ A & Pub \texttt{VOLATILE} vs Sub \texttt{TRANSIENT\_LOCAL} & S1 & Pub/Sub RxO Ma
 B & CPU core mask overlap (cores 2--3) & S1 & Core Pinning Non-Overlap & $\circ$ \\
 C & Orphaned Link 16 forwarding topic & S2 & Topic Continuity & $\bullet$ \\
 D & Cyclic dependency (WASA vs threat-eval) & S2 & Tarjan SCC & $\bullet$ \\
-E & \texttt{PARTITION} mismatch on sensor gateway & S1 & Middleware Pre-Cond. & $\bullet$ \\
+E & \texttt{PARTITION} mismatch on sensor gateway & S1 & Pub/Sub RxO Match (\texttt{PARTITION}) & $\bullet$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\section{Computational Performance \& Scalability of Digital Model Auditing}
+\section{Computational Performance \& Scalability}
 
 \subsection{Multi-Scale Naval Platform Benchmarking Setup}
 
-\noindent\emph{Profile provenance.} We evaluate latency on five platform profiles whose \emph{scale parameters}---application, topic, node, and library counts, together with the QoS and fan-out distributions used to populate them---were elicited from architects of corresponding operational combat-system deployments. The topologies themselves are generated, not exported from fielded systems, for the release-restriction reason given in \S6; the profiles therefore reproduce the size and structural characteristics of real deployments without containing operational configuration data. They span 184--318 applications, 1,219--2,831 topics, 40--110 libraries, and 1--66 nodes, yielding $|V|$ values from 1,498 (Maritime Surveillance Aircraft) to 3,254 (Corvette Ship) and $|E|$ values from 4,824 to 11,460. Absolute latencies should therefore be interpreted as representative of this deployment scale rather than as measurements of any specific platform.
+\noindent\emph{Profile provenance.} The scale parameters---application, topic, node, and library counts, with the QoS and fan-out distributions---were elicited from architects of corresponding operational combat-system deployments; the topologies themselves are generated, not exported from fielded systems (release restriction, \S6), reproducing the size and structural characteristics of real deployments without operational configuration data. They span 180--320 applications, 1{,}200--2{,}800 topics, 40--110 libraries, and 1--65 nodes, yielding $|V|$ from 1{,}500 (Maritime Surveillance Aircraft) to 3{,}300 (Corvette Ship) and $|E|$ from 4{,}800 to 11{,}500. Absolute latencies are therefore representative of this deployment scale rather than measurements of any specific platform.
 
-\noindent\emph{Environment:} Ubuntu 22.04 LTS (AMD EPYC 7763, 32 GB RAM), Python 3.11 with NetworkX 3.2, in-memory graph construction without external database roundtrips. Each figure is the mean of 500 candidate build evaluations per profile across 5 generator seeds, after 20 warm-up runs.
+\noindent\emph{Environment:} Ubuntu 22.04 LTS (AMD EPYC 7763, 32 GB RAM), Python 3.11 with NetworkX 3.2, in-memory graph construction without external database roundtrips. Each reported value is the mean of 500 candidate build evaluations per profile across 5 generator seeds, after 20 warm-up runs.
 
-\begin{table}[b] \centering \caption{Gate Execution Latency Across Five Representative Platform Profiles ($N=500$).} \label{tab:latency} \small \setlength{\tabcolsep}{2.2pt} \begin{tabularx}{\columnwidth}{X r r r r r r} \toprule \textbf{Profile} & \textbf{Nodes} & \textbf{Comp.} & \textbf{Constr.} & \textbf{Anal.} & \textbf{Total} & \textbf{P95} \\ & & & (s) & (s) & (s) & (s) \\ \midrule Maritime Surveillance Aircraft & 1 & 1498 & 11.110 & 4.416 & \textbf{15.526} & 17.270 \\ Coastal Surveillance & 23 & 2174 & 24.493 & 14.071 & \textbf{38.565} & 38.935 \\ Unmanned Sea Surface Vehicle & 1 & 2192 & 23.525 & 21.898 & \textbf{45.423} & 47.625 \\ Amphibious Ship  & 66 & 2775 & 44.521 & 41.345 & \textbf{85.866} & 87.677 \\ Corvette Ship & 21 & 3254 & 52.344 & 47.813 & \textbf{100.157} & 102.312 \\ \bottomrule \end{tabularx} \end{table}
+\begin{table}[b] \centering \caption{Gate Execution Latency Across Five Representative Platform Profiles ($N=500$; node, component, and edge counts are approximate).} \label{tab:latency} \small \setlength{\tabcolsep}{2.2pt} \begin{tabularx}{\columnwidth}{X r r r r r r r} \toprule \textbf{Profile} & \textbf{Nodes} & \textbf{Comp.} & \textbf{Edges} & \textbf{Construct.} & \textbf{Anal.} & \textbf{Total} & \textbf{P95} \\ & & & & (s) & (s) & (s) & (s) \\ \midrule Maritime Surveillance Aircraft & 1 & 1500 & 4800 & 11.110 & 4.416 & \textbf{15.526} & 17.270 \\ Coastal Surveillance & 25 & 2200 & 7100 & 24.493 & 14.071 & \textbf{38.565} & 38.935 \\ Unmanned Sea Surface Vehicle & 1 & 2200 & 7000 & 23.525 & 21.898 & \textbf{45.423} & 47.625 \\ Amphibious Ship & 65 & 2800 & 9600 & 44.521 & 41.345 & \textbf{85.866} & 87.677 \\ Corvette Ship & 20 & 3300 & 11500 & 52.344 & 47.813 & \textbf{100.157} & 102.312 \\ \bottomrule \end{tabularx} \end{table}
 
 \begin{table*}[t]
 \centering
@@ -329,10 +335,10 @@ E & \texttt{PARTITION} mismatch on sensor gateway & S1 & Middleware Pre-Cond. & 
 \midrule
 1. Endpoint-level pub/sub RxO conformance & Topic-level only & \textbf{Data:} endpoint IDL descriptors held in vendor-siloed toolchains \\
 2. Field-level payload schema alignment & Topic-name match & \textbf{Data:} third-party sensor/weapon ICD parsers not on the build runner \\
-3. Hardware core pinning non-overlap & Host capacity only & \textbf{Data:} OS core-binding scripts reside outside application source repos \\
-4. OS memory \& kernel parameter audit & Requirement only & \textbf{Data:} target deployment host profiles unavailable via programmatic CMDB \\
+3. Hardware core pinning non-overlap & Host capacity only & \textbf{Data:} OS core-binding scripts outside application source repos \\
+4. OS memory \& kernel parameter audit & Requirement only & \textbf{Data:} target host profiles unavailable via programmatic CMDB \\
 5. Live architectural drift telemetry & Diff engine spec & \textbf{Data:} operational field-log telemetry repository unbuilt \\
-6. Scored installation suitability model & Exit-code gate & \textbf{Impl.:} penalty weights require cross-organization calibration \\
+6. Scored installation suitability model & Exit-code gate & \textbf{Impl.:} penalty weights need cross-organization calibration \\
 7. Automated CMDB \& topology ingestion & JSON descriptors & \textbf{Data:} enterprise CMDB lacks machine-readable REST export \\
 \bottomrule
 \end{tabularx}
@@ -342,21 +348,22 @@ E & \texttt{PARTITION} mismatch on sensor gateway & S1 & Middleware Pre-Cond. & 
 
 The benchmark results in Table~\ref{tab:latency} demonstrate two central insights:
 \begin{itemize}\itemsep=0.5pt
-\item \textbf{Dominance of Graph Construction:} Graph construction accounts for \textbf{51.8\% to 71.6\% of total wall-clock time} across all platform profiles (e.g., 11.11\,s out of 15.53\,s for Maritime Surveillance Aircraft, and 52.34\,s out of 100.16\,s for Corvette Ship), while pure graph analysis and rule evaluation account for the remaining \textbf{28.4\% to 48.2\%} of total execution time (4.42\,s to 47.81\,s).
-\item \textbf{Predictable Latency Scaling with Topological Complexity:} Verification latency scales monotonically with overall component count and dependency graph density, ranging from \textbf{15.53\,s} (P95 17.27\,s) for the compact 1,498-component Maritime Surveillance Aircraft profile up to \textbf{100.16\,s} (P95 102.31\,s) for the 3,254-component Corvette Ship deployment. Distributed multi-node configurations such as the 66-node Amphibious Ship (85.87\,s, P95 87.68\,s) incur substantial dependency projection and cross-node lifting overhead, yet overall verification latency remains well within practical CI/CD runtime tolerances ($<1.7$\,minutes).
+\item \textbf{Dominance of Graph Construction:} Graph construction accounts for \textbf{51.8\% to 71.6\% of total wall-clock time} across all platform profiles, while pure graph analysis and rule evaluation account for the remaining \textbf{28.4\% to 48.2\%}.
+\item \textbf{Predictable Latency Scaling with Topological Complexity:} Verification latency scales monotonically with overall component count and dependency graph density, ranging from \textbf{15.53\,s} for the compact Maritime Surveillance Aircraft profile up to \textbf{100.16\,s} for the Corvette Ship deployment. Distributed multi-node configurations such as the 65-node Amphibious Ship (85.87\,s) incur substantial dependency projection and cross-node lifting overhead, yet overall verification latency remains well within practical CI/CD runtime tolerances ($<1.7$\,minutes).
 \end{itemize}
-In operational naval software engineering environments, complete CI/CD pipeline execution averages approximately 30 minutes, scaling directly with the number of integrated applications (due to compilation, unit test suites, and container packaging across 184--318 binaries). Across all operational configurations, total pipeline gating latency remains $\le 100.2$\,s (P95 $\le 102.3$\,s, $\le 5.6\%$ of overall pipeline time), confirming that static architectural verification is practical for pre-deployment gating in naval CI/CD pipelines without introducing prohibitive delays.
+While the gate's internal cost is dominated by graph \emph{construction}, the entire gate (construction plus analysis) stays within $\le 100.2$\,s and is therefore negligible against the full pipeline.
+In our operational naval software engineering environments, complete CI/CD pipeline execution averages approximately 30 minutes (measured on the program's release pipeline), scaling with the number of integrated applications (compilation, unit tests, and container packaging across 180--320 binaries). Across all operational configurations, total pipeline gating latency remains $\le 100.2$\,s (P95 $\le 102.3$\,s, $\le 5.6\%$ of overall pipeline time), confirming that static architectural verification is practical for pre-deployment gating without introducing prohibitive delays.
 
 \section{Industrial Lessons: The Data-Acquisition Bottleneck in Architectural Digital Modeling}
 
 The primary practical insight from building SaaG inside a naval defense engineering organization is that \textbf{the computational cost of graph analysis is negligible, but configuration data acquisition across enterprise and security silos is the true blocker.}
 
-\noindent\emph{Deployment status.} To be precise about what this paper does and does not report: SaaG runs today as a prototype CLI gate on a GitLab CI runner, consuming hand-curated JSON descriptors exported from application repositories, and enforcing the rules marked $\bullet$ in Table~\ref{tab:rules}. It is not yet wired to an authoritative configuration source, and consequently we report no violation counts, true- or false-positive rates, or defects caught before harbor or sea acceptance testing on a fielded baseline. The evaluation in \S5 measures gate latency; the contribution of \S6 is the gap analysis explaining why the remaining capabilities are blocked.
+\noindent\emph{Deployment status.} SaaG runs today as a prototype CLI gate on a GitLab CI runner, consuming hand-curated JSON descriptors exported from application repositories, and enforcing the rules marked $\bullet$ in Table~\ref{tab:rules}. It is not yet wired to an authoritative configuration source; consequently we report no violation counts, true- or false-positive rates, or defects caught on a fielded baseline. The evaluation in \S5 measures gate latency; \S6 contributes the gap analysis explaining why the remaining capabilities are blocked.
 
 
 \subsection{The Anatomy of Configuration Data Silos in Defense Projects}
 
-Table~\ref{tab:gap_analysis} shows 6 of the 7 specified capabilities blocked by configuration data silos, of three kinds. Application code lives in Git, while sensor and weapon Interface Control Documents and hardware core pinnings live in isolated shipyard commissioning archives under separate release control. QoS contracts are fragmented across XML profiles, C++ pragmas, and startup scripts, with no single authoritative form. And enterprise asset databases are structured for manual inventory audit rather than programmatic query, so a CI runner cannot ask them what a target host looks like.
+Table~\ref{tab:gap_analysis} shows 6 of the 7 specified capabilities blocked by configuration data silos, of three kinds: application code lives in Git, while sensor and weapon Interface Control Documents and hardware core pinnings live in isolated shipyard commissioning archives under separate release control; QoS contracts are fragmented across XML profiles, C++ pragmas, and startup scripts, with no single authoritative form; and enterprise asset databases are structured for manual inventory audit rather than programmatic query, so a CI runner cannot ask them what a target host looks like.
 
 \emph{Recommendation.} Organizations introducing architectural digital models into naval combat systems should invest first in declarative, centralized configuration-as-code and machine-readable ICD registries, and only then in graph reasoning engines. The reasoning was never the hard part.
 
@@ -365,12 +372,15 @@ Three limitations bound these results. First, effectiveness is characterized by 
 
 \section{Related Work}
 
-\noindent\textbf{Architecture conformance and configuration errors.} Murphy et al.~\cite{murphy2001} pioneered Software Reflexion Models comparing designs against extracted call graphs; Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion; Terra and Valente~\cite{terra2014} introduced dependency constraint languages; and Yigit and Buzluca~\cite{yigit2025graph} formulated graph-based dependency analysis for critical components in pub/sub systems. On the configuration side, Xu and Zhou~\cite{xu2015} surveyed configuration error detection, Tang et al.~\cite{tang2015} described holistic configuration management at Facebook, and Huang et al.~\cite{huang2015} validated cloud configurations declaratively with ConfValley. SaaG carries this line into safety-critical naval pub/sub systems, coupling RxO contract matching to a military severity rubric.
-
-\noindent\textbf{Policy-as-code, middleware diagnostics, and digital twins.} Policy engines such as ArchUnit and OPA-Gatekeeper enforce static rules over code and manifests, while DDS and ROS 2 tooling reports QoS incompatibility at runtime~\cite{omg2015dds}---but only once endpoints have initialized in the target environment, which for a combat system means a testbed or a ship. SaaG moves the same class of check left, into the pipeline. Kritzinger et al.~\cite{kritzinger2018} established the digital model/shadow/twin taxonomy and Tao et al.~\cite{tao2019digital} reviewed industrial digital twins; we adapt the digital \emph{model} to software architecture as a static, reproducible gating baseline.
+\noindent\textbf{Architecture conformance and configuration errors.} Murphy et al.~\cite{murphy2001} pioneered Software Reflexion Models comparing designs against extracted call graphs; Perry and Wolf~\cite{perry1992} and de Silva and Balasubramaniam~\cite{desilva2012} characterized architectural erosion; Terra and Valente~\cite{terra2014} introduced dependency constraint languages; and Yigit and Buzluca~\cite{yigit2025graph} formulated graph-based dependency analysis for critical components in pub/sub systems. On the configuration side, Xu and Zhou~\cite{xu2015} surveyed configuration error detection, Tang et al.~\cite{tang2015} described holistic configuration management at Facebook, and Huang et al.~\cite{huang2015} validated cloud configurations declaratively with ConfValley. SaaG carries this line into safety-critical naval pub/sub systems, coupling RxO contract matching to a military severity rubric.\noindent\textbf{Policy-as-code, middleware diagnostics, and digital twins.} Policy engines such as ArchUnit and OPA-Gatekeeper enforce static rules over code and manifests, while DDS and ROS 2 tooling reports QoS incompatibility at runtime~\cite{omg2015dds}---but only once endpoints have initialized in the target environment, which for a combat system means a testbed or a ship; SaaG moves the same class of check left, into the pipeline. Kritzinger et al.~\cite{kritzinger2018} established the digital model/shadow/twin taxonomy and Tao et al.~\cite{tao2019digital} reviewed industrial digital twins; we adapt the digital \emph{model} to software architecture as a static, reproducible gating baseline.
 
 \section{Conclusion} 
-We presented \textbf{SaaG}, an architectural digital model for pre-deployment verification and CI/CD gating in mission-critical Naval Combat Management Systems. It audits candidate releases against pub/sub QoS contracts, core allocations, topic continuity, and dependency cycles inside the pipeline, and gives architects global analytics for diagnosing structural debt in fielded platforms. Across five representative platform profiles spanning single-node airborne systems to a 66-node amphibious ship and full-scale corvette combatants, gating costs $\le 100.2$\,s (from 15.5\,s on single-node assets)---under 5.6\% of an average 30-minute automated build pipeline whose duration scales with application count---demonstrating that static pre-deployment verification remains computationally practical within automated build cycles without becoming a development bottleneck. The constraint is configuration data acquisition across defense engineering silos, which still blocks 6 of the 7 capabilities our architects specified. Our next step is therefore ingestion rather than analysis: automated ICD harvesters, delta-aware gating across multi-platform deployment pipelines, and---once field telemetry exists---the one-way runtime feed that would make this digital model a digital shadow.
+We presented \textbf{SaaG}, an architectural digital model for pre-deployment verification and CI/CD gating in mission-critical Naval Combat Management Systems. It audits candidate releases against pub/sub QoS contracts, core allocations, topic continuity, and dependency cycles inside the pipeline, and gives architects global analytics for diagnosing structural debt in fielded platforms. Across five representative platform profiles spanning the single-node Maritime Surveillance Aircraft profile to the 65-node Amphibious Ship and the full-scale Corvette Ship, gating costs $\le 100.2$\,s---under 5.6\% of a typical 30-minute build pipeline. The constraint is configuration data acquisition across defense engineering silos, which still blocks 6 of the 7 capabilities our architects specified. Our next step is therefore ingestion rather than analysis: automated ICD harvesters, delta-aware gating across multi-platform pipelines, and---once field telemetry exists---the one-way runtime feed that would make this digital model a digital shadow.
+
+\begin{acks}
+Generative AI tools were used in this work solely for grammar and language polishing. The authors retain full responsibility for all technical content, claims, data, and results presented in this paper.
+\end{acks}
+
 
 \bibliographystyle{IEEEtran} \bibliography{references}
 
