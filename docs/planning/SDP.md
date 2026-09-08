@@ -1,6 +1,6 @@
 # Software Development Plan (SDP): System as a Graph (SaaG)
 
-**Definition:** This Software Development Plan (SDP) is the plan for performing the software development of the System as a Graph (SaaG) Computer Software Configuration Item (CSCI). It decomposes the work defined in the SRS into a Work Breakdown Structure (WBS) of functional deliverables, and sequences those deliverables into a series of incremental builds. Every WBS deliverable and every increment is traceable to the CSU-scoped requirements in the SRS, which are themselves traceable to the SSS via the SRS's own §7.
+**Definition:** This Software Development Plan (SDP) is the plan for performing the software development of the System as a Graph (SaaG) Computer Software Configuration Item (CSCI). It decomposes the work defined in the SRS into a Work Breakdown Structure (WBS) of functional deliverables, and sequences those deliverables into a series of incremental builds. Every WBS deliverable and every increment is traceable to the CSU-scoped requirements in the SRS, which allocate baseline system capabilities via §7.
 
 **Purpose:** The WBS (§1) establishes the full scope of development work, organized by Computer Software Component (CSC) and Computer Software Unit (CSU). The Incremental Development Plan (§2) sequences that work into a strictly serial series of builds — one increment at a time, in dependency-safe order. Each increment is scoped to one or more CSCs (their remaining CSUs) plus, where relevant, the corresponding slice of VAE-01 (Operations Panel), SaaG's front-door UI CSU, so that every increment produces an end-to-end, demonstrable capability.
 
@@ -353,8 +353,8 @@ system-as-a-graph/
 ├── README.md
 ├── docs/
 │   ├── requirements/
-│   │   ├── SSS.md
-│   │   └── SRS.md
+│   │   ├── SRS.md
+│   │   └── SRS.tr.md
 │   ├── planning/
 │   │   └── SDP.md
 │   ├── design/

@@ -183,7 +183,7 @@ Synthetic data generation is fully decoupled from field data collection; scenari
 
 #### 3.3.1 CSC-wide design decisions
 
-System Field Records are stored centrally and indexed for retrieval by project, platform, system version, record source, and upload time; upload-time validation prevents malformed records from entering the store (FRD.1). Storage hardware disk capacity is an environment/infrastructure requirement (SSS-FRD.6) whose sizing will be determined during the critical design phase; it is not modeled as a CSU-level design element.
+System Field Records are stored centrally and indexed for retrieval by project, platform, system version, record source, and upload time; upload-time validation prevents malformed records from entering the store (FRD.1). Storage hardware disk capacity is an environment/infrastructure requirement (SRS FRD-INF.1) whose sizing will be determined during the critical design phase; it is not modeled as a CSU-level design element.
 
 #### 3.3.2 CSU detailed design
 

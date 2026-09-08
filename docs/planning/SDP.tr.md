@@ -1,6 +1,6 @@
 # Yazılım Geliştirme Planı (SDP): System as a Graph (SaaG)
 
-**Tanım:** Bu Yazılım Geliştirme Planı (SDP), System as a Graph (SaaG) Yazılım Kırılım Öğesinin (CSCI) yazılım geliştirme çalışmasının nasıl yürütüleceğini planlar. SRS'te tanımlanan işi, işlevsel teslimatlardan oluşan bir İş Kırılım Yapısına (WBS) ayrıştırır ve bu teslimatları bir dizi artımlı yapıya (increment) sıralar. Her WBS teslimatı ve her artım, SRS'in CSU kapsamlı isterlerine izlenebilir; bu isterler de SRS'in kendi §7'si üzerinden SSS'e izlenebilir durumdadır.
+**Tanım:** Bu Yazılım Geliştirme Planı (SDP), System as a Graph (SaaG) Yazılım Kırılım Öğesinin (CSCI) yazılım geliştirme çalışmasının nasıl yürütüleceğini planlar. SRS'te tanımlanan işi, işlevsel teslimatlardan oluşan bir İş Kırılım Yapısına (WBS) ayrıştırır ve bu teslimatları bir dizi artımlı yapıya (increment) sıralar. Her WBS teslimatı ve her artım, temel sistem kabiliyetlerini §7 üzerinden dağıtan SRS'in CSU kapsamlı isterlerine izlenebilir durumdadır.
 
 **Amaç:** İş Kırılım Yapısı (§1), Yazılım Komponenti (CSC) ve Yazılım Birimi (CSU) bazında organize edilmiş şekilde geliştirme çalışmasının tam kapsamını ortaya koyar. Artımlı Geliştirme Planı (§2), bu çalışmayı — bağımlılık açısından güvenli bir sırayla, tek seferde bir artım olacak şekilde — tamamen ardışık bir yapı dizisine sıralar. Her artım; bir veya daha fazla CSC'nin (kalan CSU'larının) yanı sıra, ilgili olduğu ölçüde DAD-01'in (İşlem Paneli, SaaG'ın ön yüz kullanıcı arayüzü CSU'su) karşılık gelen dilimini de kapsayacak şekilde belirlenmiştir; böylece her artım uçtan uca, gösterilebilir bir yetenek üretir.
 
@@ -353,8 +353,8 @@ system-as-a-graph/
 ├── README.md
 ├── docs/
 │   ├── requirements/
-│   │   ├── SSS.md
-│   │   └── SRS.md
+│   │   ├── SRS.md
+│   │   └── SRS.tr.md
 │   ├── planning/
 │   │   └── SDP.md
 │   ├── design/

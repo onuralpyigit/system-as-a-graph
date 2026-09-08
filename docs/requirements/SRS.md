@@ -1,23 +1,24 @@
 # Software Requirements Specification (SRS): System as a Graph (SaaG)
 
-**Definition:** This Software Requirements Specification (SRS) decomposes the six Computer Software Components (CSCs) specified in the SSS into ten Computer Software Units (CSUs). SaaG is the Computer Software Configuration Item (CSCI); each CSC below is decomposed into one or more CSUs, and each requirement is scoped to exactly one CSU. Every requirement in this document is traceable to its source System/Subsystem Specification (SSS) requirement via §7.
+**Definition:** The System as a Graph (SaaG) Digital System Model is a static digital system model developed using an architectural digital twin approach, which models the structural and relational architecture of the system using a node-relationship representation, without actually running the system applications. In this model, system entities such as software units, middleware and communication services, processor/console units, topics, and messages are represented as nodes; the dependency, publishing, and consuming relationships between them are represented as relationships. The behavioral analysis dimension of the model is achieved not by running the components, but by overlaying Analytical Evaluation Data — derived from field records or the scenario generator — onto this model.
+
+SaaG is the Computer Software Configuration Item (CSCI). This Software Requirements Specification (SRS) serves as the unified requirements specification for the system, decomposing the six Computer Software Components (CSCs) into ten Computer Software Units (CSUs). Each functional requirement is scoped to exactly one CSU, and the infrastructure constraints governing the platform environment are formally incorporated.
+
+**Purpose:** The primary purpose of the model is architectural verification. Within this scope, structural/circular dependencies, publisher/consumer matches, the conformance of topic quality-of-service (QoS) parameters, the capacity conformance of hardware present in the system (CPU core count, RAM size, network bandwidth, etc.), and design patterns that violate architectural rules are statically audited at the design stage. Architectural verification also covers the detection of deviations (architectural drift) between the architecture envisioned in the design and the runtime structure observed in field data. In addition to architectural verification, the model allows for hypothetical scenario analyses; without breaking structural integrity, the user can create experimental design constructs by adding/removing nodes/relationships or changing attributes. In these hypothetical scenarios, the propagation of situations such as an entity becoming inactive, an increase in message density, or a narrowing of bandwidth to dependent entities, and their effects on the architecture, are evaluated analytically. Furthermore, the model provides an automated evaluation mechanism for production deployment pipelines to verify candidate software unit suitability prior to target environment installation. Thus, the Digital System Model provides a repeatable verification environment aimed at predicting the architectural consequences of design decisions and changes before software units are installed in the target environment.
 
 **Table 1. SRS Requirement Distribution**
 
-| No | Component | Abbreviation | Number of CSUs | Number of Requirements |
-|---|---|---|---|---|
-| 1 | Model Setup Data Generation | SaaG-MSD | 1 | 23 |
-| 2 | Scenario Generator | SaaG-SCG | 1 | 7 |
-| 3 | Field Records Database | SaaG-FRD | 1 | 5 |
-| 4 | Analytical Data Preparation | SaaG-ADP | 1 | 6 |
-| 5 | Node-Relationship Based Core System Model | SaaG-CSM | 2 | 37 |
-| 6 | Design Verification, Analysis and Evaluation | SaaG-VAE | 4 | 78 |
-| **TOTAL** | | | **10** | **156** |
+| No | Component | Abbreviation | Number of CSUs | CSU IDs | Number of Requirements |
+|---|---|---|---|---|---|
+| 1 | Model Setup Data Generation | SaaG-MSD | 1 | MSD | 23 |
+| 2 | Scenario Generator | SaaG-SCG | 1 | SCG | 7 |
+| 3 | Field Records Database | SaaG-FRD | 1 | FRD | 5 (+ 1 Infrastructure) |
+| 4 | Analytical Data Preparation | SaaG-ADP | 1 | ADP | 6 |
+| 5 | Node-Relationship Based Core System Model | SaaG-CSM | 2 | CSM-01, CSM-02 | 37 |
+| 6 | Design Verification, Analysis and Evaluation | SaaG-VAE | 4 | VAE-01, VAE-02, VAE-03, VAE-04 | 78 |
+| **TOTAL** | | | **10** | | **156 (+ 1 Infrastructure)** |
 
-Per-CSC requirement distribution tables appear under each component's own section below.
-
-**Purpose:** This SRS translates each SSS requirement into one or more CSU-level functional requirements suitable for design and implementation. Each requirement is scoped to a single CSU and is traceable to its source SSS requirement via §7.
-
+Per-CSC requirement distribution tables appear under each component's own section below. Every requirement in this document is traceable to its source baseline system capability requirement via §7.
 ---
 
 ## 1. Model Setup Data Generation (SaaG-MSD)
@@ -82,10 +83,11 @@ Per-CSC requirement distribution tables appear under each component's own sectio
 
 **Table 4. SaaG-FRD Requirement Distribution**
 
-| CSU | CSU ID | Number of Requirements |
-|---|---|---|
-| Field Records Database | FRD | 5 |
-| **Subtotal** | | **5** |
+| CSU / Element | Identifier | Type | Number of Requirements |
+|---|---|---|---|
+| Field Records Database | FRD | Functional | 5 |
+| Storage Platform Environment | FRD-INF | Infrastructure | 1 |
+| **Subtotal** | | | **6** |
 
 ### 3.1 FRD: Field Records Database
 
@@ -95,7 +97,9 @@ Per-CSC requirement distribution tables appear under each component's own sectio
 4. FRD shall enable the user to list, search, and select the existing System Field Records according to criteria such as project, platform, system version, record source, or upload time.
 5. FRD shall report and record any format incompatibility, integrity error, or missing field conditions detected during upload.
 
-*Note: SSS-FRD.6 (storage hardware disk capacity, details TBD at critical design) is an infrastructure constraint on the platform FRD runs on, and is not restated as a CSU-level functional requirement.*
+### 3.2 Infrastructure and Platform Constraints
+
+1. **FRD-INF.1:** FRD shall operate on storage hardware with a disk capacity whose sizing and specifications will be determined during the critical design phase.
 
 ---
 
@@ -278,13 +282,19 @@ Per-CSC requirement distribution tables appear under each component's own sectio
 
 ---
 
-## 7. Requirements Traceability
+## 7. System Capability Allocation and Requirements Traceability
 
-Relationship key: **Direct** = one SSS requirement reworded to one CSU-scoped SRS requirement, unchanged in substance. **Split** = one SSS requirement's enumerated items each stated as a separate SRS requirement. **Joint** = one SSS requirement (a component charter, or a requirement whose scope spans multiple CSUs) realized by a distinct SRS requirement in each contributing CSU.
+This section establishes the bidirectional traceability and allocation between baseline system capability requirements (CSCI/CSC level) and Computer Software Unit (CSU) functional requirements.
+
+**Relationship key:**
+- **Direct**: A baseline system capability requirement allocated directly to a single CSU functional requirement without decomposition.
+- **Split**: A compound system capability requirement decomposed into multiple atomic, independently testable CSU functional requirements.
+- **Joint**: A system-wide charter or cross-cutting capability requirement realized through coordinated functional requirements across multiple contributing CSUs.
+- **Infrastructure**: A non-functional or physical platform constraint allocated to the runtime infrastructure environment.
 
 ### SaaG-MSD
 
-| SRS Req ID | CSU | Source SSS Req | Relationship |
+| SRS Req ID | CSU | Baseline System Req ID | Relationship |
 |---|---|---|---|
 | MSD.1 | MSD | SSS-MSD.1 | Direct (charter) |
 | MSD.2 | MSD | SSS-MSD.2 | Split |
@@ -312,7 +322,7 @@ Relationship key: **Direct** = one SSS requirement reworded to one CSU-scoped SR
 
 ### SaaG-SCG
 
-| SRS Req ID | CSU | Source SSS Req | Relationship |
+| SRS Req ID | CSU | Baseline System Req ID | Relationship |
 |---|---|---|---|
 | SCG.1 | SCG | SSS-SCG.1 | Direct (charter) |
 | SCG.2 | SCG | SSS-SCG.2 | Direct |
@@ -324,18 +334,18 @@ Relationship key: **Direct** = one SSS requirement reworded to one CSU-scoped SR
 
 ### SaaG-FRD
 
-| SRS Req ID | CSU | Source SSS Req | Relationship |
+| SRS Req ID | CSU | Baseline System Req ID | Relationship |
 |---|---|---|---|
 | FRD.1 | FRD | SSS-FRD.1 | Direct (charter) |
 | FRD.2 | FRD | SSS-FRD.2 | Direct |
 | FRD.3 | FRD | SSS-FRD.3 | Direct |
 | FRD.4 | FRD | SSS-FRD.4 | Direct |
 | FRD.5 | FRD | SSS-FRD.5 | Direct |
-| — | — | SSS-FRD.6 | Infrastructure (no CSU) |
+| FRD-INF.1 | FRD-INF | SSS-FRD.6 | Infrastructure (platform storage) |
 
 ### SaaG-ADP
 
-| SRS Req ID | CSU | Source SSS Req | Relationship |
+| SRS Req ID | CSU | Baseline System Req ID | Relationship |
 |---|---|---|---|
 | ADP.1 | ADP | SSS-ADP.1 | Direct (charter) |
 | ADP.2 | ADP | SSS-ADP.2 | Direct |
@@ -346,7 +356,7 @@ Relationship key: **Direct** = one SSS requirement reworded to one CSU-scoped SR
 
 ### SaaG-CSM
 
-| SRS Req ID | CSU | Source SSS Req | Relationship |
+| SRS Req ID | CSU | Baseline System Req ID | Relationship |
 |---|---|---|---|
 | CSM-01.1 | CSM-01 | SSS-CSM.1 | Joint |
 | CSM-01.2 | CSM-01 | SSS-CSM.2 | Direct |
@@ -388,7 +398,7 @@ Relationship key: **Direct** = one SSS requirement reworded to one CSU-scoped SR
 
 ### SaaG-VAE
 
-| SRS Req ID | CSU | Source SSS Req | Relationship |
+| SRS Req ID | CSU | Baseline System Req ID | Relationship |
 |---|---|---|---|
 | VAE-01.1 | VAE-01 | SSS-VAE.1 | Joint |
 | VAE-01.2 | VAE-01 | SSS-VAE.2 | Direct |
@@ -469,4 +479,4 @@ Relationship key: **Direct** = one SSS requirement reworded to one CSU-scoped SR
 | VAE-04.7 | VAE-04 | SSS-VAE.53 | Direct |
 | VAE-04.8 | VAE-04 | SSS-VAE.54 | Direct |
 
-**Coverage check:** all 112 SSS requirements appear at least once above (111 as functional CSU requirements, 1 — SSS-FRD.6 — as a noted infrastructure constraint). Total SRS requirements: **156**.
+**Coverage check:** all 112 baseline system capabilities appear at least once above (111 realized as functional CSU requirements, 1 — SSS-FRD.6 / FRD-INF.1 — realized as a platform infrastructure constraint). Total SRS functional requirements: **156**; infrastructure constraints: **1**; total managed requirements: **157**.

@@ -1,6 +1,6 @@
 # Critical Design Review (CDR): System as a Graph (SaaG)
 
-**Definition:** Critical Design Review is a review milestone, not a deliverable format. This register consolidates, in one place, every design point that the SSS, SRS, and SDD deliberately left as "to be determined during the critical design phase" rather than inventing a value.
+**Definition:** Critical Design Review is a review milestone, not a deliverable format. This register consolidates, in one place, every design point that the SRS and SDD deliberately left as "to be determined during the critical design phase" rather than inventing a value.
 
 **Purpose:** This register gives the CDR board a single checklist of decisions that must be closed before those documents can be considered final. Each item has a **Status**: `Open` (default, no decision yet), `Resolved` (decision made — record it and update the source document), or `Deferred` (explicitly pushed past this CDR to a later review, with reason noted). Resolving an item means updating the corresponding source document to replace its "to be determined during the critical design phase" language with the actual decision.
 
@@ -36,7 +36,7 @@
 
 | ID | Item | Source | Status |
 |---|---|---|---|
-| CDR-15 | Field Records Database storage hardware disk capacity | SSS-FRD.6 (infrastructure constraint; no SRS CSU requirement) | Open |
+| CDR-15 | Field Records Database storage hardware disk capacity | SRS FRD-INF.1 (infrastructure constraint) | Open |
 | CDR-16 | Concurrent user/operation count for production-pipeline and analysis/simulation operations | SRS CSM-01.30 | Open |
 
 ### 1.4 Interface Protocols

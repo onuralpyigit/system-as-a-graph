@@ -35,8 +35,7 @@ Implementation has begun. The repository has the full documentation set, a scaff
 
 | Document | Purpose |
 |---|---|
-| [`docs/requirements/SSS.md`](docs/requirements/SSS.md) | System/Subsystem Specification — the 112 CSCI-level requirements. |
-| [`docs/requirements/SRS.md`](docs/requirements/SRS.md) | Software Requirements Specification — 156 CSU-scoped requirements derived from SSS. |
+| [`docs/requirements/SRS.md`](docs/requirements/SRS.md) | Software Requirements Specification — unified system and software requirements (156 CSU-scoped functional requirements, 1 platform infrastructure constraint, and system capability allocation). Available in English ([`SRS.md`](docs/requirements/SRS.md)) and Turkish ([`SRS.tr.md`](docs/requirements/SRS.tr.md)). |
 | [`docs/planning/SDP.md`](docs/planning/SDP.md) | Software Development Plan — WBS, 7-increment development schedule, and project structure. |
 | [`docs/design/SDD.md`](docs/design/SDD.md) | Software Design Description — CSCI-wide design decisions, architecture, interfaces, database design, and CSU-level detailed design. |
 | [`docs/design/UXD.md`](docs/design/UXD.md) | UI/UX Design Document — visual identity, layout, and interaction design for the VAE-01 Operations Panel. |
@@ -50,7 +49,7 @@ The document set is fully traceable across documents.
 Every top-level backend directory maps to exactly one CSC and owns its own hexagonal boundary (`api/`, `use_cases/`, `model/`, `ports/`, `adapters/`). `web/` and `cli/` implement the VAE-01 user-facing applications. See [Table 4 in the SDP](docs/planning/SDP.md#4-project-structure) for the full directory mapping.
 
 ```
-docs/            # SSS, SRS, SDP, SDD, UXD, CDR, STD
+docs/            # SRS, SDP, SDD, UXD, CDR, STD
 web/             # VAE-01: web application
 cli/             # VAE-01: command-line application
 msd/             # MSD: Model Setup Data Generation

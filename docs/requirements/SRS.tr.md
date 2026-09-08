@@ -1,23 +1,24 @@
 # Yazılım Gereksinimleri Şartnamesi (SRS): System as a Graph (SaaG)
 
-**Tanım:** Bu Yazılım Gereksinimleri Şartnamesi (SRS), SSS'te tanımlanan altı Yazılım Komponentini (CSC) on Yazılım Birimine (CSU) ayrıştırır. SaaG, Yazılım Kırılım Öğesidir (CSCI); aşağıdaki her CSC bir veya daha fazla CSU'ya ayrıştırılmıştır ve her ister tam olarak bir CSU'ya kapsamlandırılmıştır. Bu belgedeki her ister, §7 üzerinden kaynak Sistem/Alt Sistem Şartnamesi (SSS) isterine izlenebilir.
+**Tanım:** System as a Graph (SaaG) Sayısal Sistem Modeli, mimari dijital ikiz yaklaşımıyla geliştirilmiş, sistem uygulamalarını fiilen çalıştırmaksızın, sistemin yapısal ve ilişkisel mimarisini düğüm-ilişki temsiliyle modelleyen statik bir sayısal sistem modelidir. Bu modelde yazılım birimleri, arakatman ve haberleşme servisleri, işlemci/konsol birimleri, topic ve mesaj gibi sistem varlıkları düğüm; aralarındaki bağımlılık, yayımlama ve tüketme bağıntıları ise ilişki olarak temsil edilir. Modelin davranışsal analizlere imkân tanıyan boyutu, bileşenlerin koşumuyla değil; saha kayıtlarından veya senaryo üretecinden türetilen Analitik Değerlendirme Verisinin bu model üzerine bindirilmesiyle sağlanır.
+
+SaaG, Yazılım Kırılım Öğesidir (CSCI). Bu Yazılım Gereksinimleri Şartnamesi (SRS), sistem ve yazılım isterlerini tek bir şartnamede birleştirerek tanımlanan altı Yazılım Komponentini (CSC) on Yazılım Birimine (CSU) ayrıştırır. Her işlevsel ister tam olarak bir CSU'ya kapsamlandırılmış olup sisteme ait altyapı kısıtları da resmi olarak dokümante edilmiştir.
+
+**Amaç:** Modelin birincil amacı mimari doğrulamadır. Bu kapsamda yapısal/döngüsel bağımlılıklar, yayımcı/tüketici eşleşmeleri, topic servis kalite parametrelerinin (QoS) uygunluğu, sistemde yer alan donanımların kapasite uygunluğu (CPU çekirdek adedi, RAM boyutu, ağ bant genişliği vb.) ve mimari kurallara aykırı tasarım örüntüleri tasarım aşamasında statik olarak denetlenir. Mimari doğrulama, tasarımda öngörülen mimari ile saha verisinde gözlemlenen çalışma-zamanı yapısı arasındaki sapmaların (architectural drift) tespitini de kapsar. Mimari doğrulamanın yanı sıra model, kurgusal senaryo analizlerine olanak tanır; kullanıcı, yapısal bütünlüğü bozmadan düğüm/ilişki ekleyip çıkararak ya da öznitelikleri değiştirerek deneysel tasarım kurguları oluşturabilir. Bu kurgusal senaryolarda bir varlığın devre dışı kalması, mesaj yoğunluğunun artması veya bant genişliğinin daralması gibi durumların bağımlı varlıklara yayılımı ve mimari üzerindeki etkileri analitik olarak değerlendirilir. Ayrıca model, yazılım birimlerinin hedef ortama kurulum uygunluğunu canlıya alma işlem hattında (pipeline) otomatik olarak değerlendiren bir mekanizma sunar. Böylelikle Sayısal Sistem Modeli, henüz yazılım birimlerinin hedef ortama kurulumları yapılmadan tasarım kararlarının ve değişikliklerinin mimari sonuçlarını öngörmeye yönelik, tekrarlanabilir bir doğrulama ortamı sağlar.
 
 **Tablo 1. SRS İster Dağılımı**
 
-| No | Bileşen | Kısaltma | CSU Sayısı | İster Sayısı |
-|---|---|---|---|---|
-| 1 | Model Kurulum Verisi Üretimi | SaaG-MKV | 1 | 23 |
-| 2 | Senaryo Üreteci | SaaG-SUR | 1 | 7 |
-| 3 | Saha Kayıtları Veri Tabanı | SaaG-SKV | 1 | 5 |
-| 4 | Analitik Veri Hazırlama | SaaG-AVH | 1 | 6 |
-| 5 | Düğüm-İlişki Tabanlı Çekirdek Sistem Modeli | SaaG-CSM | 2 | 37 |
-| 6 | Tasarım Doğrulama, Analiz ve Değerlendirme | SaaG-DAD | 4 | 78 |
-| **TOPLAM** | | | **10** | **156** |
+| No | Bileşen | Kısaltma | CSU Sayısı | CSU Kimlikleri | İster Sayısı |
+|---|---|---|---|---|---|
+| 1 | Model Kurulum Verisi Üretimi | SaaG-MKV | 1 | MKV | 23 |
+| 2 | Senaryo Üreteci | SaaG-SUR | 1 | SUR | 7 |
+| 3 | Saha Kayıtları Veri Tabanı | SaaG-SKV | 1 | SKV | 5 (+ 1 Altyapı) |
+| 4 | Analitik Veri Hazırlama | SaaG-AVH | 1 | AVH | 6 |
+| 5 | Düğüm-İlişki Tabanlı Çekirdek Sistem Modeli | SaaG-CSM | 2 | CSM-01, CSM-02 | 37 |
+| 6 | Tasarım Doğrulama, Analiz ve Değerlendirme | SaaG-DAD | 4 | DAD-01, DAD-02, DAD-03, DAD-04 | 78 |
+| **TOPLAM** | | | **10** | | **156 (+ 1 Altyapı)** |
 
-Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bileşenin kendi bölümünde yer almaktadır.
-
-**Amaç:** Bu SRS, her SSS isterini, tasarım ve gerçekleştirime uygun bir veya daha fazla CSU seviyesinde işlevsel istere dönüştürür. Her ister tek bir CSU'ya kapsamlandırılmıştır ve §7 üzerinden kaynak SSS isterine izlenebilir.
-
+Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bileşenin kendi bölümünde yer almaktadır. Bu belgedeki her ister, §7 üzerinden kaynak temel sistem kabiliyet isterine izlenebilir.
 ---
 
 ## 1. Model Kurulum Verisi Üretimi (SaaG-MKV)
@@ -82,10 +83,11 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 
 **Tablo 4. SaaG-SKV İster Dağılımı**
 
-| CSU | CSU Kimliği | İster Sayısı |
-|---|---|---|
-| Saha Kayıtları Veri Tabanı | SKV | 5 |
-| **Alt Toplam** | | **5** |
+| CSU / Öğe | Kimlik | Tür | İster Sayısı |
+|---|---|---|---|
+| Saha Kayıtları Veri Tabanı | SKV | İşlevsel | 5 |
+| Depolama Platform Ortamı | SKV-INF | Altyapı | 1 |
+| **Alt Toplam** | | | **6** |
 
 ### 3.1 SKV: Saha Kayıtları Veri Tabanı
 
@@ -95,7 +97,9 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 4. SKV, kullanıcının mevcut Sistem Saha Kayıtlarını proje, platform, sistem sürümü, kayıt kaynağı veya yükleme zamanı ölçütlerine göre listeleyebilmesini, arayabilmesini ve seçebilmesini sağlayacaktır.
 5. SKV, yükleme sırasında tespit edilen format uyumsuzluğu, bütünlük hatası veya eksik alan durumlarını raporlayacak ve kayıt altına alacaktır.
 
-*Not: SSS-SKV.6 (depolama donanımının disk kapasitesi; detayları kritik tasarım aşamasında belirlenecektir) SKV'nin çalıştığı platforma ait bir altyapı kısıtıdır ve CSU seviyesinde işlevsel bir ister olarak yeniden ifade edilmemiştir.*
+### 3.2 Altyapı ve Platform Kısıtları
+
+1. **SKV-INF.1:** SKV, depolama donanımının disk kapasitesi ve donanım özellikleri kritik tasarım aşamasında belirlenecek bir depolama altyapısı üzerinde çalışacaktır.
 
 ---
 
@@ -278,13 +282,19 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 
 ---
 
-## 7. İsterlerin İzlenebilirliği
+## 7. Sistem Kabiliyeti Dağılımı ve İster İzlenebilirliği
 
-İlişki anahtarı: **Doğrudan** = bir SSS isterinin, öz içeriği değişmeden tek bir CSU kapsamlı SRS isteri olarak yeniden ifade edilmesi. **Bölünmüş** = bir SSS isterinin listelenen her bir alt maddesinin ayrı bir SRS isteri olarak ifade edilmesi. **Birleşik** = bir SSS isterinin (bir bileşen görev tanımı veya kapsamı birden fazla CSU'ya yayılan bir ister) katkı sağlayan her CSU'da ayrı bir SRS isteri ile karşılanması.
+Bu bölüm, sistem seviyesi temel kabiliyet isterleri (CSCI/CSC seviyesi) ile Yazılım Birimi (CSU) işlevsel isterleri arasındaki iki yönlü izlenebilirliği ve dağılımı ortaya koyar.
+
+**İlişki türü açıklamaları:**
+- **Doğrudan**: Temel bir sistem kabiliyet isterinin ayrıştırılmadan tek bir CSU işlevsel isterine doğrudan atanması.
+- **Bölünmüş**: Bileşik bir sistem kabiliyet isterinin birden fazla bağımsız ve test edilebilir CSU işlevsel isterine ayrıştırılması.
+- **Birleşik**: Sistem geneline veya bileşen misyonuna yönelik bir kabiliyet isterinin birden fazla CSU'nun eşgüdümlü işlevsel isterleriyle karşılanması.
+- **Altyapı**: Çalışma-zamanı ortamına veya fiziksel platform donanımına tahsis edilmiş işlevsel olmayan sistem kısıtı.
 
 ### SaaG-MKV
 
-| SRS İster No | CSU | Kaynak SSS İster | İlişki |
+| SRS İster No | CSU | Temel Sistem İster No | İlişki |
 |---|---|---|---|
 | MKV.1 | MKV | SSS-MKV.1 | Doğrudan (görev tanımı) |
 | MKV.2 | MKV | SSS-MKV.2 | Bölünmüş |
@@ -312,7 +322,7 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 
 ### SaaG-SUR
 
-| SRS İster No | CSU | Kaynak SSS İster | İlişki |
+| SRS İster No | CSU | Temel Sistem İster No | İlişki |
 |---|---|---|---|
 | SUR.1 | SUR | SSS-SUR.1 | Doğrudan (görev tanımı) |
 | SUR.2 | SUR | SSS-SUR.2 | Doğrudan |
@@ -324,18 +334,18 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 
 ### SaaG-SKV
 
-| SRS İster No | CSU | Kaynak SSS İster | İlişki |
+| SRS İster No | CSU | Temel Sistem İster No | İlişki |
 |---|---|---|---|
 | SKV.1 | SKV | SSS-SKV.1 | Doğrudan (görev tanımı) |
 | SKV.2 | SKV | SSS-SKV.2 | Doğrudan |
 | SKV.3 | SKV | SSS-SKV.3 | Doğrudan |
 | SKV.4 | SKV | SSS-SKV.4 | Doğrudan |
 | SKV.5 | SKV | SSS-SKV.5 | Doğrudan |
-| — | — | SSS-SKV.6 | Altyapı (CSU yok) |
+| SKV-INF.1 | SKV-INF | SSS-SKV.6 | Altyapı (platform depolama) |
 
 ### SaaG-AVH
 
-| SRS İster No | CSU | Kaynak SSS İster | İlişki |
+| SRS İster No | CSU | Temel Sistem İster No | İlişki |
 |---|---|---|---|
 | AVH.1 | AVH | SSS-AVH.1 | Doğrudan (görev tanımı) |
 | AVH.2 | AVH | SSS-AVH.2 | Doğrudan |
@@ -346,7 +356,7 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 
 ### SaaG-CSM
 
-| SRS İster No | CSU | Kaynak SSS İster | İlişki |
+| SRS İster No | CSU | Temel Sistem İster No | İlişki |
 |---|---|---|---|
 | CSM-01.1 | CSM-01 | SSS-CSM.1 | Birleşik |
 | CSM-01.2 | CSM-01 | SSS-CSM.2 | Doğrudan |
@@ -388,7 +398,7 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 
 ### SaaG-DAD
 
-| SRS İster No | CSU | Kaynak SSS İster | İlişki |
+| SRS İster No | CSU | Temel Sistem İster No | İlişki |
 |---|---|---|---|
 | DAD-01.1 | DAD-01 | SSS-DAD.1 | Birleşik |
 | DAD-01.2 | DAD-01 | SSS-DAD.2 | Doğrudan |
@@ -469,4 +479,4 @@ Her bileşenin CSU başına ister dağılım tabloları, aşağıda ilgili bile�
 | DAD-04.7 | DAD-04 | SSS-DAD.53 | Doğrudan |
 | DAD-04.8 | DAD-04 | SSS-DAD.54 | Doğrudan |
 
-**Kapsam kontrolü:** 112 SSS isterinin tamamı yukarıda en az bir kez yer almaktadır (111'i işlevsel CSU isteri olarak, 1'i — SSS-SKV.6 — bir altyapı kısıtı notu olarak). Toplam SRS isteri sayısı: **156**.
+**Kapsam kontrolü:** 112 temel sistem kabiliyetinin tamamı yukarıda en az bir kez yer almaktadır (111'i işlevsel CSU isteri olarak, 1'i — SSS-SKV.6 / SKV-INF.1 — platform altyapı kısıtı olarak). Toplam SRS işlevsel isteri sayısı: **156**; altyapı kısıtı sayısı: **1**; toplam yönetilen ister: **157**.
