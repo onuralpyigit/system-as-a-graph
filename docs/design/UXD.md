@@ -1,6 +1,6 @@
 # UI/UX Design Document (UXD): System as a Graph (SaaG)
 
-**Definition:** This UXD specifies the visual identity, layout system, interaction patterns, and performance targets for **VAE Operations and Visualization (Operations Panel)** — the sole user-facing surface of the SaaG CSCI. It covers the web application only; the CLI automation interface of VAE (VAE.27) is a text-output automation interface and has no visual UX surface.
+**Definition:** This UXD specifies the visual identity, layout system, interaction patterns, and performance targets for **DVE Operations and Visualization (Operations Panel)** — the sole user-facing surface of the SaaG CSCI. It covers the web application only; the CLI automation interface of DVE (DVE.27) is a text-output automation interface and has no visual UX surface.
 
 **Purpose:** SDD §3.6.2.1 already fixes *what* each Operations Panel screen does and *which* SRS requirements it satisfies. This document fixes *how it looks and feels* — the design tokens, layout shell, and interaction patterns that make the Operations Panel read as a premium, high-performance instrument rather than a generic admin CRUD app — using only the technologies already committed to in SDP §5 Table 6.
 
@@ -10,7 +10,7 @@
 
 1. **Instrument, not brochure.** Every screen is a working surface for an operator staring at it for hours — density and legibility beat whitespace and marketing polish.
 2. **Trust through clarity.** Findings, severities, and conformance status must read unambiguously at a glance; the same severity scale is reused everywhere (graph, tables, charts).
-3. **Non-destructive editing must be visually loud.** The Working Model (VAE.17) is a sandbox derived from the read-only Core System Model (SDD §1 decision 4) — the UI must make it impossible to mistake one for the other at any zoom level.
+3. **Non-destructive editing must be visually loud.** The Working Model (DVE.17) is a sandbox derived from the read-only Core System Model (SDD §1 decision 4) — the UI must make it impossible to mistake one for the other at any zoom level.
 4. **Performance is a UX requirement, not an afterthought.** Graph pan/zoom and high-volume trace charts are the product's core interaction; a sluggish canvas undermines the "premium" goal more than any visual choice does.
 5. **Dark-first, light-second.** Dark "control room" is primary; light is a fully-supported, token-driven alternate via shadcn/ui's native theming — no separate design.
 
@@ -100,13 +100,13 @@ flowchart TB
     MAIN --> INSPECT
 ```
 
-- **Top bar**: one persistent row — project/platform/version selector (VAE.4), group nav, avatar dropdown (LDAP user, sign out), and a job-status strip for in-flight MSD/production/evaluation ops (Procrastinate + SSE). No left sidebar; the route outlet always spans full width.
+- **Top bar**: one persistent row — project/platform/version selector (DVE.4), group nav, avatar dropdown (LDAP user, sign out), and a job-status strip for in-flight MSG/production/evaluation ops (Procrastinate + SSE). No left sidebar; the route outlet always spans full width.
 - **Group nav**: four groups — Setup, Model, Analytical Data, Findings — each one page, no subpages. Active state: bold `--foreground` vs. `--muted-foreground` text, not a pill (pills are for in-page tabs, §5). Three groups push further content behind in-page toggles instead:
   - **Model** toggles Browse/Edit on one shared canvas.
-  - **Analytical Data** toggles Field Records/Scenario Generator (FRD.2–5, VAE.10, 12, 15–16 / VAE.11, 13–16) on one shared screen — the same pattern as Model.
+  - **Analytical Data** toggles Field Records/Scenario Generator (TDM.2–5, DVE.10, 12, 15–16 / DVE.11, 13–16) on one shared screen — the same pattern as Model.
   - **Findings**: four-way toggle — **Verification**, **Analysis**, **Evaluation** (split by Verification / Analysis / Evaluation), plus **Reports** across all three.
 - **Pipeline-progress badges**: each group carries a two-state readiness dot — `--muted` (not yet available) vs. `--status-conforming` (has output) — not the full severity scale (§2.2). Per active project/platform/version:
-  - Setup: `--muted` until an MSD file exists.
+  - Setup: `--muted` until an MSG file exists.
   - Model: `--muted` until a Core System Model is built.
   - Analytical Data: `--muted` until bound Analytical Evaluation Data (AED) exists.
   - Findings: `--muted` until any of Verification/Analysis/Evaluation has results.
@@ -118,13 +118,13 @@ flowchart TB
 
 ## 4. Screen-by-Screen UX
 
-Each screen maps VAE Operations and Visualization requirements to actual UX/page boundaries (nearest SDD §3.6.2.1 element; SRS IDs unchanged). Four refinements versus SDD:
-- **Model build placement:** VAE.9 (build Core System Model) ships with Model Visualization, not Setup.
-- **Findings toggle:** Findings toggles Verification (VAE.28–49) / Analysis (VAE.50–70) / Evaluation (VAE.71–78) / Reports, the last a shared tab across all three.
-- **Analytical Data toggle:** Analytical Data toggles Field Records (FRD.2–5, VAE.10, 12, 15–16) / Scenario Generator (VAE.11, 13–16) by data source.
-- **Analysis KPI strip:** Analysis carries VAE.58/70's KPI strip.
+Each screen maps DVE Operations and Visualization requirements to actual UX/page boundaries (nearest SDD §3.6.2.1 element; SRS IDs unchanged). Four refinements versus SDD:
+- **Model build placement:** DVE.9 (build Core System Model) ships with Model Visualization, not Setup.
+- **Findings toggle:** Findings toggles Verification (DVE.28–49) / Analysis (DVE.50–70) / Evaluation (DVE.71–78) / Reports, the last a shared tab across all three.
+- **Analytical Data toggle:** Analytical Data toggles Field Records (TDM.2–5, DVE.10, 12, 15–16) / Scenario Generator (DVE.11, 13–16) by data source.
+- **Analysis KPI strip:** Analysis carries DVE.58/70's KPI strip.
 
-**Session & Authentication** — *VAE.3–4* — Centered single-card login, no shell chrome until authenticated. LDAP form (React Hook Form + shadcn), guarded by Refine's access-control provider (§5). Post-login: project/platform/version selection if none active, else last-visited screen, else Model Visualization & Navigation.
+**Session & Authentication** — *DVE.3–4* — Centered single-card login, no shell chrome until authenticated. LDAP form (React Hook Form + shadcn), guarded by Refine's access-control provider (§5). Post-login: project/platform/version selection if none active, else last-visited screen, else Model Visualization & Navigation.
 
 **Figure 2. Session & Authentication — Login Screen**
 
@@ -146,7 +146,7 @@ Each screen maps VAE Operations and Visualization requirements to actual UX/page
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Setup** — *VAE.5–8, MSD.7–8* — Stepper-style status view: file list plus a production trigger, progress fed by the top-bar job strip. Errors (missing-data/access/authorization/format/integrity) surface inline via §7. On success, **"Continue to Model →"** navigates to the Model page — the build itself happens there via Model's own **"Build Model"** trigger. A status dot per data source sits under the header (VAE.7); **Edit** opens a plain form for that source's address/credentials, including the network-topology manual-entry toggle (MSD.7–8) — one form, no separate dialog.
+**Setup** — *DVE.5–8, MSG.7–8* — Stepper-style status view: file list plus a production trigger, progress fed by the top-bar job strip. Errors (missing-data/access/authorization/format/integrity) surface inline via §7. On success, **"Continue to Model →"** navigates to the Model page — the build itself happens there via Model's own **"Build Model"** trigger. A status dot per data source sits under the header (DVE.7); **Edit** opens a plain form for that source's address/credentials, including the network-topology manual-entry toggle (MSG.7–8) — one form, no separate dialog.
 
 **Figure 3. Setup**
 
@@ -157,7 +157,7 @@ Each screen maps VAE Operations and Visualization requirements to actual UX/page
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ Sources: * config-mgmt DB  * source repo  * package repo  * net topology   [Edit]      │
 │                                                                                        │
-│ Selected MSD file: msd_2026-07-14_platformA.json                                       │
+│ Selected MSG file: msd_2026-07-14_platformA.json                                       │
 │                                                                                        │
 │ File list                                                                              │
 │   msd_2026-07-14_platformA.json                                                   ready│
@@ -169,9 +169,9 @@ Each screen maps VAE Operations and Visualization requirements to actual UX/page
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Field Records** — *FRD.2–5, VAE.10, 12, 15–16* — TanStack Table of uploaded System Field Records, filterable by project/platform/version/source/upload time (FRD.4). Upload (React Hook Form, file input) records source/time/project/platform/version (FRD.2–3); errors inline via §7 (FRD.5). Table-pattern example for §5.
+**Field Records** — *TDM.2–5, DVE.10, 12, 15–16* — TanStack Table of uploaded System Field Records, filterable by project/platform/version/source/upload time (TDM.4). Upload (React Hook Form, file input) records source/time/project/platform/version (TDM.2–3); errors inline via §7 (TDM.5). Table-pattern example for §5.
 
-Selecting records and **Produce Analytical Data** (VAE.10, 12) starts AED production (VAE.15); binding vs. Core System Model is the final stage, a progress card once CSM completes (VAE.16). Entered via the Field Records/Scenario Generator toggle, like Model's Browse/Edit.
+Selecting records and **Produce Analytical Data** (DVE.10, 12) starts AED production (DVE.15); binding vs. Core System Model is the final stage, a progress card once CSM completes (DVE.16). Entered via the Field Records/Scenario Generator toggle, like Model's Browse/Edit.
 
 **Figure 4. Field Records**
 
@@ -198,7 +198,7 @@ Selecting records and **Produce Analytical Data** (VAE.10, 12) starts AED produc
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Scenario Generator** — *VAE.11, 13–16* — Form: scope, type, interval, density, data types (VAE.11, 13). **Produce Synthetic Data** tracks production, errors inline via §7 (VAE.14); **Produce Analytical Data** then starts AED production against it (VAE.15). Binding vs. Core System Model is final, a progress card once CSM completes (VAE.16).
+**Scenario Generator** — *DVE.11, 13–16* — Form: scope, type, interval, density, data types (DVE.11, 13). **Produce Synthetic Data** tracks production, errors inline via §7 (DVE.14); **Produce Analytical Data** then starts AED production against it (DVE.15). Binding vs. Core System Model is final, a progress card once CSM completes (DVE.16).
 
 Entered via the same Field Records/Scenario Generator toggle — the tab itself is the source choice.
 
@@ -218,7 +218,7 @@ Entered via the same Field Records/Scenario Generator toggle — the tab itself 
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Working Model Editor** — *VAE.17* — Same canvas as Model Visualization, via a Browse/Edit toggle. A persistent amber `--status-medium` banner/border marks it as non-read-only; selecting a node/edge opens the same Inspector Panel, now editable (React Hook Form + shadcn) — the canvas itself stays non-editable. Every edit is explicit and undoable; edits live only in the Working Model store (SDD §2.4), never autosaved to the Core System Model.
+**Working Model Editor** — *DVE.17* — Same canvas as Model Visualization, via a Browse/Edit toggle. A persistent amber `--status-medium` banner/border marks it as non-read-only; selecting a node/edge opens the same Inspector Panel, now editable (React Hook Form + shadcn) — the canvas itself stays non-editable. Every edit is explicit and undoable; edits live only in the Working Model store (SDD §2.4), never autosaved to the Core System Model.
 
 Unsaved edits + Project/Platform/Version switch prompts a confirmation dialog (shadcn `AlertDialog`); switching top-bar groups mid-edit is safe — edits persist, banner reappears on return.
 
@@ -243,7 +243,7 @@ Unsaved edits + Project/Platform/Version switch prompts a confirmation dialog (s
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Model Visualization & Navigation** — *VAE.9, 19–20* — Full-bleed React Flow canvas (tier 0), floating top-left search/filter bar (type/project/platform/version/unit), bottom-right minimap. Node/edge selection opens the Inspector Panel (§3). No Core System Model yet: canvas replaced by a "Build Model" trigger + progress (VAE.9), fed by the job strip.
+**Model Visualization & Navigation** — *DVE.9, 19–20* — Full-bleed React Flow canvas (tier 0), floating top-left search/filter bar (type/project/platform/version/unit), bottom-right minimap. Node/edge selection opens the Inspector Panel (§3). No Core System Model yet: canvas replaced by a "Build Model" trigger + progress (DVE.9), fed by the job strip.
 
 **Figure 7. Model Visualization & Navigation**
 
@@ -268,7 +268,7 @@ Unsaved edits + Project/Platform/Version switch prompts a confirmation dialog (s
 Not pictured: the empty state described above, where a "Build Model" trigger replaces the
 canvas entirely.
 
-**Verification** — *VAE.28–49, VAE.18, 21–25* — TanStack Table of structural rule-based checks (VAE.28–49) against the Core System Model — no AED involved. Severity-colored, sortable/filterable, same columns/Inspector pattern as other Findings tabs (evidence, related rule, cause/effect chain); simulation-only fields never apply here.
+**Verification** — *DVE.28–49, DVE.18, 21–25* — TanStack Table of structural rule-based checks (DVE.28–49) against the Core System Model — no AED involved. Severity-colored, sortable/filterable, same columns/Inspector pattern as other Findings tabs (evidence, related rule, cause/effect chain); simulation-only fields never apply here.
 
 **Figure 8. Verification**
 
@@ -291,7 +291,7 @@ canvas entirely.
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Analysis** — *VAE.50–70, VAE.18, 21–25* — TanStack Table of behavioral simulation and field analysis results (VAE.50–70), headed by a KPI strip (Recharts/shadcn Chart, §5) for top resource-usage/messaging-intensity entities (VAE.58, 70). Row selection: evidence, related rule, cause/effect chain, plus scenario name/inputs/time for simulation-sourced findings. Interrupted ops show cause/stage/time inline via §7.
+**Analysis** — *DVE.50–70, DVE.18, 21–25* — TanStack Table of behavioral simulation and field analysis results (DVE.50–70), headed by a KPI strip (Recharts/shadcn Chart, §5) for top resource-usage/messaging-intensity entities (DVE.58, 70). Row selection: evidence, related rule, cause/effect chain, plus scenario name/inputs/time for simulation-sourced findings. Interrupted ops show cause/stage/time inline via §7.
 
 **Figure 9. Analysis**
 
@@ -318,9 +318,9 @@ canvas entirely.
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Evaluation** — *VAE.71–78, VAE.18, 21–25* — Installation suitability runs (VAE.71–78), one row per software unit: score, score class, decision (conforming/non-conforming — VAE.77–78), and a Blocking count of violations forcing non-conforming regardless of score.
+**Evaluation** — *DVE.71–78, DVE.18, 21–25* — Installation suitability runs (DVE.71–78), one row per software unit: score, score class, decision (conforming/non-conforming — DVE.77–78), and a Blocking count of violations forcing non-conforming regardless of score.
 
-Row selection: blocking findings behind the decision (rule ID, heading, severity, weight, acceptance criterion — VAE.74, 76). Scoring method/score-class open per CDR-14 (VAE.76); labels shown are illustrative.
+Row selection: blocking findings behind the decision (rule ID, heading, severity, weight, acceptance criterion — DVE.74, 76). Scoring method/score-class open per CDR-14 (DVE.76); labels shown are illustrative.
 
 **Figure 10. Evaluation**
 
@@ -340,12 +340,12 @@ Row selection: blocking findings behind the decision (rule ID, heading, severity
 │ svc-router@1.4    91    Good      conforming       0             | (blocking):         │
 │ svc-cache@3.0     78    Fair      conforming       0             | dependency &        │
 │                                                                  | integration         │
-│ Score/class illustrative, pending CDR-14 (VAE.76)              | conformance         │
-│                                                                  | (VAE.74)          │
+│ Score/class illustrative, pending CDR-14 (DVE.76)              | conformance         │
+│                                                                  | (DVE.74)          │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Reports** — *VAE.26* — Fourth Findings tab: list of generated reports plus a generate action (summary/detailed, PDF/JSON) synthesizing Verification/Analysis/Evaluation for the selected project/platform/version — Scope control can narrow to just one.
+**Reports** — *DVE.26* — Fourth Findings tab: list of generated reports plus a generate action (summary/detailed, PDF/JSON) synthesizing Verification/Analysis/Evaluation for the selected project/platform/version — Scope control can narrow to just one.
 
 **Figure 11. Reports**
 
@@ -378,12 +378,12 @@ Cross-cutting patterns, each owned by exactly one library from SDP §5 Table 6 �
 |---|---|---|
 | Graph canvas | React Flow ^12.11 | Search/filter, zoom/pan, click-to-select → Inspector Panel, minimap always present. Below the node-count threshold (§6): full detail; above it: degraded LOD (labels hidden, edges simplified) until zoomed in. |
 | Data tables | TanStack Table ^8.21 + shadcn/ui | Sort/filter/pagination and severity-colored rows are table-wide conventions: Verification, Analysis, Evaluation, Reports, Field Records. |
-| Charts | Recharts ^3.9 + shadcn/ui Chart, or ECharts ^6.1 | **Decision rule:** low-cardinality summary/KPI/status charts (findings counts, conformance breakdowns, VAE.58/70's top-entity KPIs) use Recharts/shadcn Chart; high-volume field-trace data (message flow, resource usage, latency/loss — VAE.59–65) uses ECharts for scale. Both share the severity/status token scale for series color. |
+| Charts | Recharts ^3.9 + shadcn/ui Chart, or ECharts ^6.1 | **Decision rule:** low-cardinality summary/KPI/status charts (findings counts, conformance breakdowns, DVE.58/70's top-entity KPIs) use Recharts/shadcn Chart; high-volume field-trace data (message flow, resource usage, latency/loss — DVE.59–65) uses ECharts for scale. Both share the severity/status token scale for series color. |
 | Forms | React Hook Form ^7.81 + shadcn/ui | Inline per-field validation, matching SDD §1 decision 5's CSCI-wide pattern. Credential fields (Sources, §4) are always masked (password input, reveal toggle). |
 | Page header | shadcn/ui header row | Bold page title (30px, §2.3) left; at most one primary action (`--primary` button, e.g. "Produce Model Setup Data") right-aligned. Never duplicates the top bar's selector. |
 | Tab navigation | shadcn/ui `Tabs` | Every in-page toggle (Browse/Edit, Field Records/Scenario Generator, Verification/Analysis/Evaluation/Reports) is one pill-shaped tab list under the page header — `--muted` track, `--card`-filled active pill, plain `--muted-foreground` inactive text. |
-| KPI / stat cards | shadcn/ui `Card` | Low-cardinality summary numbers (VAE.58/70's top-entity KPIs) as bordered stat cards — label + icon, large tabular-nums value, muted caption. Icons fixed per card: Top Resource Usage = `Cpu`, Top Msg Intensity = `Activity` (lucide-react). |
-| Background operations | Procrastinate (PostgreSQL) + SSE | One status-strip + toast pattern for every long-running op (MSD, AED, evaluation): queued → running → succeeded/failed, failure reason inline. |
+| KPI / stat cards | shadcn/ui `Card` | Low-cardinality summary numbers (DVE.58/70's top-entity KPIs) as bordered stat cards — label + icon, large tabular-nums value, muted caption. Icons fixed per card: Top Resource Usage = `Cpu`, Top Msg Intensity = `Activity` (lucide-react). |
+| Background operations | Procrastinate (PostgreSQL) + SSE | One status-strip + toast pattern for every long-running op (MSG, AED, evaluation): queued → running → succeeded/failed, failure reason inline. |
 | Shell, routing & access control | Refine ^5.0 | Route guarding, auth redirects, CRUD/resource bindings under Login, Verification, Analysis, Evaluation, Reports, Field Records (SDP §5 Table 6) — plumbing only, no visual pattern of its own. |
 
 ---
@@ -420,20 +420,20 @@ Concrete, testable targets, not a hope.
 
 **Table 6. Requirements Traceability**
 
-| UXD Section | VAE SRS Reference |
+| UXD Section | DVE SRS Reference |
 |---|---|
-| §1 Design Principles | VAE.1–2 *(CSU-wide role, SDD §3.6.1)* |
-| §4 Session & Authentication | VAE.3–4 |
-| §4 Setup | VAE.5–8, MSD.7–8 *(cross-CSU, SRS §7 "Joint" convention: no VAE requirement covers source config directly)* |
-| §4 Field Records | FRD.2–5 *(cross-CSU, same convention)*, VAE.10, 12, 15–16 |
-| §4 Scenario Generator | VAE.11, 13–16 |
-| §4 Working Model Editor | VAE.17 |
-| §4 Model Visualization & Navigation | VAE.9, 19–20 |
-| §4 Verification | VAE.18, 21–25 *(structural verification slice: VAE.28–49)* |
-| §4 Analysis | VAE.18, 21–25, VAE.58, 70 *(behavioral analysis slice: VAE.50–70)* |
-| §4 Evaluation | VAE.18, 21–25, VAE.74, 76–78 *(installation evaluation slice; VAE.76 scoring method open per CDR-14)* |
-| §4 Reports | VAE.26 |
-| §5 Background operations status pattern | VAE.16, 27 (status delivery, shared pattern) |
-| §7 Error-state convention | VAE.18 (conforming/non-conforming classification), SDD §1 decision 5 |
+| §1 Design Principles | DVE.1–2 *(CSU-wide role, SDD §3.6.1)* |
+| §4 Session & Authentication | DVE.3–4 |
+| §4 Setup | DVE.5–8, MSG.7–8 *(cross-CSU, SRS §7 "Joint" convention: no DVE requirement covers source config directly)* |
+| §4 Field Records | TDM.2–5 *(cross-CSU, same convention)*, DVE.10, 12, 15–16 |
+| §4 Scenario Generator | DVE.11, 13–16 |
+| §4 Working Model Editor | DVE.17 |
+| §4 Model Visualization & Navigation | DVE.9, 19–20 |
+| §4 Verification | DVE.18, 21–25 *(structural verification slice: DVE.28–49)* |
+| §4 Analysis | DVE.18, 21–25, DVE.58, 70 *(behavioral analysis slice: DVE.50–70)* |
+| §4 Evaluation | DVE.18, 21–25, DVE.74, 76–78 *(installation evaluation slice; DVE.76 scoring method open per CDR-14)* |
+| §4 Reports | DVE.26 |
+| §5 Background operations status pattern | DVE.16, 27 (status delivery, shared pattern) |
+| §7 Error-state convention | DVE.18 (conforming/non-conforming classification), SDD §1 decision 5 |
 
-**Coverage check:** all 27 VAE Operations and Visualization SRS requirements (VAE.1–27) appear at least once above.
+**Coverage check:** all 27 DVE Operations and Visualization SRS requirements (DVE.1–27) appear at least once above.

@@ -8,20 +8,20 @@
 
 | No | Component | Abbreviation | CSUs | Number of Test Cases |
 |---|---|---|---|---|
-| 1 | Model Setup Generator | SaaG-MSD | 1 | 5 |
+| 1 | Model Setup Generator | SaaG-MSG | 1 | 5 |
 | 2 | Scenario Generator | SaaG-SCG | 1 | 3 |
-| 3 | Telemetry Data Manager | SaaG-FRD | 1 | 2 |
-| 4 | Analytical Data Manager | SaaG-ADP | 1 | 3 |
+| 3 | Telemetry Data Manager | SaaG-TDM | 1 | 2 |
+| 4 | Analytical Data Manager | SaaG-ADM | 1 | 3 |
 | 5 | Core System Model | SaaG-CSM | 1 | 8 |
-| 6 | Design Verification Engine | SaaG-VAE | 1 | 19 |
+| 6 | Design Verification Engine | SaaG-DVE | 1 | 19 |
 | **TOTAL** | | | **6** | **40** |
 
 ---
 
-## 1. MSD — Model Setup Data Generation (SaaG-MSD)
+## 1. MSG — Model Setup Data Generation (SaaG-MSG)
 
-**TC-MSD-01: Data Source Connector & Configuration Manager**
-Traces to: MSD.2–8 / SDD §3.1.2
+**TC-MSG-01: Data Source Connector & Configuration Manager**
+Traces to: MSG.2–8 / SDD §3.1.2
 
 Procedure:
 1. For each of the four external data source types (configuration management database, source code repository, package repository, network topology data source), define and save a source configuration (source type, source name, access method, connection address, credentials).
@@ -31,8 +31,8 @@ Procedure:
 
 Expected Result: All four data source types accept and persist configuration; both automatic and manual network topology acquisition methods are available and operate without error.
 
-**TC-MSD-02: Configuration Data Acquisition**
-Traces to: MSD.9–13, 16 / SDD §3.1.2
+**TC-MSG-02: Configuration Data Acquisition**
+Traces to: MSG.9–13, 16 / SDD §3.1.2
 
 Procedure:
 1. Select a project and acquire current project information from the configuration management database.
@@ -42,8 +42,8 @@ Procedure:
 
 Expected Result: Project/platform/version information is retrieved with the effective version marked; each injected fault condition results in an error-status acquisition process.
 
-**TC-MSD-03: Software Unit Version Inventory Manager**
-Traces to: MSD.14–15 / SDD §3.1.2
+**TC-MSG-03: Software Unit Version Inventory Manager**
+Traces to: MSG.14–15 / SDD §3.1.2
 
 Procedure:
 1. For a selected project/platform/version, record the Software Unit Version Inventory (software unit name and version).
@@ -52,8 +52,8 @@ Procedure:
 
 Expected Result: The inventory correctly records baseline software unit versions and appends the candidate version without altering existing entries.
 
-**TC-MSD-04: Source Repository Ingestion**
-Traces to: MSD.17–20 / SDD §3.1.2
+**TC-MSG-04: Source Repository Ingestion**
+Traces to: MSG.17–20 / SDD §3.1.2
 
 Procedure:
 1. Trigger transfer of source code, installation scripts, and configuration files for the Software Unit Version Inventory's software units from the source code repository.
@@ -63,8 +63,8 @@ Procedure:
 
 Expected Result: Files transfer with correct metadata recorded; a missing mandatory file yields "missing data" status; access, authorization, and integrity errors are displayed and recorded.
 
-**TC-MSD-05: Data Validation & Model Setup Data Assembler**
-Traces to: MSD.21–23 / SDD §3.1.2
+**TC-MSG-05: Data Validation & Model Setup Data Assembler**
+Traces to: MSG.21–23 / SDD §3.1.2
 
 Procedure:
 1. Submit a full set of source data (received and manually entered) with all mandatory fields present, and verify it passes the mandatory-field-presence check.
@@ -101,16 +101,16 @@ Traces to: SCG.5, 7 / SDD §3.2.2
 
 Procedure:
 1. After synthetic data production, verify the output is recorded together with scenario name, production time, and project/platform/system-version association.
-2. Verify the recorded output is prepared and available for transfer via INT-IF-02 to ADP.
+2. Verify the recorded output is prepared and available for transfer via INT-IF-02 to ADM.
 
-Expected Result: Produced synthetic data is fully attributed and handed off to ADP without loss of scenario metadata.
+Expected Result: Produced synthetic data is fully attributed and handed off to ADM without loss of scenario metadata.
 
 ---
 
-## 3. FRD — Telemetry Data Manager (SaaG-FRD)
+## 3. TDM — Telemetry Data Manager (SaaG-TDM)
 
-**TC-FRD-01: Record Upload Manager**
-Traces to: FRD.2, 5 / SDD §3.3.2
+**TC-TDM-01: Record Upload Manager**
+Traces to: TDM.2, 5 / SDD §3.3.2
 
 Procedure:
 1. Upload a valid telemetry/system data record associated with a project/platform/system-version, and verify it is accepted and recorded in a controlled, traceable manner.
@@ -118,8 +118,8 @@ Procedure:
 
 Expected Result: Valid uploads succeed and associate correctly; each malformed upload variant is detected and reported without being silently accepted.
 
-**TC-FRD-02: Record Catalog Manager**
-Traces to: FRD.3–4 / SDD §3.3.2
+**TC-TDM-02: Record Catalog Manager**
+Traces to: TDM.3–4 / SDD §3.3.2
 
 Procedure:
 1. Verify each uploaded System Field Record is cataloged with source, upload time, and project/platform/version association.
@@ -129,19 +129,19 @@ Expected Result: Every uploaded record is cataloged with the required attributes
 
 ---
 
-## 4. ADP — Analytical Data Manager (SaaG-ADP)
+## 4. ADM — Analytical Data Manager (SaaG-ADM)
 
-**TC-ADP-01: Field Record Ingestion**
-Traces to: ADP.2, 5 / SDD §3.4.2
+**TC-ADM-01: Field Record Ingestion**
+Traces to: ADM.2, 5 / SDD §3.4.2
 
 Procedure:
-1. Obtain System Field Records from FRD for Analytical Evaluation Data production.
+1. Obtain System Field Records from TDM for Analytical Evaluation Data production.
 2. Submit a field record with an incompatible format and one that is unreadable, and verify both are detected and reported.
 
 Expected Result: Valid field records are ingested successfully; incompatible or unreadable records are detected and reported without halting the ingestion path.
 
-**TC-ADP-02: Scenario Data Ingestion**
-Traces to: ADP.3, 6 / SDD §3.4.2
+**TC-ADM-02: Scenario Data Ingestion**
+Traces to: ADM.3, 6 / SDD §3.4.2
 
 Procedure:
 1. Obtain synthetic data from SCG for Analytical Evaluation Data production.
@@ -149,12 +149,12 @@ Procedure:
 
 Expected Result: Valid synthetic data is ingested successfully; each malformed variant is detected and reported.
 
-**TC-ADP-03: Analytical Data Assembler**
-Traces to: ADP.4 / SDD §3.4.2
+**TC-ADM-03: Analytical Data Assembler**
+Traces to: ADM.4 / SDD §3.4.2
 
 Procedure:
-1. Using ingested field records (TC-ADP-01), produce Analytical Evaluation Data and verify it is transmitted via INT-IF-04 to CSM.
-2. Using ingested synthetic data (TC-ADP-02), independently produce Analytical Evaluation Data and verify the same handoff.
+1. Using ingested field records (TC-ADM-01), produce Analytical Evaluation Data and verify it is transmitted via INT-IF-04 to CSM.
+2. Using ingested synthetic data (TC-ADM-02), independently produce Analytical Evaluation Data and verify the same handoff.
 3. Verify the two runs never combine field-record and synthetic data within a single Analytical Evaluation Data set.
 
 Expected Result: Analytical Evaluation Data is correctly assembled and handed off for both upstream sources, and the two sources are never mixed in one production run. Analytical Evaluation Data format/content details are pending resolution of CDR-12; this test case verifies successful assembly and handoff, not the internal schema.
@@ -167,7 +167,7 @@ Expected Result: Analytical Evaluation Data is correctly assembled and handed of
 Traces to: CSM.2–5, 25–26 / SDD §3.5.2
 
 Procedure:
-1. Submit a valid Model Setup Data file (TC-MSD-05) via INT-IF-01, and verify format, schema, integrity, and mandatory-field checks run before model construction.
+1. Submit a valid Model Setup Data file (TC-MSG-05) via INT-IF-01, and verify format, schema, integrity, and mandatory-field checks run before model construction.
 2. Verify the checked data converts into a node-relationship Core System Model associated with the correct project/platform/system version.
 3. Submit a Model Setup Data file with a missing entity and one with an invalid relationship, in two separate attempts, and verify each is reported as an error.
 4. Verify the Model Setup Data file used, creation time, and model status are recorded against the created model.
@@ -188,10 +188,10 @@ Expected Result: All 12 node types, all 6 relationship types, and the three attr
 Traces to: CSM.27–28 / SDD §3.5.2
 
 Procedure:
-1. From a VAE component, request read access to the Core System Model via INT-IF-05.
+1. From a DVE component, request read access to the Core System Model via INT-IF-05.
 2. Request read access to the nodes, relationships, and their bound Analytical Evaluation Data.
 
-Expected Result: VAE can read the Core System Model and its bound Analytical Evaluation Data via INT-IF-05, without write access.
+Expected Result: DVE can read the Core System Model and its bound Analytical Evaluation Data via INT-IF-05, without write access.
 
 **TC-CSM-04: Concurrency & Session Manager**
 Traces to: CSM.29–30 / SDD §3.5.2
@@ -215,9 +215,9 @@ Expected Result: Each candidate evaluation produces its own isolated Core System
 Traces to: CSM.33 / SDD §3.5.2
 
 Procedure:
-1. Submit Analytical Evaluation Data produced by ADP (TC-ADP-03) via INT-IF-04, and verify CSM accepts it as input for binding.
+1. Submit Analytical Evaluation Data produced by ADM (TC-ADM-03) via INT-IF-04, and verify CSM accepts it as input for binding.
 
-Expected Result: Analytical Evaluation Data from ADP is accepted via INT-IF-04.
+Expected Result: Analytical Evaluation Data from ADM is accepted via INT-IF-04.
 
 **TC-CSM-07: Node/Relationship Matcher & Binder**
 Traces to: CSM.32, 34–36 / SDD §3.5.2
@@ -240,12 +240,12 @@ Expected Result: Every node or relationship record lacking an Analytical Evaluat
 
 ---
 
-## 6. VAE — Design Verification Engine (SaaG-VAE)
+## 6. DVE — Design Verification Engine (SaaG-DVE)
 
 ### 6.1 Operations and Visualization
 
-**TC-VAE-01: Session & Authentication Manager**
-Traces to: VAE.3–4 / SDD §3.6.2.1
+**TC-DVE-01: Session & Authentication Manager**
+Traces to: DVE.3–4 / SDD §3.6.2.1
 
 Procedure:
 1. Authenticate with valid LDAP credentials and verify access is granted within the user's authorizations.
@@ -254,8 +254,8 @@ Procedure:
 
 Expected Result: Only successfully-authenticated users gain access within their authorization scope; the effective version is clearly indicated after selection.
 
-**TC-VAE-02: Model Setup Data Workflow Manager**
-Traces to: VAE.5–9 / SDD §3.6.2.1
+**TC-DVE-02: Model Setup Data Workflow Manager**
+Traces to: DVE.5–9 / SDD §3.6.2.1
 
 Procedure:
 1. List Model Setup Data files for a selected project/platform/version and select one.
@@ -266,8 +266,8 @@ Procedure:
 
 Expected Result: The full Model Setup Data production and Core System Model creation workflow is monitorable end-to-end, with data-source status and all five error categories visible to the user.
 
-**TC-VAE-03: Analytical Data Workflow Manager**
-Traces to: VAE.10–16 / SDD §3.6.2.1
+**TC-DVE-03: Analytical Data Workflow Manager**
+Traces to: DVE.10–16 / SDD §3.6.2.1
 
 Procedure:
 1. Select System Field Records as the Analytical Evaluation Data source and select specific records.
@@ -278,8 +278,8 @@ Procedure:
 
 Expected Result: Both Analytical Evaluation Data source paths (field records, synthetic) are selectable, trackable end-to-end with error visibility, and their binding status is displayed.
 
-**TC-VAE-04: Working Model Editor**
-Traces to: VAE.17 / SDD §3.6.2.1
+**TC-DVE-04: Working Model Editor**
+Traces to: DVE.17 / SDD §3.6.2.1
 
 Procedure:
 1. Derive a working model from the Core System Model.
@@ -288,8 +288,8 @@ Procedure:
 
 Expected Result: Structural edits apply only to the working model, preserve its structural integrity, and are usable as the input to downstream verification/analysis operations.
 
-**TC-VAE-05: Model Visualization & Navigation UI**
-Traces to: VAE.19–20 / SDD §3.6.2.1
+**TC-DVE-05: Model Visualization & Navigation UI**
+Traces to: DVE.19–20 / SDD §3.6.2.1
 
 Procedure:
 1. Search for a system entity/relationship on the node-relationship structure.
@@ -298,8 +298,8 @@ Procedure:
 
 Expected Result: Search, all five filter dimensions, and all visual navigation operations function correctly against the displayed model.
 
-**TC-VAE-06: Findings & Reporting Manager**
-Traces to: VAE.18, 21–26 / SDD §3.6.2.1
+**TC-DVE-06: Findings & Reporting Manager**
+Traces to: DVE.18, 21–26 / SDD §3.6.2.1
 
 Procedure:
 1. Run a verification/analysis operation and verify each finding is classified as conforming or non-conforming.
@@ -308,12 +308,12 @@ Procedure:
 4. Sort and filter findings by operation type, evaluation result, finding type, severity, project, platform, system version, and affected nodes.
 5. Interrupt an operation mid-run and verify error cause, interruption stage, and error time are recorded.
 6. Run a simulation and verify scenario name, inputs, production time, and project/platform/version are recorded.
-7. Generate a summary report and a detailed report and verify each contains all fields listed in VAE.26.
+7. Generate a summary report and a detailed report and verify each contains all fields listed in DVE.26.
 
 Expected Result: Findings are classified, fully attributed, sortable/filterable, and cause-and-effect linked; interruption and simulation metadata are recorded; both report types contain all required fields. Conforming/non-conforming classification rules (CDR-08) and the exportable report file format (CDR-13) are pending resolution; this test case verifies presence and structure of the required data, not specific thresholds or file format.
 
-**TC-VAE-07: Automation Interface (CLI/Build Tools)**
-Traces to: VAE.27 / SDD §3.6.2.1
+**TC-DVE-07: Automation Interface (CLI/Build Tools)**
+Traces to: DVE.27 / SDD §3.6.2.1
 
 Procedure:
 1. Submit an analysis request from the CLI and, separately, from a Build Automation Tool client via EXT-IF-07.
@@ -324,8 +324,8 @@ Expected Result: Both automation entry points can submit requests and observe st
 
 ### 6.2 Structural Design Verification
 
-**TC-VAE-08: Structural & Dependency Analysis Engine**
-Traces to: VAE.31, 46–48 / SDD §3.6.2.2
+**TC-DVE-08: Structural & Dependency Analysis Engine**
+Traces to: DVE.31, 46–48 / SDD §3.6.2.2
 
 Procedure:
 1. Run structural dependency, communication-connection, and runtime-environment relationship analysis on a Core System Model.
@@ -334,8 +334,8 @@ Procedure:
 
 Expected Result: All analyzed relationship types are examined, and all six injected fault conditions are correctly detected.
 
-**TC-VAE-09: Topic QoS Verification Engine**
-Traces to: VAE.32–35 / SDD §3.6.2.2
+**TC-DVE-09: Topic QoS Verification Engine**
+Traces to: DVE.32–35 / SDD §3.6.2.2
 
 Procedure:
 1. Configure topics with Durability, Reliability, Lifespan, and Transport Priority QoS parameters, including at least one non-conformant value per parameter.
@@ -343,8 +343,8 @@ Procedure:
 
 Expected Result: All four QoS parameters are verified and non-conformant values flagged. Conformance rules for each parameter are pending resolution of CDR-01; this test case verifies that verification runs and reports against whatever rule set is configured, not specific pass/fail thresholds.
 
-**TC-VAE-10: Publisher/Consumer Matcher**
-Traces to: VAE.36–38 / SDD §3.6.2.2
+**TC-DVE-10: Publisher/Consumer Matcher**
+Traces to: DVE.36–38 / SDD §3.6.2.2
 
 Procedure:
 1. Define a topic with no publisher and verify it is detected.
@@ -353,8 +353,8 @@ Procedure:
 
 Expected Result: All three publisher/consumer mismatch conditions are detected.
 
-**TC-VAE-11: Communication Consistency Verifier**
-Traces to: VAE.39 / SDD §3.6.2.2
+**TC-DVE-11: Communication Consistency Verifier**
+Traces to: DVE.39 / SDD §3.6.2.2
 
 Procedure:
 1. Configure an external-to-middleware communication with consistent source, destination, message, and direction information, and verify it passes.
@@ -362,8 +362,8 @@ Procedure:
 
 Expected Result: Consistent communications pass; inconsistent ones are flagged. Which communication services are in scope is pending resolution of CDR-02; this test case exercises the verification mechanism against the currently configured service set.
 
-**TC-VAE-12: Resource Allocation Verifier**
-Traces to: VAE.40–45 / SDD §3.6.2.2
+**TC-DVE-12: Resource Allocation Verifier**
+Traces to: DVE.40–45 / SDD §3.6.2.2
 
 Procedure:
 1. Analyze software-unit load-balancing distribution across processor/console units.
@@ -375,8 +375,8 @@ Procedure:
 
 Expected Result: Load-balancing distribution is analyzed and all core-allocation, OS-settings, and memory-allocation conditions are correctly detected. Load-balancing, core-allocation, OS-settings, and memory-allocation conformance rules are pending resolution of CDR-03, CDR-04, CDR-05, and CDR-06; this test case verifies detection mechanics against whatever rule set is configured.
 
-**TC-VAE-13: Architectural Rule Verifier**
-Traces to: VAE.49 / SDD §3.6.2.2
+**TC-DVE-13: Architectural Rule Verifier**
+Traces to: DVE.49 / SDD §3.6.2.2
 
 Procedure:
 1. Construct a model containing a known architectural-rule-violating design pattern.
@@ -386,8 +386,8 @@ Expected Result: The configured architectural-rule violation is detected. Archit
 
 ### 6.3 Behavioral Simulation and Analysis
 
-**TC-VAE-14: Simulation Analysis Engine**
-Traces to: VAE.53–58 / SDD §3.6.2.3
+**TC-DVE-14: Simulation Analysis Engine**
+Traces to: DVE.53–58 / SDD §3.6.2.3
 
 Procedure:
 1. Using synthetic-sourced Analytical Evaluation Data, analyze message flow direction, count, volume, and frequency between nodes.
@@ -399,8 +399,8 @@ Procedure:
 
 Expected Result: All listed simulation analyses run correctly against synthetic-sourced data and produce the specified outputs.
 
-**TC-VAE-15: Field Data Analysis Engine**
-Traces to: VAE.59–65, 69–70 / SDD §3.6.2.3
+**TC-DVE-15: Field Data Analysis Engine**
+Traces to: DVE.59–65, 69–70 / SDD §3.6.2.3
 
 Procedure:
 1. Using field-record-sourced Analytical Evaluation Data, analyze operational/health status.
@@ -414,8 +414,8 @@ Procedure:
 
 Expected Result: All listed field-data analyses run correctly and produce the specified outputs.
 
-**TC-VAE-16: Architectural Drift Detector**
-Traces to: VAE.66–68 / SDD §3.6.2.3
+**TC-DVE-16: Architectural Drift Detector**
+Traces to: DVE.66–68 / SDD §3.6.2.3
 
 Procedure:
 1. Compare Model Setup Data nodes/relationships against field-record-sourced runtime observations.
@@ -427,8 +427,8 @@ Expected Result: All three drift categories are correctly detected.
 
 ### 6.4 Installation Suitability Evaluation
 
-**TC-VAE-17: Installation Suitability Evaluator**
-Traces to: VAE.72–76 / SDD §3.6.2.4
+**TC-DVE-17: Installation Suitability Evaluator**
+Traces to: DVE.72–76 / SDD §3.6.2.4
 
 Procedure:
 1. Submit a candidate software unit for installation suitability evaluation.
@@ -438,8 +438,8 @@ Procedure:
 
 Expected Result: All four evaluation headings are assessed with fully-attributed rule results and an overall conformance score. Scoring method details are pending resolution of CDR-14; this test case verifies that scoring is produced and rule attribution is complete, not a specific scoring formula.
 
-**TC-VAE-18: Blocking Decision Engine**
-Traces to: VAE.77 / SDD §3.6.2.4
+**TC-DVE-18: Blocking Decision Engine**
+Traces to: DVE.77 / SDD §3.6.2.4
 
 Procedure:
 1. Construct an evaluation with a critical-severity finding but a high overall conformance score, and verify the installation result is forced to "non-conforming."
@@ -448,8 +448,8 @@ Procedure:
 
 Expected Result: A critical finding or blocking-rule violation always forces "non-conforming" regardless of score, and the decision reaches the automation client.
 
-**TC-VAE-19: Concurrent Evaluation Orchestrator**
-Traces to: VAE.78 / SDD §3.6.2.4
+**TC-DVE-19: Concurrent Evaluation Orchestrator**
+Traces to: DVE.78 / SDD §3.6.2.4
 
 Procedure:
 1. Submit installation suitability evaluations for three software units concurrently, each under an independent operation identifier.
@@ -465,19 +465,19 @@ Expected Result: Concurrent multi-unit evaluation produces correctly-isolated pe
 
 | Test Case | Design Element | SRS Req ID Range |
 |---|---|---|
-| TC-MSD-01 | Data Source Connector & Configuration Manager | MSD.2–8 |
-| TC-MSD-02 | Configuration Data Acquisition | MSD.9–13, 16 |
-| TC-MSD-03 | Software Unit Version Inventory Manager | MSD.14–15 |
-| TC-MSD-04 | Source Repository Ingestion | MSD.17–20 |
-| TC-MSD-05 | Data Validation & Model Setup Data Assembler | MSD.21–23 |
+| TC-MSG-01 | Data Source Connector & Configuration Manager | MSG.2–8 |
+| TC-MSG-02 | Configuration Data Acquisition | MSG.9–13, 16 |
+| TC-MSG-03 | Software Unit Version Inventory Manager | MSG.14–15 |
+| TC-MSG-04 | Source Repository Ingestion | MSG.17–20 |
+| TC-MSG-05 | Data Validation & Model Setup Data Assembler | MSG.21–23 |
 | TC-SCG-01 | Scenario Input Manager | SCG.3, 6 |
 | TC-SCG-02 | Synthetic Data Generator | SCG.2, 4 |
 | TC-SCG-03 | Scenario Output Recorder | SCG.5, 7 |
-| TC-FRD-01 | Record Upload Manager | FRD.2, 5 |
-| TC-FRD-02 | Record Catalog Manager | FRD.3–4 |
-| TC-ADP-01 | Field Record Ingestion | ADP.2, 5 |
-| TC-ADP-02 | Scenario Data Ingestion | ADP.3, 6 |
-| TC-ADP-03 | Analytical Data Assembler | ADP.4 |
+| TC-TDM-01 | Record Upload Manager | TDM.2, 5 |
+| TC-TDM-02 | Record Catalog Manager | TDM.3–4 |
+| TC-ADM-01 | Field Record Ingestion | ADM.2, 5 |
+| TC-ADM-02 | Scenario Data Ingestion | ADM.3, 6 |
+| TC-ADM-03 | Analytical Data Assembler | ADM.4 |
 | TC-CSM-01 | Model Construction Engine | CSM.2–5, 25–26 |
 | TC-CSM-02 | Node-Relationship Schema Manager | CSM.6–24 |
 | TC-CSM-03 | Model Access Provider | CSM.27–28 |
@@ -486,24 +486,24 @@ Expected Result: Concurrent multi-unit evaluation produces correctly-isolated pe
 | TC-CSM-06 | Analytical Data Ingestion | CSM.33 |
 | TC-CSM-07 | Node/Relationship Matcher & Binder | CSM.32, 34–36 |
 | TC-CSM-08 | Unmatched Record Reporter | CSM.37 |
-| TC-VAE-01 | Session & Authentication Manager | VAE.3–4 |
-| TC-VAE-02 | Model Setup Data Workflow Manager | VAE.5–9 |
-| TC-VAE-03 | Analytical Data Workflow Manager | VAE.10–16 |
-| TC-VAE-04 | Working Model Editor | VAE.17 |
-| TC-VAE-05 | Model Visualization & Navigation UI | VAE.19–20 |
-| TC-VAE-06 | Findings & Reporting Manager | VAE.18, 21–26 |
-| TC-VAE-07 | Automation Interface (CLI/Build Tools) | VAE.27 |
-| TC-VAE-08 | Structural & Dependency Analysis Engine | VAE.31, 46–48 |
-| TC-VAE-09 | Topic QoS Verification Engine | VAE.32–35 |
-| TC-VAE-10 | Publisher/Consumer Matcher | VAE.36–38 |
-| TC-VAE-11 | Communication Consistency Verifier | VAE.39 |
-| TC-VAE-12 | Resource Allocation Verifier | VAE.40–45 |
-| TC-VAE-13 | Architectural Rule Verifier | VAE.49 |
-| TC-VAE-14 | Simulation Analysis Engine | VAE.53–58 |
-| TC-VAE-15 | Field Data Analysis Engine | VAE.59–65, 69–70 |
-| TC-VAE-16 | Architectural Drift Detector | VAE.66–68 |
-| TC-VAE-17 | Installation Suitability Evaluator | VAE.72–76 |
-| TC-VAE-18 | Blocking Decision Engine | VAE.77 |
-| TC-VAE-19 | Concurrent Evaluation Orchestrator | VAE.78 |
+| TC-DVE-01 | Session & Authentication Manager | DVE.3–4 |
+| TC-DVE-02 | Model Setup Data Workflow Manager | DVE.5–9 |
+| TC-DVE-03 | Analytical Data Workflow Manager | DVE.10–16 |
+| TC-DVE-04 | Working Model Editor | DVE.17 |
+| TC-DVE-05 | Model Visualization & Navigation UI | DVE.19–20 |
+| TC-DVE-06 | Findings & Reporting Manager | DVE.18, 21–26 |
+| TC-DVE-07 | Automation Interface (CLI/Build Tools) | DVE.27 |
+| TC-DVE-08 | Structural & Dependency Analysis Engine | DVE.31, 46–48 |
+| TC-DVE-09 | Topic QoS Verification Engine | DVE.32–35 |
+| TC-DVE-10 | Publisher/Consumer Matcher | DVE.36–38 |
+| TC-DVE-11 | Communication Consistency Verifier | DVE.39 |
+| TC-DVE-12 | Resource Allocation Verifier | DVE.40–45 |
+| TC-DVE-13 | Architectural Rule Verifier | DVE.49 |
+| TC-DVE-14 | Simulation Analysis Engine | DVE.53–58 |
+| TC-DVE-15 | Field Data Analysis Engine | DVE.59–65, 69–70 |
+| TC-DVE-16 | Architectural Drift Detector | DVE.66–68 |
+| TC-DVE-17 | Installation Suitability Evaluator | DVE.72–76 |
+| TC-DVE-18 | Blocking Decision Engine | DVE.77 |
+| TC-DVE-19 | Concurrent Evaluation Orchestrator | DVE.78 |
 
-**Coverage check:** all 40 SDD §3 design elements have exactly one test case above, and all 156 SRS requirements are covered through their owning design element, consistent with SDD §4. Test cases TC-ADP-03, TC-CSM-04, TC-VAE-06, TC-VAE-09, TC-VAE-11, TC-VAE-12, TC-VAE-13, and TC-VAE-17 carry acceptance criteria pending CDR-01 through CDR-08, CDR-12, CDR-14, and CDR-16 resolution (see the CDR).
+**Coverage check:** all 40 SDD §3 design elements have exactly one test case above, and all 156 SRS requirements are covered through their owning design element, consistent with SDD §4. Test cases TC-ADM-03, TC-CSM-04, TC-DVE-06, TC-DVE-09, TC-DVE-11, TC-DVE-12, TC-DVE-13, and TC-DVE-17 carry acceptance criteria pending CDR-01 through CDR-08, CDR-12, CDR-14, and CDR-16 resolution (see the CDR).
