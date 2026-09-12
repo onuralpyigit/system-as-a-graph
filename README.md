@@ -15,16 +15,16 @@ The model's primary purpose is architectural verification at design time: struct
 
 ## Capability areas
 
-Per the SRS, SaaG is organized into six Computer Software Components (CSCs) and ten Computer Software Units (CSUs):
+Per the SRS, SaaG is organized into six Computer Software Components (CSCs) and six Computer Software Units (CSUs) in a 1-to-1 mapping:
 
 | CSC | CSU | Abbreviation | Requirements |
 |---|---|---|---|
-| Model Setup Data Generation | MSD | MSD | 23 |
+| Model Setup Generator | MSG | MSG | 23 |
 | Scenario Generator | SCG | SCG | 7 |
-| Field Records Database | FRD | FRD | 5 |
-| Analytical Data Preparation | ADP | ADP | 6 |
-| Node-Relationship Based Core System Model | CSM-01, CSM-02 | CSM | 37 |
-| Design Verification, Analysis and Evaluation | VAE-01, VAE-02, VAE-03, VAE-04 | VAE | 78 |
+| Telemetry Data Manager | TDM | TDM | 5 |
+| Analytical Data Manager | ADM | ADM | 6 |
+| Core System Model | CSM | CSM | 37 |
+| Design Verification Engine | DVE | DVE | 78 |
 | **Total** | | | **156** |
 
 ## Current status
@@ -35,11 +35,10 @@ Implementation has begun. The repository has the full documentation set, a scaff
 
 | Document | Purpose |
 |---|---|
-| [`docs/requirements/SSS.md`](docs/requirements/SSS.md) | System/Subsystem Specification — the 112 CSCI-level requirements. |
-| [`docs/requirements/SRS.md`](docs/requirements/SRS.md) | Software Requirements Specification — 156 CSU-scoped requirements derived from SSS. |
+| [`docs/requirements/SRS.md`](docs/requirements/SRS.md) | Software Requirements Specification — unified system and software requirements (156 CSU-scoped functional requirements, 1 platform infrastructure constraint, and system capability allocation). Available in English ([`SRS.md`](docs/requirements/SRS.md)) and Turkish ([`SRS.tr.md`](docs/requirements/SRS.tr.md)). |
 | [`docs/planning/SDP.md`](docs/planning/SDP.md) | Software Development Plan — WBS, 7-increment development schedule, and project structure. |
 | [`docs/design/SDD.md`](docs/design/SDD.md) | Software Design Description — CSCI-wide design decisions, architecture, interfaces, database design, and CSU-level detailed design. |
-| [`docs/design/UXD.md`](docs/design/UXD.md) | UI/UX Design Document — visual identity, layout, and interaction design for the VAE-01 Operations Panel. |
+| [`docs/design/UXD.md`](docs/design/UXD.md) | UI/UX Design Document — visual identity, layout, and interaction design for the DVE Operations Panel. |
 | [`docs/design/CDR.md`](docs/design/CDR.md) | Critical Design Review — open items register consolidating every design point left "to be determined during the critical design phase." |
 | [`docs/test/STD.md`](docs/test/STD.md) | Software Test Description — qualification test cases and procedures mapped to SDD design elements and SRS requirements. |
 
@@ -47,18 +46,18 @@ The document set is fully traceable across documents.
 
 ## Repository layout
 
-Every top-level backend directory maps to exactly one CSC and owns its own hexagonal boundary (`api/`, `use_cases/`, `model/`, `ports/`, `adapters/`). `web/` and `cli/` implement the VAE-01 user-facing applications. See [Table 4 in the SDP](docs/planning/SDP.md#4-project-structure) for the full directory mapping.
+Every top-level backend directory maps to exactly one CSC/CSU and owns its own hexagonal boundary (`api/`, `use_cases/`, `model/`, `ports/`, `adapters/`). `web/` and `cli/` implement the DVE user-facing applications. See [Table 4 in the SDP](docs/planning/SDP.md#4-project-structure) for the full directory mapping.
 
 ```
-docs/            # SSS, SRS, SDP, SDD, UXD, CDR, STD
-web/             # VAE-01: web application
-cli/             # VAE-01: command-line application
-msd/             # MSD: Model Setup Data Generation
+docs/            # SRS, SDP, SDD, UXD, CDR, STD
+web/             # DVE: web application
+cli/             # DVE: command-line application
+msd/             # MSG: Model Setup Generator
 scg/             # SCG: Scenario Generator
-frd/             # FRD: Field Records Database
-adp/             # ADP: Analytical Data Preparation
-csm/             # CSM: Node-Relationship Based Core System Model (CSM-01 model_manager, CSM-02 data_binder)
-vae/             # VAE: Design Verification, Analysis and Evaluation (VAE-02 design_verifier, VAE-03 design_analyzer, VAE-04 design_evaluator)
+frd/             # TDM: Telemetry Data Manager
+adp/             # ADM: Analytical Data Manager
+csm/             # CSM: Core System Model
+vae/             # DVE: Design Verification Engine
 shared/          # contracts, types, errors, security shared across CSCs
 tests/           # integration and acceptance tests
 main.py          # FastAPI app aggregating each CSC's router

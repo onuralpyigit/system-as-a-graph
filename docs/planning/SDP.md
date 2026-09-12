@@ -1,8 +1,8 @@
 # Software Development Plan (SDP): System as a Graph (SaaG)
 
-**Definition:** This Software Development Plan (SDP) is the plan for performing the software development of the System as a Graph (SaaG) Computer Software Configuration Item (CSCI). It decomposes the work defined in the SRS into a Work Breakdown Structure (WBS) of functional deliverables, and sequences those deliverables into a series of incremental builds. Every WBS deliverable and every increment is traceable to the CSU-scoped requirements in the SRS, which are themselves traceable to the SSS via the SRS's own §7.
+**Definition:** This Software Development Plan (SDP) is the plan for performing the software development of the System as a Graph (SaaG) Computer Software Configuration Item (CSCI). It decomposes the work defined in the SRS into a Work Breakdown Structure (WBS) of functional deliverables, and sequences those deliverables into a series of incremental builds. Every WBS deliverable and every increment is traceable to the CSU-scoped requirements in the SRS.
 
-**Purpose:** The WBS (§1) establishes the full scope of development work, organized by Computer Software Component (CSC) and Computer Software Unit (CSU). The Incremental Development Plan (§2) sequences that work into a strictly serial series of builds — one increment at a time, in dependency-safe order. Each increment is scoped to one or more CSCs (their remaining CSUs) plus, where relevant, the corresponding slice of VAE-01 (Operations Panel), SaaG's front-door UI CSU, so that every increment produces an end-to-end, demonstrable capability.
+**Purpose:** The WBS (§1) establishes the full scope of development work, organized by Computer Software Component (CSC) and Computer Software Unit (CSU). The Incremental Development Plan (§2) sequences that work into a strictly serial series of builds — one increment at a time, in dependency-safe order. Each increment is scoped to one or more CSCs/CSUs plus, where relevant, the corresponding slice of DVE (Operations and Visualization), SaaG's front-door UI capability, so that every increment produces an end-to-end, demonstrable capability.
 
 ---
 
@@ -12,48 +12,50 @@
 
 | No | Component | Abbreviation | CSUs | Deliverables |
 |---|---|---|---|---|
-| 1 | Model Setup Data Generation | SaaG-MSD | 1 | 1 |
+| 1 | Model Data Generator | SaaG-MDG | 1 | 1 |
 | 2 | Scenario Generator | SaaG-SCG | 1 | 1 |
-| 3 | Field Records Database | SaaG-FRD | 1 | 1 |
-| 4 | Analytical Data Preparation | SaaG-ADP | 1 | 2 |
-| 5 | Node-Relationship Based Core System Model | SaaG-CSM | 2 | 2 |
-| 6 | Design Verification, Analysis and Evaluation | SaaG-VAE | 4 | 10 |
-| **TOTAL** | | | **10** | **17** |
+| 3 | Field Data Manager | SaaG-FDM | 1 | 1 |
+| 4 | Analytical Data Manager | SaaG-ADM | 1 | 2 |
+| 5 | System Model Manager | SaaG-SMM | 1 | 2 |
+| 6 | Design Verification Engine | SaaG-DVE | 1 | 10 |
+| **TOTAL** | | | **6** | **17** |
 
 Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 - **SaaG**
-  - **SaaG-MSD**
-    - **MSD: Model Setup Data Generation** (MSD.1–23)
+  - **SaaG-MDG**
+    - **MDG: Model Data Generator** (MDG.1–23)
   - **SaaG-SCG**
     - **SCG: Scenario Generator** (SCG.1–7)
-  - **SaaG-FRD**
-    - **FRD: Field Records Database** (FRD.1–5)
-  - **SaaG-ADP**
-    - **ADP: Analytical Data Preparation**
-      - Synthetic-Path Data Preparation (ADP.1, 3, 4, 6)
-      - Field-Path Data Preparation (ADP.2, 5)
-  - **SaaG-CSM**
-    - **CSM-01: Model Manager** (CSM-01.1–31)
-    - **CSM-02: Analytical Data Binder** (CSM-02.1–6)
-  - **SaaG-VAE**
-    - **VAE-01: Operations Panel**
-      - Logging In & Setting Up Model Data (VAE-01.1–8)
-      - Building & Viewing the Model (VAE-01.9, 19–20)
-      - Editing the Model & Viewing Findings (VAE-01.17–18, 21–24)
-      - Setting Up & Tracking Synthetic Data (VAE-01.11, 13–15)
-      - Selecting & Tracking Field Data (VAE-01.10, 12, 16)
-      - Recording Simulation Scenarios (VAE-01.25)
-      - Reporting & Automating via CLI (VAE-01.26–27)
-    - **VAE-02: Design Verifier** (VAE-02.1–22)
-    - **VAE-03: Design Analyzer** (VAE-03.1–21)
-    - **VAE-04: Design Evaluator** (VAE-04.1–8)
+  - **SaaG-FDM**
+    - **FDM: Field Data Manager** (FDM.1–5)
+  - **SaaG-ADM**
+    - **ADM: Analytical Data Manager**
+      - Synthetic-Path Data Preparation (ADM.1, 3, 4, 6)
+      - Field-Path Data Preparation (ADM.2, 5)
+  - **SaaG-SMM**
+    - **SMM: System Model Manager**
+      - Structural Model Construction (SMM.1–31)
+      - Analytical Data Binding (SMM.32–37)
+  - **SaaG-DVE**
+    - **DVE: Design Verification Engine**
+      - Operations and Visualization (DVE.1–27)
+        - Logging In & Setting Up Model Data (DVE.1–8)
+        - Building & Viewing the Model (DVE.9, 19–20)
+        - Editing the Model & Viewing Findings (DVE.17–18, 21–24)
+        - Setting Up & Tracking Synthetic Data (DVE.11, 13–15)
+        - Selecting & Tracking Field Data (DVE.10, 12, 16)
+        - Recording Simulation Scenarios (DVE.25)
+        - Reporting & Automating via CLI (DVE.26–27)
+      - Structural Design Verification (DVE.28–49)
+      - Behavioral Simulation and Analysis (DVE.50–70)
+      - Installation Suitability Evaluation (DVE.71–78)
 
 ---
 
 ## 2. Incremental Development Plan
 
-Increment 0 establishes the repository scaffolding, shared infrastructure, and documentation skeleton. The seven functional increments that follow are built one at a time, in dependency-safe order. Each increment delivers one or more CSCs' remaining CSUs plus the matching slice of VAE-01 (Operations Panel). Each increment also states the design, development, test, and packaging work needed to deliver it, plus its demo scenario. The SDD, UXD, CDR, and STD are updated within every increment to cover that increment's CSUs.
+Increment 0 establishes the repository scaffolding, shared infrastructure, and documentation skeleton. The seven functional increments that follow are built one at a time, in dependency-safe order. Each increment delivers one or more CSCs' remaining CSUs plus the matching slice of DVE (Operations and Visualization). Each increment also states the design, development, test, and packaging work needed to deliver it, plus its demo scenario. The SDD, UXD, CDR, and STD are updated within every increment to cover that increment's CSUs.
 
 **Definition of Done (applies to every increment):** an increment is Done when (1) every deliverable in its CSU/Deliverable table is implemented and satisfies its SRS requirement(s); (2) every CDR item cited in its Design paragraph is Resolved or Deferred with a recorded reason; (3) everything in its Test paragraph passes; (4) every service in its Packaging paragraph builds and deploys cleanly; (5) its Demo scenario runs end-to-end.
 
@@ -62,13 +64,13 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | # | Increment | CSUs delivered | CSCs complete |
 |---|---|---|---|
 | 0 | Project Scaffolding | — | — |
-| 1 | Model Setup Data Generation | MSD | SaaG-MSD |
-| 2 | Model Manager | CSM-01 | — |
-| 3 | Design Verifier | VAE-02 | — |
-| 4 | Synthetic Data Pipeline | SCG, ADP (synthetic slice) | SaaG-SCG |
-| 5 | Field Data Pipeline | CSM-02, FRD, ADP (field slice) | SaaG-FRD, SaaG-ADP, SaaG-CSM |
-| 6 | Design Analyzer | VAE-03 | — |
-| 7 | Design Evaluator | VAE-04, VAE-01 (complete) | SaaG-VAE |
+| 1 | Model Data Generation | MDG | SaaG-MDG |
+| 2 | System Model Construction | SMM (structural slice) | — |
+| 3 | Structural Design Verification | DVE (verification slice) | — |
+| 4 | Synthetic Data Pipeline | SCG, ADM (synthetic slice) | SaaG-SCG |
+| 5 | Field Data Pipeline | SMM (binding slice), FDM, ADM (field slice) | SaaG-FDM, SaaG-ADM, SaaG-SMM |
+| 6 | Behavioral Design Analysis | DVE (analysis slice) | — |
+| 7 | Installation Suitability Evaluation | DVE (evaluation & ops complete) | SaaG-DVE |
 
 ### Increment 0: Project Scaffolding
 
@@ -93,64 +95,64 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 - [x] Scaffolding builds, lints, and deploys cleanly
 - [x] Demo run end-to-end
 
-### Increment 1: Model Setup Data Generation
+### Increment 1: Model Data Generation
 
 | CSU | Deliverable |
 |---|---|
-| MSD *(complete)* | Model Setup Data Generation (MSD.1–23) |
-| VAE-01 *(ongoing)* | Logging In & Setting Up Model Data (VAE-01.1–8) |
+| MDG *(complete)* | Model Data Generation (MDG.1–23) |
+| DVE *(ongoing)* | Logging In & Setting Up Model Data (DVE.1–8) |
 
-**Completes:** SaaG-MSD
+**Completes:** SaaG-MDG
 
-**Design:** MSD (SRS MSD.1–23) and the login/MSD-control screen (VAE-01.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
+**Design:** MDG (SRS MDG.1–23) and the login/MDG-control screen (DVE.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
 
-**Development:** Build the MSD backend — connect to, validate, and assemble data from the four external sources — plus login/session handling. On the frontend: login, project/platform/version selection, source configuration, and an MSD production/status screen.
+**Development:** Build the MDG backend — connect to, validate, and assemble data from the four external sources — plus login/session handling. On the frontend: login, project/platform/version selection, source configuration, and an MDG production/status screen.
 
-**Test:** Verify MSD's five jobs (source connections, config pull, version tracking, file transfer, validation/assembly) and the login/production screens, then run an end-to-end MSD-file production.
+**Test:** Verify MDG's five jobs (source connections, config pull, version tracking, file transfer, validation/assembly) and the login/production screens, then run an end-to-end MDG-file production.
 
-**Packaging:** Stand up MSD and web services with a metadata database, a settings template for the four sources plus LDAP, and stand-in external systems for demoing.
+**Packaging:** Stand up MDG and web services with a metadata database, a settings template for the four sources plus LDAP, and stand-in external systems for demoing.
 
-**Demo:** An operator authenticates via LDAP, selects a project/platform/system version, configures and connects to all four external data sources, triggers Model Setup Data production end-to-end, and observes accessibility status and any errors, producing a valid, verified Model Setup Data file.
+**Demo:** An operator authenticates via LDAP, selects a project/platform/system version, configures and connects to all four external data sources, triggers Model Data production end-to-end, and observes accessibility status and any errors, producing a valid, verified Model Data file.
 
 **Definition of Done:**
-- [ ] MSD (MSD.1–23) and login/MSD-control (VAE-01.1–8) built and working
+- [ ] MDG (MDG.1–23) and login/MDG-control (DVE.1–8) built and working
 - [ ] CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24 resolved or deferred
-- [ ] MSD and login/workflow tests pass
-- [ ] MSD/web services deploy together
+- [ ] MDG and login/workflow tests pass
+- [ ] MDG/web services deploy together
 - [ ] Demo run end-to-end
 
-### Increment 2: Model Manager
+### Increment 2: System Model Construction
 
 | CSU | Deliverable |
 |---|---|
-| CSM-01 *(complete)* | Model Manager (CSM-01.1–31) |
-| VAE-01 *(ongoing)* | Building & Viewing the Model (VAE-01.9, 19–20) |
+| SMM *(ongoing)* | Structural Model Construction (SMM.1–31) |
+| DVE *(ongoing)* | Building & Viewing the Model (DVE.9, 19–20) |
 
-**Design:** Model Manager (SRS CSM-01.1–31) and the model-build/browsing screen (VAE-01.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (CDR-29–30); concurrency limits and the VAE read protocol are also open (CDR-16, CDR-28).
+**Design:** System Model Manager (SRS SMM.1–31) and the model-build/browsing screen (DVE.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (CDR-29–30); concurrency limits and the DVE read protocol are also open (CDR-16, CDR-28).
 
-**Development:** Build the Model Manager backend — turn Model Setup Data into a graph, keep it safe under concurrent access, support isolated evaluation copies — on a graph database. On the frontend: model browsing (search/filter/zoom/pan/attributes).
+**Development:** Build the Model Manager backend — turn Model Data into a graph, keep it safe under concurrent access, support isolated evaluation copies — on a graph database. On the frontend: model browsing (search/filter/zoom/pan/attributes).
 
 **Test:** Verify the model builds correctly, represents all node/relationship types, stays consistent under concurrent access, and browsing works — end-to-end, completing Increment 1's workflow test.
 
 **Packaging:** Stand up the Model Manager service with a graph database and background-job handling for concurrency.
 
-**Demo:** An operator builds the Core System Model from the Increment 1 Model Setup Data file, browses and visually navigates the resulting node-relationship structure (search/filter, zoom/pan, attribute display), while the model is served for concurrent multi-session access.
+**Demo:** An operator builds the System Model Manager from the Increment 1 Model Data file, browses and visually navigates the resulting node-relationship structure (search/filter, zoom/pan, attribute display), while the model is served for concurrent multi-session access.
 
 **Definition of Done:**
-- [ ] Model Manager (CSM-01.1–31) and browsing screen (VAE-01.9,19–20) built and working
+- [ ] System Model Manager (SMM.1–31) and browsing screen (DVE.9, 19–20) built and working
 - [ ] CDR-16, CDR-28, CDR-29–30 resolved or deferred
 - [ ] Model Manager and browsing tests pass, completing Increment 1's
 - [ ] Model Manager service and graph database deploy together
 - [ ] Demo run end-to-end
 
-### Increment 3: Design Verifier
+### Increment 3: Structural Design Verification
 
 | CSU | Deliverable |
 |---|---|
-| VAE-02 *(complete)* | Design Verifier (VAE-02.1–22) |
-| VAE-01 *(ongoing)* | Editing the Model & Viewing Findings (VAE-01.17–18, 21–24) |
+| DVE *(ongoing)* | Structural Design Verification (DVE.28–49) |
+| DVE *(ongoing)* | Editing the Model & Viewing Findings (DVE.17–18, 21–24) |
 
-**Design:** Design Verifier (SRS VAE-02.1–22) and the model-editor/findings screen (VAE-01.17–18, 21–24) are laid out, but most of the actual pass/fail rules are undecided — the biggest design gap in this plan (CDR-01–08).
+**Design:** Structural Design Verification (SRS DVE.28–49) and the model-editor/findings screen (DVE.17–18, 21–24) are laid out, but most of the actual pass/fail rules are undecided — the biggest design gap in this plan (CDR-01–08).
 
 **Development:** Build the Design Verifier's six checking engines against interim rules until CDR-01–08 close. On the frontend: the working-model editor (safe sandbox) and findings display/classification.
 
@@ -158,10 +160,10 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Packaging:** Stand up the Design Verifier service — no new storage; it reads the model and writes findings to Increment 1's database.
 
-**Demo:** An operator edits a working-model sandbox derived from the Core System Model (add/remove nodes/relationships, update attributes) and runs design verification against it — QoS conformance, publisher/consumer matching, resource/load-balancing checks, circular-dependency and architectural-rule detection — with findings presented, classified, and filterable.
+**Demo:** An operator edits a working-model sandbox derived from the System Model Manager (add/remove nodes/relationships, update attributes) and runs design verification against it — QoS conformance, publisher/consumer matching, resource/load-balancing checks, circular-dependency and architectural-rule detection — with findings presented, classified, and filterable.
 
 **Definition of Done:**
-- [ ] Design Verifier (VAE-02.1–22) and editor/findings screen (VAE-01.17–18,21–24) built and working
+- [ ] Structural Design Verification (DVE.28–49) and editor/findings screen (DVE.17–18, 21–24) built and working
 - [ ] CDR-01–08 — the biggest open item in this plan — resolved or deferred
 - [ ] Verifier and editor/findings tests pass (to the extent rules allow)
 - [ ] Design Verifier service deploys and runs
@@ -172,23 +174,23 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | CSU | Deliverable |
 |---|---|
 | SCG *(complete)* | Scenario Generator (SCG.1–7) |
-| ADP *(ongoing)* | Synthetic-Path Data Preparation (ADP.1, 3, 4, 6) |
-| VAE-01 *(ongoing)* | Setting Up & Tracking Synthetic Data (VAE-01.11, 13–15) |
+| ADM *(ongoing)* | Synthetic-Path Data Preparation (ADM.1, 3, 4, 6) |
+| DVE *(ongoing)* | Setting Up & Tracking Synthetic Data (DVE.11, 13–15) |
 
 **Completes:** SaaG-SCG
 
-**Design:** Scenario Generator (SRS SCG.1–7) and the synthetic-data setup screen (VAE-01.11, 13–15) are fully designed. Still open: what the synthetic data should simulate, the Analytical Evaluation Data format, and the SCG→ADP handoff (CDR-11, CDR-12, CDR-25).
+**Design:** Scenario Generator (SRS SCG.1–7) and the synthetic-data setup screen (DVE.11, 13–15) are fully designed. Still open: what the synthetic data should simulate, the Analytical Evaluation Data format, and the SCG→ADM handoff (CDR-11, CDR-12, CDR-25).
 
-**Development:** Build the Scenario Generator (capture inputs, produce and record traceable synthetic data) and the synthetic-intake half of Analytical Data Preparation. On the frontend: scenario input and production/status screens.
+**Development:** Build the Scenario Generator (capture inputs, produce and record traceable synthetic data) and the synthetic-intake half of Analytical Data Manager. On the frontend: scenario input and production/status screens.
 
 **Test:** Verify scenario inputs are captured, synthetic data matches the real system's structure, and the synthetic intake/assembly works — end-to-end, generating synthetic data and preparing analytical data.
 
-**Packaging:** Stand up the Scenario Generator and Analytical Data Preparation services — no new storage; data streams straight through.
+**Packaging:** Stand up the Scenario Generator and Analytical Data Manager services — no new storage; data streams straight through.
 
 **Demo:** An operator defines scenario scope/type/interval/density/data types, triggers synthetic data production, and observes the produced data recorded and traceable to its inputs. The synthetic data is then prepared into Analytical Evaluation Data (AED), with production status tracked and any format/missing-field errors reported — completing SaaG-SCG.
 
 **Definition of Done:**
-- [ ] Scenario Generator (SCG.1–7) and setup screen (VAE-01.11, 13–15) built and working
+- [ ] Scenario Generator (SCG.1–7) and setup screen (DVE.11, 13–15) built and working
 - [ ] CDR-11, CDR-12, CDR-25 resolved or deferred
 - [ ] Scenario Generator and synthetic-path tests pass
 - [ ] Both services deploy together
@@ -198,38 +200,38 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 | CSU | Deliverable |
 |---|---|
-| CSM-02 *(complete)* | Analytical Data Binder (CSM-02.1–6) |
-| FRD *(complete)* | Field Records Database (FRD.1–5) |
-| ADP *(complete)* | Field-Path Data Preparation (ADP.2, 5) |
-| VAE-01 *(ongoing)* | Selecting & Tracking Field Data (VAE-01.10, 12, 16) |
+| SMM *(complete)* | Analytical Data Binding (SMM.32–37) |
+| FDM *(complete)* | Field Data Manager (FDM.1–5) |
+| ADM *(complete)* | Field-Path Data Preparation (ADM.2, 5) |
+| DVE *(ongoing)* | Selecting & Tracking Field Data (DVE.10, 12, 16) |
 
-**Completes:** SaaG-FRD, SaaG-ADP, SaaG-CSM
+**Completes:** SaaG-FDM, SaaG-ADM, SaaG-SMM
 
-**Design:** Analytical Data Binder (SRS CSM-02.1–6) and Field Records Database (FRD.1–5) are fully designed, as are the field-record source-selection and binding-status screens (VAE-01.10, 12, 16). Still open: field-record storage capacity, the FRD external interface protocol, the FRD→ADP and ADP→CSM-02 handoffs, and the carried-over AED format decision (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
+**Design:** Analytical Data Binding (SRS SMM.32–37) and Field Data Manager (FDM.1–5) are fully designed, as are the field-record source-selection and binding-status screens (DVE.10, 12, 16). Still open: field-record storage capacity, the FDM external interface protocol, the FDM→ADM and ADM→SMM handoffs, and the carried-over AED format decision (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
 
-**Development:** Build the Field Records Database (upload/catalog/search), the field-intake half of Analytical Data Preparation, and the Data Binder (attach behavioral data without altering the model). On the frontend: field-record source-selection, upload/catalog, and binding-status screens.
+**Development:** Build the Field Data Manager (upload/catalog/search), the field-intake half of Analytical Data Manager, and the Data Binder (attach behavioral data without altering the model). On the frontend: field-record source-selection, upload/catalog, and binding-status screens.
 
 **Test:** Verify records upload/catalog correctly, the field intake/assembly completes (never mixing with synthetic data), and binding matches data to the model without changing it — end-to-end, including a check that Increment 2's model is untouched.
 
-**Packaging:** Stand up the Field Records Database and Data Binder services with a time-series database for telemetry; raw uploads are discarded after parsing.
+**Packaging:** Stand up the Field Data Manager and Data Binder services with a time-series database for telemetry; raw uploads are discarded after parsing.
 
-**Demo:** The synthetic-sourced AED from Increment 4 is bound onto the Core System Model without altering its nodes/relationships, with binding status and provenance visible to the operator. The operator then selects System Field Records as the Analytical Evaluation Data source, uploads System Field Records (listing/searching/selecting them by project, platform, version, source, or upload time), and the resulting field-sourced AED is bound onto the model via the same source-agnostic binder — completing SaaG-FRD, SaaG-ADP (both the synthetic and field paths now work end-to-end), and SaaG-CSM.
+**Demo:** The synthetic-sourced AED from Increment 4 is bound onto the System Model Manager without altering its nodes/relationships, with binding status and provenance visible to the operator. The operator then selects System Field Records as the Analytical Evaluation Data source, uploads System Field Records (listing/searching/selecting them by project, platform, version, source, or upload time), and the resulting field-sourced AED is bound onto the model via the same source-agnostic binder — completing SaaG-FDM, SaaG-ADM (both the synthetic and field paths now work end-to-end), and SaaG-SMM.
 
 **Definition of Done:**
-- [ ] Data Binder (CSM-02.1–6), FRD (FRD.1–5), and field-selection/binding-status screens (VAE-01.10, 12, 16) built and working
+- [ ] Analytical Data Binding (SMM.32–37), FDM (FDM.1–5), and field-selection/binding-status screens (DVE.10, 12, 16) built and working
 - [ ] CDR-15, CDR-21, CDR-26, CDR-27, CDR-12 resolved or deferred
 - [ ] Field-records, binder, and field-path tests pass, completing Increment 4's
 - [ ] New services and telemetry database deploy together
 - [ ] Demo run end-to-end
 
-### Increment 6: Design Analyzer
+### Increment 6: Behavioral Design Analysis
 
 | CSU | Deliverable |
 |---|---|
-| VAE-03 *(complete)* | Design Analyzer (VAE-03.1–21) |
-| VAE-01 *(ongoing)* | Recording Simulation Scenarios (VAE-01.25) |
+| DVE *(ongoing)* | Behavioral Simulation and Analysis (DVE.50–70) |
+| DVE *(ongoing)* | Recording Simulation Scenarios (DVE.25) |
 
-**Design:** Design Analyzer (SRS VAE-03.1–21) and the simulation-recording screen (VAE-01.25) are fully designed. No item names it directly, but it depends on two carried-over decisions: the VAE read protocol and the model's storage/schema (CDR-28, CDR-29–30).
+**Design:** Behavioral Simulation and Analysis (SRS DVE.50–70) and the simulation-recording screen (DVE.25) are fully designed. No item names it directly, but it depends on two carried-over decisions: the DVE read protocol and the model's storage/schema (CDR-28, CDR-29–30).
 
 **Development:** Build the Design Analyzer's three engines (synthetic-data simulation, field-data analysis, drift detection). On the frontend: simulation-scenario recording and high-volume field-trace charts.
 
@@ -237,25 +239,25 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Packaging:** Stand up the Design Analyzer service — no new storage; it reads Increment 2 and 5's databases.
 
-**Demo:** An operator runs static analysis using synthetic-sourced AED (message/traffic flow, node/relationship-inactivity effects, load-density and fault-propagation analysis, resource-usage summaries) and using field-record-sourced AED (operational/health status, resource usage, error/timeout information, communication latency/loss, model-vs-runtime drift detection), with simulation scenario metadata (VAE-01.25) recorded against the results.
+**Demo:** An operator runs static analysis using synthetic-sourced AED (message/traffic flow, node/relationship-inactivity effects, load-density and fault-propagation analysis, resource-usage summaries) and using field-record-sourced AED (operational/health status, resource usage, error/timeout information, communication latency/loss, model-vs-runtime drift detection), with simulation scenario metadata (DVE.25) recorded against the results.
 
 **Definition of Done:**
-- [ ] Design Analyzer (VAE-03.1–21) and recording screen (VAE-01.25) built and working
+- [ ] Behavioral Simulation and Analysis (DVE.50–70) and recording screen (DVE.25) built and working
 - [ ] Carried-over CDR-28, CDR-29–30 resolved or deferred
 - [ ] Design Analyzer tests pass
 - [ ] Design Analyzer service deploys and runs
 - [ ] Demo run end-to-end
 
-### Increment 7: Design Evaluator
+### Increment 7: Installation Suitability Evaluation
 
 | CSU | Deliverable |
 |---|---|
-| VAE-04 *(complete)* | Design Evaluator (VAE-04.1–8) |
-| VAE-01 *(complete)* | Reporting & Automating via CLI (VAE-01.26–27) |
+| DVE *(complete)* | Installation Suitability Evaluation (DVE.71–78) |
+| DVE *(complete)* | Reporting & Automating via CLI (DVE.26–27) |
 
-**Completes:** SaaG-VAE
+**Completes:** SaaG-DVE
 
-**Design:** Design Evaluator (SRS VAE-04.1–8) and the reporting/CLI screen (VAE-01.26–27) are fully designed. Still open: the scoring method, report file format, and CLI protocol/result format (CDR-13, CDR-14, CDR-23) — all should close before this final increment ships.
+**Design:** Installation Suitability Evaluation (SRS DVE.71–78) and the reporting/CLI screen (DVE.26–27) are fully designed. Still open: the scoring method, report file format, and CLI protocol/result format (CDR-13, CDR-14, CDR-23) — all should close before this final increment ships.
 
 **Development:** Build the Design Evaluator (score candidates, force non-conforming on critical findings, run evaluations concurrently) and the CLI. Add PDF/JSON report generation and the report screen.
 
@@ -263,10 +265,10 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Packaging:** Stand up the Design Evaluator service, CLI package, and background-worker support with PDF generation — bringing every increment's services online together.
 
-**Demo:** An automation client (e.g., Jenkins) submits an installation-suitability evaluation via CLI for one or more candidate software units; the system scores each unit against its evaluation headings and control rules, returns a blocking/non-blocking decision and machine-processable results concurrently and independently per unit, and a comprehensive summary/detailed report covering all verification, analysis, and evaluation results is generated — completing SaaG-VAE and all six CSCs.
+**Demo:** An automation client (e.g., Jenkins) submits an installation-suitability evaluation via CLI for one or more candidate software units; the system scores each unit against its evaluation headings and control rules, returns a blocking/non-blocking decision and machine-processable results concurrently and independently per unit, and a comprehensive summary/detailed report covering all verification, analysis, and evaluation results is generated — completing SaaG-DVE and all six CSCs.
 
 **Definition of Done:**
-- [ ] Design Evaluator (VAE-04.1–8) and reporting/CLI screen (VAE-01.26–27) built and working
+- [ ] Installation Suitability Evaluation (DVE.71–78) and reporting/CLI screen (DVE.26–27) built and working
 - [ ] CDR-13, CDR-14, CDR-23 resolved or deferred
 - [ ] Evaluator and CLI tests pass, completing the reporting test from Increments 3/6/7
 - [ ] Full service stack deploys together
@@ -283,7 +285,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | Increment | Start | End | Duration |
 |---|---|---|---|
 | 0 — Project Scaffolding | 2026-07-20 | 2026-07-31 | 2w |
-| 1 — Model Setup Data Generation | 2026-08-03 | 2026-08-28 | 4w |
+| 1 — Model Data Generation | 2026-08-03 | 2026-08-28 | 4w |
 | 2 — Model Manager | 2026-08-31 | 2026-10-02 | 5w |
 | 3 — Design Verifier | 2026-10-05 | 2026-11-06 | 5w |
 | 4 — Synthetic Data Pipeline | 2026-11-09 | 2026-12-04 | 4w |
@@ -305,40 +307,40 @@ gantt
     Project Scaffolding (2w)      :scaffold1, 2026-07-20, 2026-07-31
     Inc 0 Demo (0d)               :milestone, demo0, after scaffold1, 0d
 
-    section SaaG-MSD — Model Setup Data Generation
-    Model Setup Data Generation MSD (4w)               :msd, 2026-08-03, 2026-08-28
-    Inc 1 Demo (0d)                                    :milestone, demo1, after msd, 0d
+    section SaaG-MDG — Model Data Generation
+    Model Data Generation MDG (4w)               :mdg, 2026-08-03, 2026-08-28
+    Inc 1 Demo (0d)                                    :milestone, demo1, after mdg, 0d
 
     section SaaG-SCG — Scenario Generator
     Scenario Generator SCG (10d)                       :scg, 2026-11-09, 2026-11-20
 
-    section SaaG-FRD — Field Records Database
-    Field Records Database FRD (8d)                    :frd, 2026-12-18, 2026-12-29
+    section SaaG-FDM — Field Data Manager
+    Field Data Manager FDM (8d)                    :fdm, 2026-12-18, 2026-12-29
 
-    section SaaG-ADP — Analytical Data Preparation
-    Synthetic-Path Data Preparation ADP (10d)          :adpa, 2026-11-23, 2026-12-04
+    section SaaG-ADM — Analytical Data Manager
+    Synthetic-Path Data Preparation ADM (10d)          :adpa, 2026-11-23, 2026-12-04
     Inc 4 Demo (0d)                                    :milestone, demo4, after adpa, 0d
-    Field-Path Data Preparation ADP (3d)                :adpb, 2026-12-30, 2027-01-01
+    Field-Path Data Preparation ADM (3d)                :adpb, 2026-12-30, 2027-01-01
     Inc 5 Demo (0d)                                    :milestone, demo5, after adpb, 0d
 
-    section SaaG-CSM — Core System Model
-    Model Manager CSM-01 (5w)                          :csm01, 2026-08-31, 2026-10-02
-    Inc 2 Demo (0d)                                    :milestone, demo2, after csm01, 0d
-    Analytical Data Binder CSM-02 (9d)                 :csm02, 2026-12-07, 2026-12-17
+    section SaaG-SMM — System Model Manager
+    Structural Model Construction SMM (5w)             :smm01, 2026-08-31, 2026-10-02
+    Inc 2 Demo (0d)                                    :milestone, demo2, after smm01, 0d
+    Analytical Data Binding SMM (9d)                   :smm02, 2026-12-07, 2026-12-17
 
-    section SaaG-VAE — Verification, Analysis, Evaluation
-    Logging In & Setting Up Model Data VAE-01 (4w)       :vae01a, 2026-08-03, 2026-08-28
-    Building & Viewing the Model VAE-01 (5w)               :vae01b, 2026-08-31, 2026-10-02
-    Editing the Model & Viewing Findings VAE-01 (5w)       :vae01c, 2026-10-05, 2026-11-06
-    Setting Up & Tracking Synthetic Data VAE-01 (4w) :vae01de, 2026-11-09, 2026-12-04
-    Selecting & Tracking Field Data VAE-01 (20d) :vae01f, 2026-12-07, 2027-01-01
-    Recording Simulation Scenarios VAE-01 (6w)           :vae01g, 2027-01-04, 2027-02-12
-    Reporting & Automating via CLI VAE-01 (4w)             :vae01h, 2027-02-15, 2027-03-12
-    Design Verifier VAE-02 (5w)                        :vae02, 2026-10-05, 2026-11-06
+    section SaaG-DVE — Verification, Analysis, Evaluation
+    Logging In & Setting Up Model Data DVE (4w)        :vae01a, 2026-08-03, 2026-08-28
+    Building & Viewing the Model DVE (5w)               :vae01b, 2026-08-31, 2026-10-02
+    Editing the Model & Viewing Findings DVE (5w)       :vae01c, 2026-10-05, 2026-11-06
+    Setting Up & Tracking Synthetic Data DVE (4w) :vae01de, 2026-11-09, 2026-12-04
+    Selecting & Tracking Field Data DVE (20d) :vae01f, 2026-12-07, 2027-01-01
+    Recording Simulation Scenarios DVE (6w)           :vae01g, 2027-01-04, 2027-02-12
+    Reporting & Automating via CLI DVE (4w)             :vae01h, 2027-02-15, 2027-03-12
+    Structural Design Verification DVE (5w)            :vae02, 2026-10-05, 2026-11-06
     Inc 3 Demo (0d)                                    :milestone, demo3, after vae02, 0d
-    Design Analyzer VAE-03 (6w)                         :vae03, 2027-01-04, 2027-02-12
+    Behavioral Simulation & Analysis DVE (6w)          :vae03, 2027-01-04, 2027-02-12
     Inc 6 Demo (0d)                                    :milestone, demo6, after vae03, 0d
-    Design Evaluator VAE-04 (4w)                       :vae04, 2027-02-15, 2027-03-12
+    Installation Suitability Evaluation DVE (4w)      :vae04, 2027-02-15, 2027-03-12
     Inc 7 Demo / Estimated Completion (0d)             :milestone, completion, after vae04, 0d
 ```
 
@@ -346,15 +348,15 @@ gantt
 
 ## 4. Project Structure
 
-The implementation shall use a shallow repository structure where every top-level backend directory maps to exactly one CSC. The `web/` and `cli/` directories implement the VAE-01 user-facing applications. Each CSC owns its own hexagonal boundary: inbound adapters, application use cases, domain model, outbound ports, and outbound adapters.
+The implementation shall use a shallow repository structure where every top-level backend directory maps to exactly one CSC. The `web/` and `cli/` directories implement the DVE user-facing applications. Each CSC owns its own hexagonal boundary: inbound adapters, application use cases, domain model, outbound ports, and outbound adapters.
 
 ```text
 system-as-a-graph/
 ├── README.md
 ├── docs/
 │   ├── requirements/
-│   │   ├── SSS.md
-│   │   └── SRS.md
+│   │   ├── SRS.md
+│   │   └── SRS.tr.md
 │   ├── planning/
 │   │   └── SDP.md
 │   ├── design/
@@ -364,10 +366,10 @@ system-as-a-graph/
 │   └── test/
 │       └── STD.md
 │
-├── web/                               # VAE-01 web application
-├── cli/                               # VAE-01 command-line application
+├── web/                               # DVE web application
+├── cli/                               # DVE command-line application
 │
-├── msd/                               # CSC-1: Model Setup Data Generation
+├── msd/                               # CSC-1: Model Data Generation
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -385,7 +387,7 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── frd/                               # CSC-3: Field Records Database
+├── frd/                               # CSC-3: Field Data Manager
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -394,7 +396,7 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── adp/                               # CSC-4: Analytical Data Preparation
+├── adp/                               # CSC-4: Analytical Data Manager
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -403,8 +405,8 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── csm/                               # CSC-5: Core System Model
-│   ├── model_manager/                 # CSM-01
+├── csm/                               # CSC-5: System Model Manager
+│   ├── model_manager/                 # SMM: Structural Model Construction
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -412,7 +414,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   └── data_binder/                   # CSM-02
+│   └── data_binder/                   # SMM: Analytical Data Binding
 │       ├── src/
 │       │   ├── api/
 │       │   ├── use_cases/
@@ -422,7 +424,7 @@ system-as-a-graph/
 │       └── tests/
 │
 ├── vae/                               # CSC-6: Verification, Analysis, Evaluation
-│   ├── design_verifier/               # VAE-02
+│   ├── design_verifier/               # DVE: Structural Design Verification
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -430,7 +432,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   ├── design_analyzer/               # VAE-03
+│   ├── design_analyzer/               # DVE: Behavioral Simulation and Analysis
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -438,7 +440,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   └── design_evaluator/              # VAE-04
+│   └── design_evaluator/              # DVE: Installation Suitability Evaluation
 │       ├── src/
 │       │   ├── api/
 │       │   ├── use_cases/
@@ -462,14 +464,14 @@ system-as-a-graph/
 
 | Directory | Scope |
 |---|---|
-| `web/` | VAE-01 web application for operators |
-| `cli/` | VAE-01 command-line application for automation clients |
-| `msd/` | SaaG-MSD CSC; contains `MSD` |
+| `web/` | DVE web application for operators |
+| `cli/` | DVE command-line application for automation clients |
+| `msd/` | SaaG-MDG CSC; contains `MDG` |
 | `scg/` | SaaG-SCG CSC; contains `SCG` |
-| `frd/` | SaaG-FRD CSC; contains `FRD` |
-| `adp/` | SaaG-ADP CSC; contains `ADP` |
-| `csm/` | SaaG-CSM CSC; contains `CSM-01` and `CSM-02` |
-| `vae/` | SaaG-VAE backend CSC; contains `VAE-02`, `VAE-03`, and `VAE-04` |
+| `frd/` | SaaG-FDM CSC; contains `FDM` |
+| `adp/` | SaaG-ADM CSC; contains `ADM` |
+| `csm/` | SaaG-SMM CSC; contains `SMM` |
+| `vae/` | SaaG-DVE backend CSC; contains `DVE` |
 | `shared/contracts/` | Cross-CSC request, response, event, and file schemas |
 | `shared/types/` | Cross-CSC value objects and primitive shared types |
 | `shared/errors/` | Cross-CSC error base classes and common error types |
@@ -499,37 +501,37 @@ The technology choices below implement the WBS deliverables (§1) and are tracea
 | Area | Technology | Usage |
 |---|---|---|
 | **Backend & API** | | |
-| Backend language/runtime | Python (FastAPI) | Backend services (MSD/SCG/FRD/ADP/CSM/VAE) |
-| API style | REST (JSON over HTTP) | Operations Panel and CLI/Jenkins integration (VAE-01.27) |
-| CLI framework | Python (Click/Typer) | Automation-client interface (VAE-01.27) |
+| Backend language/runtime | Python (FastAPI) | Backend services (MDG/SCG/FDM/ADM/SMM/DVE) |
+| API style | REST (JSON over HTTP) | Operations Panel and CLI/Jenkins integration (DVE.27) |
+| CLI framework | Python (Click/Typer) | Automation-client interface (DVE.27) |
 | **Data Storage** | | |
-| Graph storage | FalkorDB | Core System Model with isolated model sets (CSM-01) |
-| Relational storage | PostgreSQL | Structured metadata and VAE operations/findings records (MSD, FRD, VAE-01.23, VAE-01.25, VAE-01.26, VAE-02/03/04, VAE-04.8) |
-| Time-series storage | VictoriaMetrics | Field-record telemetry (FRD.1, VAE-03.12–13,15) |
+| Graph storage | FalkorDB | System Model Manager with isolated model sets (SMM) |
+| Relational storage | PostgreSQL | Structured metadata and DVE operations/findings records (MDG, FDM, DVE.23, DVE.25, DVE.26, DVE.28–78, DVE.78) |
+| Time-series storage | VictoriaMetrics | Field-record telemetry (FDM.1, DVE.61–62, 64) |
 | **Frontend & UI** | | |
-| Frontend framework | Next.js ^14.2 (React ^18.3) | Operations Panel (VAE-01) |
-| Graph visualization | React Flow ^12.11 | Model browsing, search/filter, and non-destructive structural editing (VAE-01.17, VAE-01.19–20) |
-| Charting / analytics visualization | Recharts ^3.9 + shadcn/ui Chart + ECharts ^6.1 | Findings, status, and KPI charts, plus high-volume field-trace charts (VAE-01.23, VAE-01.26, VAE-02/03/04) |
-| UI component library | Refine ^5.0 + shadcn/ui (Radix UI) + Tailwind CSS ~3.4 | Login, CRUD/editing, findings, and report screens; LDAP-aware access-control provider (VAE-01, VAE-01.3) |
-| Data/table/form layer | TanStack Query ^5.101 + TanStack Table ^8.21 + React Hook Form ^7.81 | Server-state caching, findings/report table state, and editing/login form state under Refine's hooks (VAE-01.17,21–23,26) |
+| Frontend framework | Next.js ^14.2 (React ^18.3) | Operations Panel (DVE) |
+| Graph visualization | React Flow ^12.11 | Model browsing, search/filter, and non-destructive structural editing (DVE.17, DVE.19–20) |
+| Charting / analytics visualization | Recharts ^3.9 + shadcn/ui Chart + ECharts ^6.1 | Findings, status, and KPI charts, plus high-volume field-trace charts (DVE.23, DVE.26, DVE.28–78) |
+| UI component library | Refine ^5.0 + shadcn/ui (Radix UI) + Tailwind CSS ~3.4 | Login, CRUD/editing, findings, and report screens; LDAP-aware access-control provider (DVE, DVE.3) |
+| Data/table/form layer | TanStack Query ^5.101 + TanStack Table ^8.21 + React Hook Form ^7.81 | Server-state caching, findings/report table state, and editing/login form state under Refine's hooks (DVE.17, 21–23, 26) |
 | **Security & Authentication** | | |
-| Authentication | LDAP direct bind (python-ldap/ldap3) | Operator authentication (VAE-01.3) |
-| Session/token strategy | JWT (stateless) | REST session across UI and CLI (VAE-01.3) |
+| Authentication | LDAP direct bind (python-ldap/ldap3) | Operator authentication (DVE.3) |
+| Session/token strategy | JWT (stateless) | REST session across UI and CLI (DVE.3) |
 | Secrets management | Environment variables (.env) | LDAP/DB/JWT credential storage |
 | **Infrastructure & Deployment** | | |
 | Containerization | Docker Compose | Single-team deployment with no orchestration overhead |
 | Deployment target | On-premises / private data center | LDAP and config-mgmt DB integration |
 | **Background Processing & Status** | | |
-| Background task execution | Procrastinate (PostgreSQL) | Long-running/concurrent operations with status, retries, chaining, and isolation (VAE-01.27, VAE-04.7, CSM-01.30, VAE-04.8) |
-| Status delivery | SSE (UI) + REST polling (CLI) | Operation status delivery (VAE-01.15/16/27) |
+| Background task execution | Procrastinate (PostgreSQL) | Long-running/concurrent operations with status, retries, chaining, and isolation (DVE.27, DVE.77, SMM.30, DVE.78) |
+| Status delivery | SSE (UI) + REST polling (CLI) | Operation status delivery (DVE.15–16, 27) |
 | **External Integrations** | | |
 | External-integration architecture | Ports and Adapters (Hexagonal) | Real adapters in production; fake adapters in development, DI-selected |
-| Source code repository adapter | Git over HTTPS (token auth) | Source code, scripts, and config files (MSD.3, 17–20) |
-| Package repository adapter | REST API (Artifactory/Nexus-style) | System Software Units Package Repository (MSD.4) |
-| Configuration management DB adapter | Generic SQL adapter (SQLAlchemy) | External configuration management database (MSD.2, 8, 10–13) |
+| Source code repository adapter | Git over HTTPS (token auth) | Source code, scripts, and config files (MDG.3, 17–20) |
+| Package repository adapter | REST API (Artifactory/Nexus-style) | System Software Units Package Repository (MDG.4) |
+| Configuration management DB adapter | Generic SQL adapter (SQLAlchemy) | External configuration management database (MDG.2, 8, 10–13) |
 | **Reporting & Data Handling** | | |
-| Report generation | PDF (WeasyPrint/ReportLab) + JSON | Summary/detailed reports; JSON shared with evaluator (VAE-01.26, VAE-04.8) |
-| Raw upload retention | Discard after parsing | Minimum storage footprint (FRD.2) |
+| Report generation | PDF (WeasyPrint/ReportLab) + JSON | Summary/detailed reports; JSON shared with evaluator (DVE.26, DVE.78) |
+| Raw upload retention | Discard after parsing | Minimum storage footprint (FDM.2) |
 | **Testing** | | |
 | Testing | pytest (backend) + Playwright (frontend/E2E) | Unit and full E2E coverage |
 

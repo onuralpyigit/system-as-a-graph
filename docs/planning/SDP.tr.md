@@ -1,8 +1,8 @@
 # Yazılım Geliştirme Planı (SDP): System as a Graph (SaaG)
 
-**Tanım:** Bu Yazılım Geliştirme Planı (SDP), System as a Graph (SaaG) Yazılım Kırılım Öğesinin (CSCI) yazılım geliştirme çalışmasının nasıl yürütüleceğini planlar. SRS'te tanımlanan işi, işlevsel teslimatlardan oluşan bir İş Kırılım Yapısına (WBS) ayrıştırır ve bu teslimatları bir dizi artımlı yapıya (increment) sıralar. Her WBS teslimatı ve her artım, SRS'in CSU kapsamlı isterlerine izlenebilir; bu isterler de SRS'in kendi §7'si üzerinden SSS'e izlenebilir durumdadır.
+**Tanım:** Bu Yazılım Geliştirme Planı (SDP), System as a Graph (SaaG) Yazılım Kırılım Öğesinin (CSCI) yazılım geliştirme çalışmasının nasıl yürütüleceğini planlar. SRS'te tanımlanan işi, işlevsel teslimatlardan oluşan bir İş Kırılım Yapısına (WBS) ayrıştırır ve bu teslimatları bir dizi artımlı yapıya (increment) sıralar. Her WBS teslimatı ve her artım, SRS'in CSU kapsamlı isterlerine izlenebilir durumdadır.
 
-**Amaç:** İş Kırılım Yapısı (§1), Yazılım Komponenti (CSC) ve Yazılım Birimi (CSU) bazında organize edilmiş şekilde geliştirme çalışmasının tam kapsamını ortaya koyar. Artımlı Geliştirme Planı (§2), bu çalışmayı — bağımlılık açısından güvenli bir sırayla, tek seferde bir artım olacak şekilde — tamamen ardışık bir yapı dizisine sıralar. Her artım; bir veya daha fazla CSC'nin (kalan CSU'larının) yanı sıra, ilgili olduğu ölçüde DAD-01'in (İşlem Paneli, SaaG'ın ön yüz kullanıcı arayüzü CSU'su) karşılık gelen dilimini de kapsayacak şekilde belirlenmiştir; böylece her artım uçtan uca, gösterilebilir bir yetenek üretir.
+**Amaç:** İş Kırılım Yapısı (§1), Yazılım Komponenti (CSC) ve Yazılım Birimi (CSU) bazında organize edilmiş şekilde geliştirme çalışmasının tam kapsamını ortaya koyar. Artımlı Geliştirme Planı (§2), bu çalışmayı — bağımlılık açısından güvenli bir sırayla, tek seferde bir artım olacak şekilde — tamamen ardışık bir yapı dizisine sıralar. Her artım; bir veya daha fazla CSC'nin/CSU'nun yanı sıra, ilgili olduğu ölçüde TDM'nin (Operasyonlar ve Görselleştirme, SaaG'ın ön yüz kullanıcı arayüzü bileşeni) karşılık gelen dilimini de kapsayacak şekilde belirlenmiştir; böylece her artım uçtan uca, gösterilebilir bir yetenek üretir.
 
 ---
 
@@ -12,48 +12,50 @@
 
 | No | Bileşen | Kısaltma | CSU Sayısı | Teslimat Sayısı |
 |---|---|---|---|---|
-| 1 | Model Kurulum Verisi Üretimi | SaaG-MKV | 1 | 1 |
+| 1 | Model Veri Üreteci | SaaG-MVU | 1 | 1 |
 | 2 | Senaryo Üreteci | SaaG-SUR | 1 | 1 |
-| 3 | Saha Kayıtları Veri Tabanı | SaaG-SKV | 1 | 1 |
-| 4 | Analitik Veri Hazırlama | SaaG-AVH | 1 | 2 |
-| 5 | Düğüm-İlişki Tabanlı Çekirdek Sistem Modeli | SaaG-CSM | 2 | 2 |
-| 6 | Tasarım Doğrulama, Analiz ve Değerlendirme | SaaG-DAD | 4 | 10 |
-| **TOPLAM** | | | **10** | **17** |
+| 3 | Saha Veri Yöneticisi | SaaG-SVY | 1 | 1 |
+| 4 | Analitik Veri Yöneticisi | SaaG-AVY | 1 | 2 |
+| 5 | Sistem Model Yöneticisi | SaaG-SMY | 1 | 2 |
+| 6 | Tasarım Doğrulama Motoru | SaaG-TDM | 1 | 10 |
+| **TOPLAM** | | | **6** | **17** |
 
-Aşağıdaki her alt madde, gerçekleştirdiği SRS ister ID aralığını doğrudan belirtir.
+Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 - **SaaG**
-  - **SaaG-MKV**
-    - **MKV: Model Kurulum Verisi Üretimi** (MKV.1–23)
+  - **SaaG-MVU**
+    - **MVU: Model Veri Üreteci** (MVU.1–23)
   - **SaaG-SUR**
     - **SUR: Senaryo Üreteci** (SUR.1–7)
-  - **SaaG-SKV**
-    - **SKV: Saha Kayıtları Veri Tabanı** (SKV.1–5)
-  - **SaaG-AVH**
-    - **AVH: Analitik Veri Hazırlama**
-      - Sentetik Veri Hazırlama (AVH.1, 3, 4, 6)
-      - Saha Verisi Hazırlama (AVH.2, 5)
-  - **SaaG-CSM**
-    - **CSM-01: Model Yöneticisi** (CSM-01.1–31)
-    - **CSM-02: Analitik Veri Bağlayıcısı** (CSM-02.1–6)
-  - **SaaG-DAD**
-    - **DAD-01: İşlem Paneli**
-      - Oturum Açma ve Model Verisi Kurulumu (DAD-01.1–8)
-      - Modelin Oluşturulması ve Görüntülenmesi (DAD-01.9, 19–20)
-      - Modelin Düzenlenmesi ve Bulguların Görüntülenmesi (DAD-01.17–18, 21–24)
-      - Sentetik Verinin Yapılandırılması ve İzlenmesi (DAD-01.11, 13–15)
-      - Saha Verisinin Seçilmesi ve İzlenmesi (DAD-01.10, 12, 16)
-      - Simülasyon Senaryolarının Kaydedilmesi (DAD-01.25)
-      - CLI Üzerinden Raporlama ve Otomasyon (DAD-01.26–27)
-    - **DAD-02: Tasarım Doğrulayıcı** (DAD-02.1–22)
-    - **DAD-03: Tasarım Analizcisi** (DAD-03.1–21)
-    - **DAD-04: Tasarım Değerlendiricisi** (DAD-04.1–8)
+  - **SaaG-SVY**
+    - **SVY: Saha Veri Yöneticisi** (SVY.1–5)
+  - **SaaG-AVY**
+    - **AVY: Analitik Veri Yöneticisi**
+      - Sentetik Veri Hazırlama (AVY.1, 3, 4, 6)
+      - Saha Verisi Hazırlama (AVY.2, 5)
+  - **SaaG-SMY**
+    - **SMY: Sistem Model Yöneticisi**
+      - Yapısal Model İnşası (SMY.1–31)
+      - Analitik Veri Bağlama (SMY.32–37)
+  - **SaaG-TDM**
+    - **TDM: Tasarım Doğrulama Motoru**
+      - Operasyonlar ve Görselleştirme (TDM.1–27)
+        - Oturum Açma ve Model Verisi Kurulumu (TDM.1–8)
+        - Modelin Oluşturulması ve Görüntülenmesi (TDM.9, 19–20)
+        - Modelin Düzenlenmesi ve Bulguların Görüntülenmesi (TDM.17–18, 21–24)
+        - Sentetik Verinin Yapılandırılması ve İzlenmesi (TDM.11, 13–15)
+        - Saha Verisinin Seçilmesi ve İzlenmesi (TDM.10, 12, 16)
+        - Simülasyon Senaryolarının Kaydedilmesi (TDM.25)
+        - CLI Üzerinden Raporlama ve Otomasyon (TDM.26–27)
+      - Yapısal Tasarım Doğrulama (TDM.28–49)
+      - Davranışsal Simülasyon ve Analiz (TDM.50–70)
+      - Kurulum Uygunluk Değerlendirmesi (TDM.71–78)
 
 ---
 
 ## 2. Artımlı Geliştirme Planı
 
-Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini kurar. Bunu izleyen yedi işlevsel artım, bağımlılık açısından güvenli bir sırayla, tek seferde bir tanesi olacak şekilde inşa edilir. Her artım, bir veya daha fazla CSC'nin kalan CSU'larını ve bunlara karşılık gelen DAD-01 (İşlem Paneli) dilimini teslim eder. Her artım ayrıca, teslimatı için gereken tasarım, geliştirme, test ve paketleme çalışmasını ve demo senaryosunu belirtir. SDD, UXD, CDR ve STD, her artımın kendi CSU'larını kapsayacak şekilde her artım içinde güncellenir.
+Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini kurar. Bunu izleyen yedi işlevsel artım, bağımlılık açısından güvenli bir sırayla, tek seferde bir tanesi olacak şekilde inşa edilir. Her artım, bir veya daha fazla CSC'nin kalan CSU'larını ve bunlara karşılık gelen TDM (Operasyonlar ve Görselleştirme) dilimini teslim eder. Her artım ayrıca, teslimatı için gereken tasarım, geliştirme, test ve paketleme çalışmasını ve demo senaryosunu belirtir. SDD, UXD, CDR ve STD, her artımın kendi CSU'larını kapsayacak şekilde her artım içinde güncellenir.
 
 **Tamamlanma Tanımı (DoD — her artım için geçerlidir):** Bir artım şu durumda Tamamlanmış sayılır: (1) CSU/Teslimat tablosundaki her teslimat gerçekleştirilmiş ve ilgili SRS isterini/isterlerini karşılıyor; (2) Tasarım paragrafında atıfta bulunulan her CDR maddesi, gerekçesi kayıt altına alınmış şekilde Çözümlenmiş veya Ertelenmiş durumda; (3) Test paragrafındaki her şey geçiyor; (4) Paketleme paragrafındaki her servis temiz şekilde derleniyor ve dağıtılıyor; (5) Demo senaryosu uçtan uca çalışıyor.
 
@@ -62,13 +64,13 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | # | Artım | Teslim Edilen CSU'lar | Tamamlanan CSC'ler |
 |---|---|---|---|
 | 0 | Proje İskeleti | — | — |
-| 1 | Model Kurulum Verisi Üretimi | MKV | SaaG-MKV |
-| 2 | Model Yöneticisi | CSM-01 | — |
-| 3 | Tasarım Doğrulayıcı | DAD-02 | — |
-| 4 | Sentetik Veri Hattı | SUR, AVH (sentetik dilim) | SaaG-SUR |
-| 5 | Saha Verisi Hattı | CSM-02, SKV, AVH (saha dilimi) | SaaG-SKV, SaaG-AVH, SaaG-CSM |
-| 6 | Tasarım Analizcisi | DAD-03 | — |
-| 7 | Tasarım Değerlendiricisi | DAD-04, DAD-01 (tamamlandı) | SaaG-DAD |
+| 1 | Model Verisi Üretimi | MVU | SaaG-MVU |
+| 2 | Yapısal Model İnşası | SMY (yapısal dilim) | — |
+| 3 | Yapısal Tasarım Doğrulama | TDM (doğrulama dilimi) | — |
+| 4 | Sentetik Veri Hattı | SUR, AVY (sentetik dilim) | SaaG-SUR |
+| 5 | Saha Verisi Hattı | SMY (bağlama dilimi), SVY, AVY (saha dilimi) | SaaG-SVY, SaaG-AVY, SaaG-SMY |
+| 6 | Davranışsal Tasarım Analizi | TDM (analiz dilimi) | — |
+| 7 | Kurulum Uygunluk Değerlendirmesi | TDM (değerlendirme ve operasyonlar tamamlandı) | SaaG-TDM |
 
 ### Artım 0: Proje İskeleti
 
@@ -93,64 +95,64 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 - [x] İskelet temiz şekilde derleniyor, lint kontrolünden geçiyor ve dağıtılıyor
 - [x] Demo uçtan uca çalıştırıldı
 
-### Artım 1: Model Kurulum Verisi Üretimi
+### Artım 1: Model Verisi Üretimi
 
 | CSU | Teslimat |
 |---|---|
-| MKV *(tamamlandı)* | Model Kurulum Verisi Üretimi (MKV.1–23) |
-| DAD-01 *(devam ediyor)* | Oturum Açma ve Model Verisi Kurulumu (DAD-01.1–8) |
+| MVU *(tamamlandı)* | Model Verisi Üretimi (MVU.1–23) |
+| TDM *(devam ediyor)* | Oturum Açma ve Model Verisi Kurulumu (TDM.1–8) |
 
-**Tamamlar:** SaaG-MKV
+**Tamamlar:** SaaG-MVU
 
-**Tasarım:** MKV (SRS MKV.1–23) ve oturum açma/MKV kontrol ekranı (DAD-01.1–8) tam olarak tasarlanmıştır. Hâlâ açık olan konular: her dış bağlantı ve LDAP için kesin protokol, topoloji alım yöntemi ve zorunlu dosya listesi (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
+**Tasarım:** MVU (SRS MVU.1–23) ve oturum açma/MVU kontrol ekranı (TDM.1–8) tam olarak tasarlanmıştır. Hâlâ açık olan konular: her dış bağlantı ve LDAP için kesin protokol, topoloji alım yöntemi ve zorunlu dosya listesi (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
 
-**Geliştirme:** MKV arka ucu inşa edilir — dört dış kaynaktan veriye bağlanma, doğrulama ve derleme — ayrıca oturum açma/oturum yönetimi eklenir. Ön yüzde: oturum açma, proje/platform/sürüm seçimi, kaynak yapılandırması ve bir MKV üretim/durum ekranı.
+**Geliştirme:** MVU arka ucu inşa edilir — dört dış kaynaktan veriye bağlanma, doğrulama ve derleme — ayrıca oturum açma/oturum yönetimi eklenir. Ön yüzde: oturum açma, proje/platform/sürüm seçimi, kaynak yapılandırması ve bir MVU üretim/durum ekranı.
 
-**Test:** MKV'nin beş işi (kaynak bağlantıları, konfigürasyon alımı, sürüm takibi, dosya aktarımı, doğrulama/derleme) ile oturum açma/üretim ekranları doğrulanır; ardından uçtan uca bir MKV dosyası üretimi çalıştırılır.
+**Test:** MVU'nin beş işi (kaynak bağlantıları, konfigürasyon alımı, sürüm takibi, dosya aktarımı, doğrulama/derleme) ile oturum açma/üretim ekranları doğrulanır; ardından uçtan uca bir MVU dosyası üretimi çalıştırılır.
 
-**Paketleme:** MKV ve web servisleri; bir metadata veritabanı, dört kaynak ile LDAP için bir ayar şablonu ve demo amaçlı yerine geçen (stand-in) dış sistemlerle birlikte ayağa kaldırılır.
+**Paketleme:** MVU ve web servisleri; bir metadata veritabanı, dört kaynak ile LDAP için bir ayar şablonu ve demo amaçlı yerine geçen (stand-in) dış sistemlerle birlikte ayağa kaldırılır.
 
-**Demo:** Bir operatör LDAP üzerinden kimlik doğrular, bir proje/platform/sistem sürümü seçer, dört dış veri kaynağının tamamını yapılandırır ve bunlara bağlanır, Model Kurulum Verisi üretimini uçtan uca tetikler ve erişilebilirlik durumunu ve olası hataları gözlemler; sonuçta geçerli ve doğrulanmış bir Model Kurulum Verisi dosyası üretilir.
+**Demo:** Bir operatör LDAP üzerinden kimlik doğrular, bir proje/platform/sistem sürümü seçer, dört dış veri kaynağının tamamını yapılandırır ve bunlara bağlanır, Model Verisi üretimini uçtan uca tetikler ve erişilebilirlik durumunu ve olası hataları gözlemler; sonuçta geçerli ve doğrulanmış bir Model Verisi dosyası üretilir.
 
 **Tamamlanma Tanımı:**
-- [ ] MKV (MKV.1–23) ve oturum açma/MKV kontrolü (DAD-01.1–8) inşa edildi ve çalışıyor
+- [ ] MVU (MVU.1–23) ve oturum açma/MVU kontrolü (TDM.1–8) inşa edildi ve çalışıyor
 - [ ] CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24 çözümlendi veya ertelendi
-- [ ] MKV ve oturum açma/iş akışı testleri geçiyor
-- [ ] MKV/web servisleri birlikte dağıtılıyor
+- [ ] MVU ve oturum açma/iş akışı testleri geçiyor
+- [ ] MVU/web servisleri birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
 
-### Artım 2: Model Yöneticisi
+### Artım 2: Yapısal Model İnşası
 
 | CSU | Teslimat |
 |---|---|
-| CSM-01 *(tamamlandı)* | Model Yöneticisi (CSM-01.1–31) |
-| DAD-01 *(devam ediyor)* | Modelin Oluşturulması ve Görüntülenmesi (DAD-01.9, 19–20) |
+| SMY *(devam ediyor)* | Yapısal Model İnşası (SMY.1–31) |
+| TDM *(devam ediyor)* | Modelin Oluşturulması ve Görüntülenmesi (TDM.9, 19–20) |
 
-**Tasarım:** Model Yöneticisi (SRS CSM-01.1–31) ve model inşa/gezinme ekranı (DAD-01.9, 19–20) tam olarak tasarlanmıştır. En büyük açık: modelin depolama teknolojisi ve şeması henüz kararlaştırılmamıştır (CDR-29–30); eşzamanlılık sınırları ve DAD okuma protokolü de açıktır (CDR-16, CDR-28).
+**Tasarım:** Sistem Model Yöneticisi (SRS SMY.1–31) ve model inşa/gezinme ekranı (TDM.9, 19–20) tam olarak tasarlanmıştır. En büyük açık: modelin depolama teknolojisi ve şeması henüz kararlaştırılmamıştır (CDR-29–30); eşzamanlılık sınırları ve TDM okuma protokolü de açıktır (CDR-16, CDR-28).
 
-**Geliştirme:** Model Yöneticisi arka ucu bir graf veritabanı üzerinde inşa edilir — Model Kurulum Verisini bir grafa dönüştürme, eşzamanlı erişim altında güvende tutma, izole değerlendirme kopyalarını destekleme. Ön yüzde: model gezinme (arama/süzme/yakınlaştırma/kaydırma/öznitelikler).
+**Geliştirme:** Model Yöneticisi arka ucu bir graf veritabanı üzerinde inşa edilir — Model Verisini bir grafa dönüştürme, eşzamanlı erişim altında güvende tutma, izole değerlendirme kopyalarını destekleme. Ön yüzde: model gezinme (arama/süzme/yakınlaştırma/kaydırma/öznitelikler).
 
 **Test:** Modelin doğru şekilde inşa edildiği, tüm düğüm/ilişki türlerini temsil ettiği, eşzamanlı erişim altında tutarlı kaldığı ve gezinmenin çalıştığı doğrulanır — Artım 1'in iş akışı testini tamamlayacak şekilde uçtan uca.
 
 **Paketleme:** Model Yöneticisi servisi; bir graf veritabanı ve eşzamanlılık için arka plan iş (background-job) yönetimiyle birlikte ayağa kaldırılır.
 
-**Demo:** Bir operatör, Artım 1'deki Model Kurulum Verisi dosyasından Çekirdek Sistem Modelini inşa eder; ortaya çıkan düğüm-ilişki yapısında gezinir ve görsel olarak dolaşır (arama/süzme, yakınlaştırma/kaydırma, öznitelik gösterimi); bu sırada model, eşzamanlı çoklu oturum erişimine açık şekilde sunulur.
+**Demo:** Bir operatör, Artım 1'deki Model Verisi dosyasından Sistem Model Yöneticisini inşa eder; ortaya çıkan düğüm-ilişki yapısında gezinir ve görsel olarak dolaşır (arama/süzme, yakınlaştırma/kaydırma, öznitelik gösterimi); bu sırada model, eşzamanlı çoklu oturum erişimine açık şekilde sunulur.
 
 **Tamamlanma Tanımı:**
-- [ ] Model Yöneticisi (CSM-01.1–31) ve gezinme ekranı (DAD-01.9, 19–20) inşa edildi ve çalışıyor
+- [ ] Sistem Model Yöneticisi (SMY.1–31) ve gezinme ekranı (TDM.9, 19–20) inşa edildi ve çalışıyor
 - [ ] CDR-16, CDR-28, CDR-29–30 çözümlendi veya ertelendi
 - [ ] Model Yöneticisi ve gezinme testleri, Artım 1'inkini tamamlayacak şekilde geçiyor
 - [ ] Model Yöneticisi servisi ve graf veritabanı birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
 
-### Artım 3: Tasarım Doğrulayıcı
+### Artım 3: Yapısal Tasarım Doğrulama
 
 | CSU | Teslimat |
 |---|---|
-| DAD-02 *(tamamlandı)* | Tasarım Doğrulayıcı (DAD-02.1–22) |
-| DAD-01 *(devam ediyor)* | Modelin Düzenlenmesi ve Bulguların Görüntülenmesi (DAD-01.17–18, 21–24) |
+| TDM *(devam ediyor)* | Yapısal Tasarım Doğrulama (TDM.28–49) |
+| TDM *(devam ediyor)* | Modelin Düzenlenmesi ve Bulguların Görüntülenmesi (TDM.17–18, 21–24) |
 
-**Tasarım:** Tasarım Doğrulayıcı (SRS DAD-02.1–22) ve model düzenleyici/bulgu ekranı (DAD-01.17–18, 21–24) taslak olarak ortaya konmuştur; ancak fiili geçti/kaldı kurallarının çoğu henüz kararlaştırılmamıştır — bu planın en büyük tasarım açığı (CDR-01–08).
+**Tasarım:** Yapısal Tasarım Doğrulama (SRS TDM.28–49) ve model düzenleyici/bulgu ekranı (TDM.17–18, 21–24) taslak olarak ortaya konmuştur; ancak fiili geçti/kaldı kurallarının çoğu henüz kararlaştırılmamıştır — bu planın en büyük tasarım açığı (CDR-01–08).
 
 **Geliştirme:** Tasarım Doğrulayıcının altı kontrol motoru, CDR-01–08 kapanana kadar geçici kurallara göre inşa edilir. Ön yüzde: çalışma modeli düzenleyicisi (güvenli sandbox) ve bulgu gösterimi/sınıflandırması.
 
@@ -158,10 +160,10 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Paketleme:** Tasarım Doğrulayıcı servisi ayağa kaldırılır — yeni bir depolama yoktur; modeli okur ve bulguları Artım 1'in veritabanına yazar.
 
-**Demo:** Bir operatör, Çekirdek Sistem Modelinden türetilen bir çalışma modeli sandbox'ını düzenler (düğüm/ilişki ekleme-çıkarma, öznitelik güncelleme) ve buna karşı tasarım doğrulama çalıştırır — QoS uygunluğu, yayımlayıcı/tüketici eşleşmesi, kaynak/yük dengeleme kontrolleri, döngüsel bağımlılık ve mimari kural ihlali tespiti — bulgular sunulur, sınıflandırılır ve süzülebilir hâlde gösterilir.
+**Demo:** Bir operatör, Sistem Model Yöneticisinden türetilen bir çalışma modeli sandbox'ını düzenler (düğüm/ilişki ekleme-çıkarma, öznitelik güncelleme) ve buna karşı tasarım doğrulama çalıştırır — QoS uygunluğu, yayımlayıcı/tüketici eşleşmesi, kaynak/yük dengeleme kontrolleri, döngüsel bağımlılık ve mimari kural ihlali tespiti — bulgular sunulur, sınıflandırılır ve süzülebilir hâlde gösterilir.
 
 **Tamamlanma Tanımı:**
-- [ ] Tasarım Doğrulayıcı (DAD-02.1–22) ve düzenleyici/bulgu ekranı (DAD-01.17–18, 21–24) inşa edildi ve çalışıyor
+- [ ] Yapısal Tasarım Doğrulama (TDM.28–49) ve düzenleyici/bulgu ekranı (TDM.17–18, 21–24) inşa edildi ve çalışıyor
 - [ ] CDR-01–08 — bu plandaki en büyük açık madde — çözümlendi veya ertelendi
 - [ ] Doğrulayıcı ve düzenleyici/bulgu testleri (kuralların izin verdiği ölçüde) geçiyor
 - [ ] Tasarım Doğrulayıcı servisi dağıtılıyor ve çalışıyor
@@ -172,23 +174,23 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | CSU | Teslimat |
 |---|---|
 | SUR *(tamamlandı)* | Senaryo Üreteci (SUR.1–7) |
-| AVH *(devam ediyor)* | Sentetik Veri Hazırlama (AVH.1, 3, 4, 6) |
-| DAD-01 *(devam ediyor)* | Sentetik Verinin Yapılandırılması ve İzlenmesi (DAD-01.11, 13–15) |
+| AVY *(devam ediyor)* | Sentetik Veri Hazırlama (AVY.1, 3, 4, 6) |
+| TDM *(devam ediyor)* | Sentetik Verinin Yapılandırılması ve İzlenmesi (TDM.11, 13–15) |
 
 **Tamamlar:** SaaG-SUR
 
-**Tasarım:** Senaryo Üreteci (SRS SUR.1–7) ve sentetik veri kurulum ekranı (DAD-01.11, 13–15) tam olarak tasarlanmıştır. Hâlâ açık olan konular: sentetik verinin neyi simüle edeceği, Analitik Değerlendirme Verisi biçimi ve SUR→AVH devir teslimi (CDR-11, CDR-12, CDR-25).
+**Tasarım:** Senaryo Üreteci (SRS SUR.1–7) ve sentetik veri kurulum ekranı (TDM.11, 13–15) tam olarak tasarlanmıştır. Hâlâ açık olan konular: sentetik verinin neyi simüle edeceği, Analitik Değerlendirme Verisi biçimi ve SUR→AVY devir teslimi (CDR-11, CDR-12, CDR-25).
 
-**Geliştirme:** Senaryo Üreteci inşa edilir (girdileri alma, izlenebilir sentetik veri üretme ve kayıt altına alma) ve Analitik Veri Hazırlamanın sentetik-alım yarısı geliştirilir. Ön yüzde: senaryo girdisi ve üretim/durum ekranları.
+**Geliştirme:** Senaryo Üreteci inşa edilir (girdileri alma, izlenebilir sentetik veri üretme ve kayıt altına alma) ve Analitik Veri Yöneticisinin sentetik-alım yarısı geliştirilir. Ön yüzde: senaryo girdisi ve üretim/durum ekranları.
 
 **Test:** Senaryo girdilerinin alındığı, sentetik verinin gerçek sistemin yapısıyla eşleştiği ve sentetik alım/derlemenin çalıştığı doğrulanır — sentetik veri üretimi ve analitik veri hazırlığı uçtan uca yürütülerek.
 
-**Paketleme:** Senaryo Üreteci ve Analitik Veri Hazırlama servisleri ayağa kaldırılır — yeni bir depolama yoktur; veri doğrudan aktarılır.
+**Paketleme:** Senaryo Üreteci ve Analitik Veri Yöneticisi servisleri ayağa kaldırılır — yeni bir depolama yoktur; veri doğrudan aktarılır.
 
 **Demo:** Bir operatör senaryo kapsamını, türünü, zaman aralığını, veri yoğunluğunu ve üretilecek veri türlerini tanımlar, sentetik veri üretimini tetikler ve üretilen verinin kayıt altına alındığını ve girdilerine izlenebilir olduğunu gözlemler. Sentetik veri ardından Analitik Değerlendirme Verisi olarak hazırlanır; üretim durumu izlenir ve olası biçim/eksik alan hataları raporlanır — böylece SaaG-SUR tamamlanmış olur.
 
 **Tamamlanma Tanımı:**
-- [ ] Senaryo Üreteci (SUR.1–7) ve kurulum ekranı (DAD-01.11, 13–15) inşa edildi ve çalışıyor
+- [ ] Senaryo Üreteci (SUR.1–7) ve kurulum ekranı (TDM.11, 13–15) inşa edildi ve çalışıyor
 - [ ] CDR-11, CDR-12, CDR-25 çözümlendi veya ertelendi
 - [ ] Senaryo Üreteci ve sentetik veri yolu testleri geçiyor
 - [ ] Her iki servis birlikte dağıtılıyor
@@ -198,38 +200,38 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 | CSU | Teslimat |
 |---|---|
-| CSM-02 *(tamamlandı)* | Analitik Veri Bağlayıcısı (CSM-02.1–6) |
-| SKV *(tamamlandı)* | Saha Kayıtları Veri Tabanı (SKV.1–5) |
-| AVH *(tamamlandı)* | Saha Verisi Hazırlama (AVH.2, 5) |
-| DAD-01 *(devam ediyor)* | Saha Verisinin Seçilmesi ve İzlenmesi (DAD-01.10, 12, 16) |
+| SMY *(tamamlandı)* | Analitik Veri Bağlama (SMY.32–37) |
+| SVY *(tamamlandı)* | Saha Veri Yöneticisi (SVY.1–5) |
+| AVY *(tamamlandı)* | Saha Verisi Hazırlama (AVY.2, 5) |
+| TDM *(devam ediyor)* | Saha Verisinin Seçilmesi ve İzlenmesi (TDM.10, 12, 16) |
 
-**Tamamlar:** SaaG-SKV, SaaG-AVH, SaaG-CSM
+**Tamamlar:** SaaG-SVY, SaaG-AVY, SaaG-SMY
 
-**Tasarım:** Analitik Veri Bağlayıcısı (SRS CSM-02.1–6) ve Saha Kayıtları Veri Tabanı (SKV.1–5), saha kaydı kaynak seçimi ve bağlama durumu ekranlarıyla (DAD-01.10, 12, 16) birlikte tam olarak tasarlanmıştır. Hâlâ açık olan konular: saha kaydı depolama kapasitesi, SKV dış arayüz protokolü, SKV→AVH ve AVH→CSM-02 devir teslimleri ve bir önceki artımdan devreden Analitik Değerlendirme Verisi format kararı (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
+**Tasarım:** Analitik Veri Bağlama (SRS SMY.32–37) ve Saha Veri Yöneticisi (SVY.1–5), saha kaydı kaynak seçimi ve bağlama durumu ekranlarıyla (TDM.10, 12, 16) birlikte tam olarak tasarlanmıştır. Hâlâ açık olan konular: saha kaydı depolama kapasitesi, SVY dış arayüz protokolü, SVY→AVY ve AVY→SMY devir teslimleri ve bir önceki artımdan devreden Analitik Değerlendirme Verisi format kararı (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
 
-**Geliştirme:** Saha Kayıtları Veri Tabanı (yükleme/kataloglama/arama), Analitik Veri Hazırlamanın saha-alım yarısı ve Veri Bağlayıcısı (davranışsal veriyi modeli değiştirmeden bağlama) inşa edilir. Ön yüzde: saha kaydı kaynak seçimi, yükleme/kataloglama ve bağlama durumu ekranları.
+**Geliştirme:** Saha Veri Yöneticisi (yükleme/kataloglama/arama), Analitik Veri Yöneticisinin saha-alım yarısı ve Veri Bağlayıcısı (davranışsal veriyi modeli değiştirmeden bağlama) inşa edilir. Ön yüzde: saha kaydı kaynak seçimi, yükleme/kataloglama ve bağlama durumu ekranları.
 
 **Test:** Kayıtların doğru şekilde yüklendiği/katalogladığı, saha alımı/derlemesinin (sentetik veriyle asla karışmadan) tamamlandığı ve bağlamanın veriyi modeli değiştirmeden modelle eşleştirdiği doğrulanır — Artım 2'deki modelin dokunulmamış kaldığının kontrolü dâhil, uçtan uca.
 
-**Paketleme:** Saha Kayıtları Veri Tabanı ve Veri Bağlayıcısı servisleri, telemetri için bir zaman serisi veritabanıyla birlikte ayağa kaldırılır; ham yüklemeler ayrıştırıldıktan sonra atılır.
+**Paketleme:** Saha Veri Yöneticisi ve Veri Bağlayıcısı servisleri, telemetri için bir zaman serisi veritabanıyla birlikte ayağa kaldırılır; ham yüklemeler ayrıştırıldıktan sonra atılır.
 
-**Demo:** Artım 4'teki sentetik kaynaklı Analitik Değerlendirme Verisi, düğümlerini/ilişkilerini değiştirmeden Çekirdek Sistem Modeline bağlanır; bağlama durumu ve veri kökeni operatöre görünür şekilde sunulur. Operatör ardından Analitik Değerlendirme Verisi kaynağı olarak Sistem Saha Kayıtlarını seçer, Sistem Saha Kayıtlarını yükler (proje, platform, sürüm, kaynak veya yükleme zamanına göre listeleyerek/arayarak/seçerek) ve ortaya çıkan saha kaynaklı Analitik Değerlendirme Verisi aynı kaynaktan bağımsız bağlayıcı üzerinden modele bağlanır — böylece SaaG-SKV, SaaG-AVH (hem sentetik hem saha yolları artık uçtan uca çalışır durumdadır) ve SaaG-CSM tamamlanmış olur.
+**Demo:** Artım 4'teki sentetik kaynaklı Analitik Değerlendirme Verisi, düğümlerini/ilişkilerini değiştirmeden Sistem Model Yöneticisine bağlanır; bağlama durumu ve veri kökeni operatöre görünür şekilde sunulur. Operatör ardından Analitik Değerlendirme Verisi kaynağı olarak Sistem Saha Kayıtlarını seçer, Sistem Saha Kayıtlarını yükler (proje, platform, sürüm, kaynak veya yükleme zamanına göre listeleyerek/arayarak/seçerek) ve ortaya çıkan saha kaynaklı Analitik Değerlendirme Verisi aynı kaynaktan bağımsız bağlayıcı üzerinden modele bağlanır — böylece SaaG-SVY, SaaG-AVY (hem sentetik hem saha yolları artık uçtan uca çalışır durumdadır) ve SaaG-SMY tamamlanmış olur.
 
 **Tamamlanma Tanımı:**
-- [ ] Veri Bağlayıcısı (CSM-02.1–6), SKV (SKV.1–5) ve saha seçimi/bağlama durumu ekranları (DAD-01.10, 12, 16) inşa edildi ve çalışıyor
+- [ ] Analitik Veri Bağlama (SMY.32–37), SVY (SVY.1–5) ve saha seçimi/bağlama durumu ekranları (TDM.10, 12, 16) inşa edildi ve çalışıyor
 - [ ] CDR-15, CDR-21, CDR-26, CDR-27, CDR-12 çözümlendi veya ertelendi
 - [ ] Saha kaydı, bağlayıcı ve saha veri yolu testleri, Artım 4'ünkini tamamlayacak şekilde geçiyor
 - [ ] Yeni servisler ve telemetri veritabanı birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
 
-### Artım 6: Tasarım Analizcisi
+### Artım 6: Davranışsal Tasarım Analizi
 
 | CSU | Teslimat |
 |---|---|
-| DAD-03 *(tamamlandı)* | Tasarım Analizcisi (DAD-03.1–21) |
-| DAD-01 *(devam ediyor)* | Simülasyon Senaryolarının Kaydedilmesi (DAD-01.25) |
+| TDM *(devam ediyor)* | Davranışsal Simülasyon ve Analiz (TDM.50–70) |
+| TDM *(devam ediyor)* | Simülasyon Senaryolarının Kaydedilmesi (TDM.25) |
 
-**Tasarım:** Tasarım Analizcisi (SRS DAD-03.1–21) ve simülasyon kayıt ekranı (DAD-01.25) tam olarak tasarlanmıştır. Hiçbir madde bunu doğrudan adlandırmasa da, iki devreden karara bağımlıdır: DAD okuma protokolü ve modelin depolama/şeması (CDR-28, CDR-29–30).
+**Tasarım:** Davranışsal Simülasyon ve Analiz (SRS TDM.50–70) ve simülasyon kayıt ekranı (TDM.25) tam olarak tasarlanmıştır. Hiçbir madde bunu doğrudan adlandırmasa da, iki devreden karara bağımlıdır: TDM okuma protokolü ve modelin depolama/şeması (CDR-28, CDR-29–30).
 
 **Geliştirme:** Tasarım Analizcisinin üç motoru inşa edilir (sentetik veri simülasyonu, saha verisi analizi, sapma tespiti). Ön yüzde: simülasyon senaryosu kaydı ve yüksek hacimli saha izi grafikleri.
 
@@ -237,25 +239,25 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Paketleme:** Tasarım Analizcisi servisi ayağa kaldırılır — yeni bir depolama yoktur; Artım 2 ve 5'in veritabanlarını okur.
 
-**Demo:** Bir operatör; sentetik kaynaklı Analitik Değerlendirme Verisiyle (mesaj/trafik akışı, düğüm/ilişki devre dışı kalma etkileri, yük yoğunluğu ve arıza yayılımı analizi, kaynak kullanım özetleri) ve saha kaydı kaynaklı Analitik Değerlendirme Verisiyle (çalışma/sağlık durumu, kaynak kullanımı, hata/zaman aşımı bilgisi, iletişim gecikmesi/kaybı, model-çalışma zamanı sapma tespiti) statik analiz çalıştırır; simülasyon senaryosu meta verisi (DAD-01.25) sonuçlarla ilişkilendirilerek kaydedilir.
+**Demo:** Bir operatör; sentetik kaynaklı Analitik Değerlendirme Verisiyle (mesaj/trafik akışı, düğüm/ilişki devre dışı kalma etkileri, yük yoğunluğu ve arıza yayılımı analizi, kaynak kullanım özetleri) ve saha kaydı kaynaklı Analitik Değerlendirme Verisiyle (çalışma/sağlık durumu, kaynak kullanımı, hata/zaman aşımı bilgisi, iletişim gecikmesi/kaybı, model-çalışma zamanı sapma tespiti) statik analiz çalıştırır; simülasyon senaryosu meta verisi (TDM.25) sonuçlarla ilişkilendirilerek kaydedilir.
 
 **Tamamlanma Tanımı:**
-- [ ] Tasarım Analizcisi (DAD-03.1–21) ve kayıt ekranı (DAD-01.25) inşa edildi ve çalışıyor
+- [ ] Davranışsal Simülasyon ve Analiz (TDM.50–70) ve kayıt ekranı (TDM.25) inşa edildi ve çalışıyor
 - [ ] Devreden CDR-28, CDR-29–30 çözümlendi veya ertelendi
 - [ ] Tasarım Analizcisi testleri geçiyor
 - [ ] Tasarım Analizcisi servisi dağıtılıyor ve çalışıyor
 - [ ] Demo uçtan uca çalıştırıldı
 
-### Artım 7: Tasarım Değerlendiricisi
+### Artım 7: Kurulum Uygunluk Değerlendirmesi
 
 | CSU | Teslimat |
 |---|---|
-| DAD-04 *(tamamlandı)* | Tasarım Değerlendiricisi (DAD-04.1–8) |
-| DAD-01 *(tamamlandı)* | CLI Üzerinden Raporlama ve Otomasyon (DAD-01.26–27) |
+| TDM *(tamamlandı)* | Kurulum Uygunluk Değerlendirmesi (TDM.71–78) |
+| TDM *(tamamlandı)* | CLI Üzerinden Raporlama ve Otomasyon (TDM.26–27) |
 
-**Tamamlar:** SaaG-DAD
+**Tamamlar:** SaaG-TDM
 
-**Tasarım:** Tasarım Değerlendiricisi (SRS DAD-04.1–8) ve raporlama/CLI ekranı (DAD-01.26–27) tam olarak tasarlanmıştır. Hâlâ açık olan konular: puanlama yöntemi, rapor dosya biçimi ve CLI protokolü/sonuç biçimi (CDR-13, CDR-14, CDR-23) — bu son artım teslim edilmeden önce hepsinin kapanması gerekir.
+**Tasarım:** Kurulum Uygunluk Değerlendirmesi (SRS TDM.71–78) ve raporlama/CLI ekranı (TDM.26–27) tam olarak tasarlanmıştır. Hâlâ açık olan konular: puanlama yöntemi, rapor dosya biçimi ve CLI protokolü/sonuç biçimi (CDR-13, CDR-14, CDR-23) — bu son artım teslim edilmeden önce hepsinin kapanması gerekir.
 
 **Geliştirme:** Tasarım Değerlendiricisi inşa edilir (adayları puanlama, kritik bulgularda zorunlu olarak "uygun değil" belirleme, değerlendirmeleri eşzamanlı yürütme) ve CLI geliştirilir. PDF/JSON rapor üretimi ve rapor ekranı eklenir.
 
@@ -263,10 +265,10 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Paketleme:** Tasarım Değerlendiricisi servisi, CLI paketi ve PDF üretimiyle birlikte arka plan işçi (background-worker) desteği ayağa kaldırılır — her artımın servisleri birlikte devreye alınır.
 
-**Demo:** Bir otomasyon istemcisi (ör. Jenkins), bir veya birden fazla aday yazılım birimi için CLI üzerinden kurulum uygunluk değerlendirmesi başlatır; sistem her birimi kendi değerlendirme başlıkları ve kontrol kurallarına göre puanlar, her birim için bağımsız ve eşzamanlı şekilde bloke edici/bloke edici olmayan bir karar ve makine tarafından işlenebilir sonuçlar döndürür; tüm doğrulama, analiz ve değerlendirme sonuçlarını kapsayan özet/ayrıntılı bir rapor üretilir — böylece SaaG-DAD ve altı CSC'nin tamamı tamamlanmış olur.
+**Demo:** Bir otomasyon istemcisi (ör. Jenkins), bir veya birden fazla aday yazılım birimi için CLI üzerinden kurulum uygunluk değerlendirmesi başlatır; sistem her birimi kendi değerlendirme başlıkları ve kontrol kurallarına göre puanlar, her birim için bağımsız ve eşzamanlı şekilde bloke edici/bloke edici olmayan bir karar ve makine tarafından işlenebilir sonuçlar döndürür; tüm doğrulama, analiz ve değerlendirme sonuçlarını kapsayan özet/ayrıntılı bir rapor üretilir — böylece SaaG-TDM ve altı CSC'nin tamamı tamamlanmış olur.
 
 **Tamamlanma Tanımı:**
-- [ ] Tasarım Değerlendiricisi (DAD-04.1–8) ve raporlama/CLI ekranı (DAD-01.26–27) inşa edildi ve çalışıyor
+- [ ] Kurulum Uygunluk Değerlendirmesi (TDM.71–78) ve raporlama/CLI ekranı (TDM.26–27) inşa edildi ve çalışıyor
 - [ ] CDR-13, CDR-14, CDR-23 çözümlendi veya ertelendi
 - [ ] Değerlendirici ve CLI testleri, Artım 3/6/7'den gelen raporlama testini tamamlayacak şekilde geçiyor
 - [ ] Tam servis yığını birlikte dağıtılıyor
@@ -283,7 +285,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | Artım | Başlangıç | Bitiş | Süre |
 |---|---|---|---|
 | 0 — Proje İskeleti | 2026-07-20 | 2026-07-31 | 2 hf |
-| 1 — Model Kurulum Verisi Üretimi | 2026-08-03 | 2026-08-28 | 4 hf |
+| 1 — Model Verisi Üretimi | 2026-08-03 | 2026-08-28 | 4 hf |
 | 2 — Model Yöneticisi | 2026-08-31 | 2026-10-02 | 5 hf |
 | 3 — Tasarım Doğrulayıcı | 2026-10-05 | 2026-11-06 | 5 hf |
 | 4 — Sentetik Veri Hattı | 2026-11-09 | 2026-12-04 | 4 hf |
@@ -305,40 +307,40 @@ gantt
     Proje İskeleti (2 hf)      :scaffold1, 2026-07-20, 2026-07-31
     Artım 0 Demo (0g)               :milestone, demo0, after scaffold1, 0d
 
-    section SaaG-MKV — Model Kurulum Verisi Üretimi
-    Model Kurulum Verisi Üretimi MKV (4 hf)               :msd, 2026-08-03, 2026-08-28
-    Artım 1 Demo (0g)                                    :milestone, demo1, after msd, 0d
+    section SaaG-MVU — Model Verisi Üretimi
+    Model Verisi Üretimi MVU (4 hf)               :mvu, 2026-08-03, 2026-08-28
+    Artım 1 Demo (0g)                                    :milestone, demo1, after mvu, 0d
 
     section SaaG-SUR — Senaryo Üreteci
     Senaryo Üreteci SUR (10g)                       :scg, 2026-11-09, 2026-11-20
 
-    section SaaG-SKV — Saha Kayıtları Veri Tabanı
-    Saha Kayıtları Veri Tabanı SKV (8g)                    :frd, 2026-12-18, 2026-12-29
+    section SaaG-SVY — Saha Veri Yöneticisi
+    Saha Veri Yöneticisi SVY (8g)                    :svy, 2026-12-18, 2026-12-29
 
-    section SaaG-AVH — Analitik Veri Hazırlama
-    Sentetik Veri Hazırlama AVH (10g)          :adpa, 2026-11-23, 2026-12-04
+    section SaaG-AVY — Analitik Veri Yöneticisi
+    Sentetik Veri Hazırlama AVY (10g)          :adpa, 2026-11-23, 2026-12-04
     Artım 4 Demo (0g)                                    :milestone, demo4, after adpa, 0d
-    Saha Verisi Hazırlama AVH (3g)                :adpb, 2026-12-30, 2027-01-01
+    Saha Verisi Hazırlama AVY (3g)                :adpb, 2026-12-30, 2027-01-01
     Artım 5 Demo (0g)                                    :milestone, demo5, after adpb, 0d
 
-    section SaaG-CSM — Çekirdek Sistem Modeli
-    Model Yöneticisi CSM-01 (5 hf)                          :csm01, 2026-08-31, 2026-10-02
-    Artım 2 Demo (0g)                                    :milestone, demo2, after csm01, 0d
-    Analitik Veri Bağlayıcısı CSM-02 (9g)                 :csm02, 2026-12-07, 2026-12-17
+    section SaaG-SMY — Sistem Model Yöneticisi
+    Yapısal Model İnşası SMY (5 hf)                         :smy01, 2026-08-31, 2026-10-02
+    Artım 2 Demo (0g)                                    :milestone, demo2, after smy01, 0d
+    Analitik Veri Bağlama SMY (9g)                          :smy02, 2026-12-07, 2026-12-17
 
-    section SaaG-DAD — Doğrulama, Analiz, Değerlendirme
-    Oturum Açma ve Model Verisi Kurulumu DAD-01 (4 hf)       :vae01a, 2026-08-03, 2026-08-28
-    Modelin Oluşturulması ve Görüntülenmesi DAD-01 (5 hf)               :vae01b, 2026-08-31, 2026-10-02
-    Modelin Düzenlenmesi ve Bulguların Görüntülenmesi DAD-01 (5 hf)       :vae01c, 2026-10-05, 2026-11-06
-    Sentetik Verinin Yapılandırılması ve İzlenmesi DAD-01 (4 hf) :vae01de, 2026-11-09, 2026-12-04
-    Saha Verisinin Seçilmesi ve İzlenmesi DAD-01 (20g) :vae01f, 2026-12-07, 2027-01-01
-    Simülasyon Senaryolarının Kaydedilmesi DAD-01 (6 hf)           :vae01g, 2027-01-04, 2027-02-12
-    CLI Üzerinden Raporlama ve Otomasyon DAD-01 (4 hf)             :vae01h, 2027-02-15, 2027-03-12
-    Tasarım Doğrulayıcı DAD-02 (5 hf)                        :vae02, 2026-10-05, 2026-11-06
+    section SaaG-TDM — Doğrulama, Analiz, Değerlendirme
+    Oturum Açma ve Model Verisi Kurulumu TDM (4 hf)        :vae01a, 2026-08-03, 2026-08-28
+    Modelin Oluşturulması ve Görüntülenmesi TDM (5 hf)               :vae01b, 2026-08-31, 2026-10-02
+    Modelin Düzenlenmesi ve Bulguların Görüntülenmesi TDM (5 hf)       :vae01c, 2026-10-05, 2026-11-06
+    Sentetik Verinin Yapılandırılması ve İzlenmesi TDM (4 hf) :vae01de, 2026-11-09, 2026-12-04
+    Saha Verisinin Seçilmesi ve İzlenmesi TDM (20g) :vae01f, 2026-12-07, 2027-01-01
+    Simülasyon Senaryolarının Kaydedilmesi TDM (6 hf)           :vae01g, 2027-01-04, 2027-02-12
+    CLI Üzerinden Raporlama ve Otomasyon TDM (4 hf)             :vae01h, 2027-02-15, 2027-03-12
+    Yapısal Tasarım Doğrulama TDM (5 hf)                   :vae02, 2026-10-05, 2026-11-06
     Artım 3 Demo (0g)                                    :milestone, demo3, after vae02, 0d
-    Tasarım Analizcisi DAD-03 (6 hf)                         :vae03, 2027-01-04, 2027-02-12
+    Davranışsal Simülasyon ve Analiz TDM (6 hf)             :vae03, 2027-01-04, 2027-02-12
     Artım 6 Demo (0g)                                    :milestone, demo6, after vae03, 0d
-    Tasarım Değerlendiricisi DAD-04 (4 hf)                       :vae04, 2027-02-15, 2027-03-12
+    Kurulum Uygunluk Değerlendirmesi TDM (4 hf)                 :vae04, 2027-02-15, 2027-03-12
     Artım 7 Demo / Tahmini Tamamlanma (0g)             :milestone, completion, after vae04, 0d
 ```
 
@@ -346,15 +348,15 @@ gantt
 
 ## 4. Proje Yapısı
 
-Gerçekleştirim, her üst düzey arka uç dizininin tam olarak bir CSC'ye karşılık geldiği sığ (shallow) bir depo yapısı kullanacaktır. `web/` ve `cli/` dizinleri, DAD-01 kullanıcıya açık uygulamalarını gerçekleştirir. Her CSC kendi altıgen sınırına sahiptir: gelen (inbound) adaptörler, uygulama kullanım senaryoları (use case), alan (domain) modeli, giden (outbound) portlar ve giden adaptörler.
+Gerçekleştirim, her üst düzey arka uç dizininin tam olarak bir CSC'ye karşılık geldiği sığ (shallow) bir depo yapısı kullanacaktır. `web/` ve `cli/` dizinleri, TDM kullanıcıya açık uygulamalarını gerçekleştirir. Her CSC kendi altıgen sınırına sahiptir: gelen (inbound) adaptörler, uygulama kullanım senaryoları (use case), alan (domain) modeli, giden (outbound) portlar ve giden adaptörler.
 
 ```text
 system-as-a-graph/
 ├── README.md
 ├── docs/
 │   ├── requirements/
-│   │   ├── SSS.md
-│   │   └── SRS.md
+│   │   ├── SRS.md
+│   │   └── SRS.tr.md
 │   ├── planning/
 │   │   └── SDP.md
 │   ├── design/
@@ -364,10 +366,10 @@ system-as-a-graph/
 │   └── test/
 │       └── STD.md
 │
-├── web/                               # DAD-01 web uygulaması
-├── cli/                               # DAD-01 komut satırı uygulaması
+├── web/                               # TDM web uygulaması
+├── cli/                               # TDM komut satırı uygulaması
 │
-├── msd/                               # CSC-1: Model Kurulum Verisi Üretimi
+├── msd/                               # CSC-1: Model Verisi Üretimi
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -385,7 +387,7 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── frd/                               # CSC-3: Saha Kayıtları Veri Tabanı
+├── frd/                               # CSC-3: Saha Veri Yöneticisi
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -394,7 +396,7 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── adp/                               # CSC-4: Analitik Veri Hazırlama
+├── adp/                               # CSC-4: Analitik Veri Yöneticisi
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -403,8 +405,8 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── csm/                               # CSC-5: Çekirdek Sistem Modeli
-│   ├── model_manager/                 # CSM-01
+├── csm/                               # CSC-5: Sistem Model Yöneticisi
+│   ├── model_manager/                 # SMY: Yapısal Model İnşası
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -412,7 +414,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   └── data_binder/                   # CSM-02
+│   └── data_binder/                   # SMY: Analitik Veri Bağlama
 │       ├── src/
 │       │   ├── api/
 │       │   ├── use_cases/
@@ -422,7 +424,7 @@ system-as-a-graph/
 │       └── tests/
 │
 ├── vae/                               # CSC-6: Tasarım Doğrulama, Analiz ve Değerlendirme
-│   ├── design_verifier/               # DAD-02
+│   ├── design_verifier/               # TDM: Yapısal Tasarım Doğrulama
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -430,7 +432,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   ├── design_analyzer/               # DAD-03
+│   ├── design_analyzer/               # TDM: Davranışsal Simülasyon ve Analiz
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -438,7 +440,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   └── design_evaluator/              # DAD-04
+│   └── design_evaluator/              # TDM: Kurulum Uygunluk Değerlendirmesi
 │       ├── src/
 │       │   ├── api/
 │       │   ├── use_cases/
@@ -462,14 +464,14 @@ system-as-a-graph/
 
 | Dizin | Kapsam |
 |---|---|
-| `web/` | Operatörler için DAD-01 web uygulaması |
-| `cli/` | Otomasyon istemcileri için DAD-01 komut satırı uygulaması |
-| `msd/` | SaaG-MKV CSC'si; MKV'yi içerir |
+| `web/` | Operatörler için TDM web uygulaması |
+| `cli/` | Otomasyon istemcileri için TDM komut satırı uygulaması |
+| `msd/` | SaaG-MVU CSC'si; MVU'yu içerir |
 | `scg/` | SaaG-SUR CSC'si; SUR'u içerir |
-| `frd/` | SaaG-SKV CSC'si; SKV'yi içerir |
-| `adp/` | SaaG-AVH CSC'si; AVH'yi içerir |
-| `csm/` | SaaG-CSM CSC'si; CSM-01 ve CSM-02'yi içerir |
-| `vae/` | SaaG-DAD arka uç CSC'si; DAD-02, DAD-03 ve DAD-04'ü içerir |
+| `frd/` | SaaG-SVY CSC'si; SVY'yi içerir |
+| `adp/` | SaaG-AVY CSC'si; AVY'yi içerir |
+| `csm/` | SaaG-SMY CSC'si; SMY'yi içerir |
+| `vae/` | SaaG-TDM arka yüz CSC'si; TDM'yi içerir |
 | `shared/contracts/` | CSC'ler arası istek, yanıt, olay ve dosya şemaları |
 | `shared/types/` | CSC'ler arası değer nesneleri ve ilkel paylaşılan türler |
 | `shared/errors/` | CSC'ler arası hata temel sınıfları ve ortak hata türleri |
@@ -499,36 +501,36 @@ Aşağıdaki teknoloji seçimleri, WBS teslimatlarını (§1) gerçekleştirir v
 | Alan | Teknoloji | Kullanım |
 |---|---|---|
 | **Arka Uç ve API** | | |
-| Arka uç dili/çalışma zamanı | Python (FastAPI) | Arka uç servisleri (MKV/SUR/SKV/AVH/CSM/DAD) |
-| API stili | REST (JSON over HTTP) | İşlem Paneli ve CLI/Jenkins entegrasyonu (DAD-01.27) |
-| CLI çerçevesi | Python (Click/Typer) | Otomasyon istemcisi arayüzü (DAD-01.27) |
+| Arka uç dili/çalışma zamanı | Python (FastAPI) | Arka uç servisleri (MVU/SUR/SVY/AVY/SMY/TDM) |
+| API stili | REST (JSON over HTTP) | İşlem Paneli ve CLI/Jenkins entegrasyonu (TDM.27) |
+| CLI çerçevesi | Python (Click/Typer) | Otomasyon istemcisi arayüzü (TDM.27) |
 | **Veri Depolama** | | |
-| Graf depolama | FalkorDB | İzole model setleriyle Çekirdek Sistem Modeli (CSM-01) |
-| İlişkisel depolama | PostgreSQL | Yapılandırılmış metadata ve DAD işlem/bulgu kayıtları (MKV, SKV, DAD-01.23, DAD-01.25, DAD-01.26, DAD-02/03/04, DAD-04.8) |
-| Zaman serisi depolama | VictoriaMetrics | Saha kaydı telemetrisi (SKV.1, DAD-03.12–13,15) |
+| Graf depolama | FalkorDB | İzole model setleriyle Sistem Model Yöneticisi (SMY) |
+| İlişkisel depolama | PostgreSQL | Yapılandırılmış metadata ve TDM işlem/bulgu kayıtları (MVU, SVY, TDM.23, TDM.25, TDM.26, TDM.28–78, TDM.78) |
+| Zaman serisi depolama | VictoriaMetrics | Saha kaydı telemetrisi (SVY.1, TDM.61–62, 64) |
 | **Ön Yüz ve Kullanıcı Arayüzü** | | |
-| Ön yüz çerçevesi | Next.js ^14.2 (React ^18.3) | İşlem Paneli (DAD-01) |
-| Graf görselleştirme | React Flow ^12.11 | Model gezinme, arama/süzme ve yıkıcı olmayan yapısal düzenleme (DAD-01.17, DAD-01.19–20) |
-| Grafik / analitik görselleştirme | Recharts ^3.9 + shadcn/ui Chart + ECharts ^6.1 | Bulgu, durum ve KPI grafikleri, ayrıca yüksek hacimli saha izi grafikleri (DAD-01.23, DAD-01.26, DAD-02/03/04) |
-| Arayüz bileşen kütüphanesi | Refine ^5.0 + shadcn/ui (Radix UI) + Tailwind CSS ~3.4 | Oturum açma, CRUD/düzenleme, bulgu ve rapor ekranları; LDAP farkında erişim kontrolü sağlayıcısı (DAD-01, DAD-01.3) |
-| Veri/tablo/form katmanı | TanStack Query ^5.101 + TanStack Table ^8.21 + React Hook Form ^7.81 | Sunucu durumu önbellekleme, bulgu/rapor tablo durumu ve Refine kancaları (hooks) altında düzenleme/oturum açma form durumu (DAD-01.17,21–23,26) |
+| Ön yüz çerçevesi | Next.js ^14.2 (React ^18.3) | İşlem Paneli (TDM) |
+| Graf görselleştirme | React Flow ^12.11 | Model gezinme, arama/süzme ve yıkıcı olmayan yapısal düzenleme (TDM.17, TDM.19–20) |
+| Grafik / analitik görselleştirme | Recharts ^3.9 + shadcn/ui Chart + ECharts ^6.1 | Bulgu, durum ve KPI grafikleri, ayrıca yüksek hacimli saha izi grafikleri (TDM.23, TDM.26, TDM.28–78) |
+| Arayüz bileşen kütüphanesi | Refine ^5.0 + shadcn/ui (Radix UI) + Tailwind CSS ~3.4 | Oturum açma, CRUD/düzenleme, bulgu ve rapor ekranları; LDAP farkında erişim kontrolü sağlayıcısı (TDM, TDM.3) |
+| Veri/tablo/form katmanı | TanStack Query ^5.101 + TanStack Table ^8.21 + React Hook Form ^7.81 | Sunucu durumu önbellekleme, bulgu/rapor tablo durumu ve Refine kancaları (hooks) altında düzenleme/oturum açma form durumu (TDM.17, 21–23, 26) |
 | **Güvenlik ve Kimlik Doğrulama** | | |
-| Kimlik doğrulama | LDAP direct bind (python-ldap/ldap3) | Operatör kimlik doğrulaması (DAD-01.3) |
-| Oturum/token stratejisi | JWT (stateless) | Arayüz ve CLI genelinde REST oturumu (DAD-01.3) |
+| Kimlik doğrulama | LDAP direct bind (python-ldap/ldap3) | Operatör kimlik doğrulaması (TDM.3) |
+| Oturum/token stratejisi | JWT (stateless) | Arayüz ve CLI genelinde REST oturumu (TDM.3) |
 | Gizli bilgi (secrets) yönetimi | Ortam değişkenleri (.env) | LDAP/veritabanı/JWT kimlik bilgisi depolama |
 | **Altyapı ve Dağıtım** | | |
 | Konteynerleştirme | Docker Compose | Orkestrasyon yükü olmadan tek ekip dağıtımı |
 | Dağıtım hedefi | Kurum içi / özel veri merkezi | LDAP ve konfigürasyon yönetimi veritabanı entegrasyonu |
 | **Arka Plan İşleme ve Durum** | | |
-| Arka plan görev yürütme | Procrastinate (PostgreSQL) | Durum, yeniden deneme, zincirleme ve izolasyona sahip uzun süreli/eşzamanlı işlemler (DAD-01.27, DAD-04.7, CSM-01.30, DAD-04.8) |
-| Durum iletimi | SSE (arayüz) + REST polling (CLI) | İşlem durumu iletimi (DAD-01.15/16/27) |
+| Arka plan görev yürütme | Procrastinate (PostgreSQL) | Durum, yeniden deneme, zincirleme ve izolasyona sahip uzun süreli/eşzamanlı işlemler (TDM.27, TDM.77, SMY.30, TDM.78) |
+| Durum iletimi | SSE (arayüz) + REST polling (CLI) | İşlem durumu iletimi (TDM.15–16, 27) |
 | **Dış Entegrasyonlar** | | |
 | Dış entegrasyon mimarisi | Portlar ve Adaptörler (Altıgen Mimari) | Üretimde gerçek adaptörler; geliştirmede DI ile seçilen sahte (fake) adaptörler |
-| Kaynak kodu deposu adaptörü | Git over HTTPS (token auth) | Kaynak kodu, betikler ve konfigürasyon dosyaları (MKV.3, 17–20) |
-| Paket deposu adaptörü | REST API (Artifactory/Nexus-style) | Sistem Yazılım Birimleri Paket Deposu (MKV.4) |
-| Konfigürasyon yönetimi veritabanı adaptörü | Generic SQL adapter (SQLAlchemy) | Dış konfigürasyon yönetimi veritabanı (MKV.2, 8, 10–13) |
+| Kaynak kodu deposu adaptörü | Git over HTTPS (token auth) | Kaynak kodu, betikler ve konfigürasyon dosyaları (MVU.3, 17–20) |
+| Paket deposu adaptörü | REST API (Artifactory/Nexus-style) | Sistem Yazılım Birimleri Paket Deposu (MVU.4) |
+| Konfigürasyon yönetimi veritabanı adaptörü | Generic SQL adapter (SQLAlchemy) | Dış konfigürasyon yönetimi veritabanı (MVU.2, 8, 10–13) |
 | **Raporlama ve Veri İşleme** | | |
-| Rapor üretimi | PDF (WeasyPrint/ReportLab) + JSON | Özet/ayrıntılı raporlar; değerlendirici ile paylaşılan JSON (DAD-01.26, DAD-04.8) |
-| Ham yükleme saklama politikası | Ayrıştırma sonrası atma | Asgari depolama ayak izi (SKV.2) |
+| Rapor üretimi | PDF (WeasyPrint/ReportLab) + JSON | Özet/ayrıntılı raporlar; değerlendirici ile paylaşılan JSON (TDM.26, TDM.78) |
+| Ham yükleme saklama politikası | Ayrıştırma sonrası atma | Asgari depolama ayak izi (SVY.2) |
 | **Test** | | |
 | Test | pytest (backend) + Playwright (frontend/E2E) | Birim ve tam E2E kapsamı |
