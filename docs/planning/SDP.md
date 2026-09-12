@@ -1,6 +1,6 @@
 # Software Development Plan (SDP): System as a Graph (SaaG)
 
-**Definition:** This Software Development Plan (SDP) is the plan for performing the software development of the System as a Graph (SaaG) Computer Software Configuration Item (CSCI). It decomposes the work defined in the SRS into a Work Breakdown Structure (WBS) of functional deliverables, and sequences those deliverables into a series of incremental builds. Every WBS deliverable and every increment is traceable to the CSU-scoped requirements in the SRS, which allocate baseline system capabilities via §7.
+**Definition:** This Software Development Plan (SDP) is the plan for performing the software development of the System as a Graph (SaaG) Computer Software Configuration Item (CSCI). It decomposes the work defined in the SRS into a Work Breakdown Structure (WBS) of functional deliverables, and sequences those deliverables into a series of incremental builds. Every WBS deliverable and every increment is traceable to the CSU-scoped requirements in the SRS.
 
 **Purpose:** The WBS (§1) establishes the full scope of development work, organized by Computer Software Component (CSC) and Computer Software Unit (CSU). The Incremental Development Plan (§2) sequences that work into a strictly serial series of builds — one increment at a time, in dependency-safe order. Each increment is scoped to one or more CSCs/CSUs plus, where relevant, the corresponding slice of DVE (Operations and Visualization), SaaG's front-door UI capability, so that every increment produces an end-to-end, demonstrable capability.
 
@@ -12,31 +12,31 @@
 
 | No | Component | Abbreviation | CSUs | Deliverables |
 |---|---|---|---|---|
-| 1 | Model Setup Generator | SaaG-MSG | 1 | 1 |
+| 1 | Model Data Generator | SaaG-MDG | 1 | 1 |
 | 2 | Scenario Generator | SaaG-SCG | 1 | 1 |
-| 3 | Telemetry Data Manager | SaaG-TDM | 1 | 1 |
+| 3 | Field Data Manager | SaaG-FDM | 1 | 1 |
 | 4 | Analytical Data Manager | SaaG-ADM | 1 | 2 |
-| 5 | Core System Model | SaaG-CSM | 1 | 2 |
+| 5 | System Model Manager | SaaG-SMM | 1 | 2 |
 | 6 | Design Verification Engine | SaaG-DVE | 1 | 10 |
 | **TOTAL** | | | **6** | **17** |
 
 Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 - **SaaG**
-  - **SaaG-MSG**
-    - **MSG: Model Setup Generator** (MSG.1–23)
+  - **SaaG-MDG**
+    - **MDG: Model Data Generator** (MDG.1–23)
   - **SaaG-SCG**
     - **SCG: Scenario Generator** (SCG.1–7)
-  - **SaaG-TDM**
-    - **TDM: Telemetry Data Manager** (TDM.1–5)
+  - **SaaG-FDM**
+    - **FDM: Field Data Manager** (FDM.1–5)
   - **SaaG-ADM**
     - **ADM: Analytical Data Manager**
       - Synthetic-Path Data Preparation (ADM.1, 3, 4, 6)
       - Field-Path Data Preparation (ADM.2, 5)
-  - **SaaG-CSM**
-    - **CSM: Core System Model**
-      - Structural Model Construction (CSM.1–31)
-      - Analytical Data Binding (CSM.32–37)
+  - **SaaG-SMM**
+    - **SMM: System Model Manager**
+      - Structural Model Construction (SMM.1–31)
+      - Analytical Data Binding (SMM.32–37)
   - **SaaG-DVE**
     - **DVE: Design Verification Engine**
       - Operations and Visualization (DVE.1–27)
@@ -64,11 +64,11 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | # | Increment | CSUs delivered | CSCs complete |
 |---|---|---|---|
 | 0 | Project Scaffolding | — | — |
-| 1 | Model Setup Data Generation | MSG | SaaG-MSG |
-| 2 | Core Model Construction | CSM (structural slice) | — |
+| 1 | Model Data Generation | MDG | SaaG-MDG |
+| 2 | System Model Construction | SMM (structural slice) | — |
 | 3 | Structural Design Verification | DVE (verification slice) | — |
 | 4 | Synthetic Data Pipeline | SCG, ADM (synthetic slice) | SaaG-SCG |
-| 5 | Field Data Pipeline | CSM (binding slice), TDM, ADM (field slice) | SaaG-TDM, SaaG-ADM, SaaG-CSM |
+| 5 | Field Data Pipeline | SMM (binding slice), FDM, ADM (field slice) | SaaG-FDM, SaaG-ADM, SaaG-SMM |
 | 6 | Behavioral Design Analysis | DVE (analysis slice) | — |
 | 7 | Installation Suitability Evaluation | DVE (evaluation & ops complete) | SaaG-DVE |
 
@@ -95,51 +95,51 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 - [x] Scaffolding builds, lints, and deploys cleanly
 - [x] Demo run end-to-end
 
-### Increment 1: Model Setup Data Generation
+### Increment 1: Model Data Generation
 
 | CSU | Deliverable |
 |---|---|
-| MSG *(complete)* | Model Setup Data Generation (MSG.1–23) |
+| MDG *(complete)* | Model Data Generation (MDG.1–23) |
 | DVE *(ongoing)* | Logging In & Setting Up Model Data (DVE.1–8) |
 
-**Completes:** SaaG-MSG
+**Completes:** SaaG-MDG
 
-**Design:** MSG (SRS MSG.1–23) and the login/MSG-control screen (DVE.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
+**Design:** MDG (SRS MDG.1–23) and the login/MDG-control screen (DVE.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
 
-**Development:** Build the MSG backend — connect to, validate, and assemble data from the four external sources — plus login/session handling. On the frontend: login, project/platform/version selection, source configuration, and an MSG production/status screen.
+**Development:** Build the MDG backend — connect to, validate, and assemble data from the four external sources — plus login/session handling. On the frontend: login, project/platform/version selection, source configuration, and an MDG production/status screen.
 
-**Test:** Verify MSG's five jobs (source connections, config pull, version tracking, file transfer, validation/assembly) and the login/production screens, then run an end-to-end MSG-file production.
+**Test:** Verify MDG's five jobs (source connections, config pull, version tracking, file transfer, validation/assembly) and the login/production screens, then run an end-to-end MDG-file production.
 
-**Packaging:** Stand up MSG and web services with a metadata database, a settings template for the four sources plus LDAP, and stand-in external systems for demoing.
+**Packaging:** Stand up MDG and web services with a metadata database, a settings template for the four sources plus LDAP, and stand-in external systems for demoing.
 
-**Demo:** An operator authenticates via LDAP, selects a project/platform/system version, configures and connects to all four external data sources, triggers Model Setup Data production end-to-end, and observes accessibility status and any errors, producing a valid, verified Model Setup Data file.
+**Demo:** An operator authenticates via LDAP, selects a project/platform/system version, configures and connects to all four external data sources, triggers Model Data production end-to-end, and observes accessibility status and any errors, producing a valid, verified Model Data file.
 
 **Definition of Done:**
-- [ ] MSG (MSG.1–23) and login/MSG-control (DVE.1–8) built and working
+- [ ] MDG (MDG.1–23) and login/MDG-control (DVE.1–8) built and working
 - [ ] CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24 resolved or deferred
-- [ ] MSG and login/workflow tests pass
-- [ ] MSG/web services deploy together
+- [ ] MDG and login/workflow tests pass
+- [ ] MDG/web services deploy together
 - [ ] Demo run end-to-end
 
-### Increment 2: Core Model Construction
+### Increment 2: System Model Construction
 
 | CSU | Deliverable |
 |---|---|
-| CSM *(ongoing)* | Structural Model Construction (CSM.1–31) |
+| SMM *(ongoing)* | Structural Model Construction (SMM.1–31) |
 | DVE *(ongoing)* | Building & Viewing the Model (DVE.9, 19–20) |
 
-**Design:** Core System Model (SRS CSM.1–31) and the model-build/browsing screen (DVE.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (CDR-29–30); concurrency limits and the DVE read protocol are also open (CDR-16, CDR-28).
+**Design:** System Model Manager (SRS SMM.1–31) and the model-build/browsing screen (DVE.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (CDR-29–30); concurrency limits and the DVE read protocol are also open (CDR-16, CDR-28).
 
-**Development:** Build the Model Manager backend — turn Model Setup Data into a graph, keep it safe under concurrent access, support isolated evaluation copies — on a graph database. On the frontend: model browsing (search/filter/zoom/pan/attributes).
+**Development:** Build the Model Manager backend — turn Model Data into a graph, keep it safe under concurrent access, support isolated evaluation copies — on a graph database. On the frontend: model browsing (search/filter/zoom/pan/attributes).
 
 **Test:** Verify the model builds correctly, represents all node/relationship types, stays consistent under concurrent access, and browsing works — end-to-end, completing Increment 1's workflow test.
 
 **Packaging:** Stand up the Model Manager service with a graph database and background-job handling for concurrency.
 
-**Demo:** An operator builds the Core System Model from the Increment 1 Model Setup Data file, browses and visually navigates the resulting node-relationship structure (search/filter, zoom/pan, attribute display), while the model is served for concurrent multi-session access.
+**Demo:** An operator builds the System Model Manager from the Increment 1 Model Data file, browses and visually navigates the resulting node-relationship structure (search/filter, zoom/pan, attribute display), while the model is served for concurrent multi-session access.
 
 **Definition of Done:**
-- [ ] Core System Model (CSM.1–31) and browsing screen (DVE.9, 19–20) built and working
+- [ ] System Model Manager (SMM.1–31) and browsing screen (DVE.9, 19–20) built and working
 - [ ] CDR-16, CDR-28, CDR-29–30 resolved or deferred
 - [ ] Model Manager and browsing tests pass, completing Increment 1's
 - [ ] Model Manager service and graph database deploy together
@@ -160,7 +160,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Packaging:** Stand up the Design Verifier service — no new storage; it reads the model and writes findings to Increment 1's database.
 
-**Demo:** An operator edits a working-model sandbox derived from the Core System Model (add/remove nodes/relationships, update attributes) and runs design verification against it — QoS conformance, publisher/consumer matching, resource/load-balancing checks, circular-dependency and architectural-rule detection — with findings presented, classified, and filterable.
+**Demo:** An operator edits a working-model sandbox derived from the System Model Manager (add/remove nodes/relationships, update attributes) and runs design verification against it — QoS conformance, publisher/consumer matching, resource/load-balancing checks, circular-dependency and architectural-rule detection — with findings presented, classified, and filterable.
 
 **Definition of Done:**
 - [ ] Structural Design Verification (DVE.28–49) and editor/findings screen (DVE.17–18, 21–24) built and working
@@ -200,25 +200,25 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 | CSU | Deliverable |
 |---|---|
-| CSM *(complete)* | Analytical Data Binding (CSM.32–37) |
-| TDM *(complete)* | Telemetry Data Manager (TDM.1–5) |
+| SMM *(complete)* | Analytical Data Binding (SMM.32–37) |
+| FDM *(complete)* | Field Data Manager (FDM.1–5) |
 | ADM *(complete)* | Field-Path Data Preparation (ADM.2, 5) |
 | DVE *(ongoing)* | Selecting & Tracking Field Data (DVE.10, 12, 16) |
 
-**Completes:** SaaG-TDM, SaaG-ADM, SaaG-CSM
+**Completes:** SaaG-FDM, SaaG-ADM, SaaG-SMM
 
-**Design:** Analytical Data Binding (SRS CSM.32–37) and Telemetry Data Manager (TDM.1–5) are fully designed, as are the field-record source-selection and binding-status screens (DVE.10, 12, 16). Still open: field-record storage capacity, the TDM external interface protocol, the TDM→ADM and ADM→CSM handoffs, and the carried-over AED format decision (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
+**Design:** Analytical Data Binding (SRS SMM.32–37) and Field Data Manager (FDM.1–5) are fully designed, as are the field-record source-selection and binding-status screens (DVE.10, 12, 16). Still open: field-record storage capacity, the FDM external interface protocol, the FDM→ADM and ADM→SMM handoffs, and the carried-over AED format decision (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
 
-**Development:** Build the Telemetry Data Manager (upload/catalog/search), the field-intake half of Analytical Data Manager, and the Data Binder (attach behavioral data without altering the model). On the frontend: field-record source-selection, upload/catalog, and binding-status screens.
+**Development:** Build the Field Data Manager (upload/catalog/search), the field-intake half of Analytical Data Manager, and the Data Binder (attach behavioral data without altering the model). On the frontend: field-record source-selection, upload/catalog, and binding-status screens.
 
 **Test:** Verify records upload/catalog correctly, the field intake/assembly completes (never mixing with synthetic data), and binding matches data to the model without changing it — end-to-end, including a check that Increment 2's model is untouched.
 
-**Packaging:** Stand up the Telemetry Data Manager and Data Binder services with a time-series database for telemetry; raw uploads are discarded after parsing.
+**Packaging:** Stand up the Field Data Manager and Data Binder services with a time-series database for telemetry; raw uploads are discarded after parsing.
 
-**Demo:** The synthetic-sourced AED from Increment 4 is bound onto the Core System Model without altering its nodes/relationships, with binding status and provenance visible to the operator. The operator then selects System Field Records as the Analytical Evaluation Data source, uploads System Field Records (listing/searching/selecting them by project, platform, version, source, or upload time), and the resulting field-sourced AED is bound onto the model via the same source-agnostic binder — completing SaaG-TDM, SaaG-ADM (both the synthetic and field paths now work end-to-end), and SaaG-CSM.
+**Demo:** The synthetic-sourced AED from Increment 4 is bound onto the System Model Manager without altering its nodes/relationships, with binding status and provenance visible to the operator. The operator then selects System Field Records as the Analytical Evaluation Data source, uploads System Field Records (listing/searching/selecting them by project, platform, version, source, or upload time), and the resulting field-sourced AED is bound onto the model via the same source-agnostic binder — completing SaaG-FDM, SaaG-ADM (both the synthetic and field paths now work end-to-end), and SaaG-SMM.
 
 **Definition of Done:**
-- [ ] Analytical Data Binding (CSM.32–37), TDM (TDM.1–5), and field-selection/binding-status screens (DVE.10, 12, 16) built and working
+- [ ] Analytical Data Binding (SMM.32–37), FDM (FDM.1–5), and field-selection/binding-status screens (DVE.10, 12, 16) built and working
 - [ ] CDR-15, CDR-21, CDR-26, CDR-27, CDR-12 resolved or deferred
 - [ ] Field-records, binder, and field-path tests pass, completing Increment 4's
 - [ ] New services and telemetry database deploy together
@@ -285,7 +285,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | Increment | Start | End | Duration |
 |---|---|---|---|
 | 0 — Project Scaffolding | 2026-07-20 | 2026-07-31 | 2w |
-| 1 — Model Setup Data Generation | 2026-08-03 | 2026-08-28 | 4w |
+| 1 — Model Data Generation | 2026-08-03 | 2026-08-28 | 4w |
 | 2 — Model Manager | 2026-08-31 | 2026-10-02 | 5w |
 | 3 — Design Verifier | 2026-10-05 | 2026-11-06 | 5w |
 | 4 — Synthetic Data Pipeline | 2026-11-09 | 2026-12-04 | 4w |
@@ -307,15 +307,15 @@ gantt
     Project Scaffolding (2w)      :scaffold1, 2026-07-20, 2026-07-31
     Inc 0 Demo (0d)               :milestone, demo0, after scaffold1, 0d
 
-    section SaaG-MSG — Model Setup Data Generation
-    Model Setup Data Generation MSG (4w)               :msd, 2026-08-03, 2026-08-28
-    Inc 1 Demo (0d)                                    :milestone, demo1, after msd, 0d
+    section SaaG-MDG — Model Data Generation
+    Model Data Generation MDG (4w)               :mdg, 2026-08-03, 2026-08-28
+    Inc 1 Demo (0d)                                    :milestone, demo1, after mdg, 0d
 
     section SaaG-SCG — Scenario Generator
     Scenario Generator SCG (10d)                       :scg, 2026-11-09, 2026-11-20
 
-    section SaaG-TDM — Telemetry Data Manager
-    Telemetry Data Manager TDM (8d)                    :frd, 2026-12-18, 2026-12-29
+    section SaaG-FDM — Field Data Manager
+    Field Data Manager FDM (8d)                    :fdm, 2026-12-18, 2026-12-29
 
     section SaaG-ADM — Analytical Data Manager
     Synthetic-Path Data Preparation ADM (10d)          :adpa, 2026-11-23, 2026-12-04
@@ -323,10 +323,10 @@ gantt
     Field-Path Data Preparation ADM (3d)                :adpb, 2026-12-30, 2027-01-01
     Inc 5 Demo (0d)                                    :milestone, demo5, after adpb, 0d
 
-    section SaaG-CSM — Core System Model
-    Structural Model Construction CSM (5w)             :csm01, 2026-08-31, 2026-10-02
-    Inc 2 Demo (0d)                                    :milestone, demo2, after csm01, 0d
-    Analytical Data Binding CSM (9d)                   :csm02, 2026-12-07, 2026-12-17
+    section SaaG-SMM — System Model Manager
+    Structural Model Construction SMM (5w)             :smm01, 2026-08-31, 2026-10-02
+    Inc 2 Demo (0d)                                    :milestone, demo2, after smm01, 0d
+    Analytical Data Binding SMM (9d)                   :smm02, 2026-12-07, 2026-12-17
 
     section SaaG-DVE — Verification, Analysis, Evaluation
     Logging In & Setting Up Model Data DVE (4w)        :vae01a, 2026-08-03, 2026-08-28
@@ -369,7 +369,7 @@ system-as-a-graph/
 ├── web/                               # DVE web application
 ├── cli/                               # DVE command-line application
 │
-├── msd/                               # CSC-1: Model Setup Data Generation
+├── msd/                               # CSC-1: Model Data Generation
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -387,7 +387,7 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── frd/                               # CSC-3: Telemetry Data Manager
+├── frd/                               # CSC-3: Field Data Manager
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -405,8 +405,8 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── csm/                               # CSC-5: Core System Model
-│   ├── model_manager/                 # CSM: Structural Model Construction
+├── csm/                               # CSC-5: System Model Manager
+│   ├── model_manager/                 # SMM: Structural Model Construction
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -414,7 +414,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   └── data_binder/                   # CSM: Analytical Data Binding
+│   └── data_binder/                   # SMM: Analytical Data Binding
 │       ├── src/
 │       │   ├── api/
 │       │   ├── use_cases/
@@ -466,11 +466,11 @@ system-as-a-graph/
 |---|---|
 | `web/` | DVE web application for operators |
 | `cli/` | DVE command-line application for automation clients |
-| `msd/` | SaaG-MSG CSC; contains `MSG` |
+| `msd/` | SaaG-MDG CSC; contains `MDG` |
 | `scg/` | SaaG-SCG CSC; contains `SCG` |
-| `frd/` | SaaG-TDM CSC; contains `TDM` |
+| `frd/` | SaaG-FDM CSC; contains `FDM` |
 | `adp/` | SaaG-ADM CSC; contains `ADM` |
-| `csm/` | SaaG-CSM CSC; contains `CSM` |
+| `csm/` | SaaG-SMM CSC; contains `SMM` |
 | `vae/` | SaaG-DVE backend CSC; contains `DVE` |
 | `shared/contracts/` | Cross-CSC request, response, event, and file schemas |
 | `shared/types/` | Cross-CSC value objects and primitive shared types |
@@ -501,13 +501,13 @@ The technology choices below implement the WBS deliverables (§1) and are tracea
 | Area | Technology | Usage |
 |---|---|---|
 | **Backend & API** | | |
-| Backend language/runtime | Python (FastAPI) | Backend services (MSG/SCG/TDM/ADM/CSM/DVE) |
+| Backend language/runtime | Python (FastAPI) | Backend services (MDG/SCG/FDM/ADM/SMM/DVE) |
 | API style | REST (JSON over HTTP) | Operations Panel and CLI/Jenkins integration (DVE.27) |
 | CLI framework | Python (Click/Typer) | Automation-client interface (DVE.27) |
 | **Data Storage** | | |
-| Graph storage | FalkorDB | Core System Model with isolated model sets (CSM) |
-| Relational storage | PostgreSQL | Structured metadata and DVE operations/findings records (MSG, TDM, DVE.23, DVE.25, DVE.26, DVE.28–78, DVE.78) |
-| Time-series storage | VictoriaMetrics | Field-record telemetry (TDM.1, DVE.61–62, 64) |
+| Graph storage | FalkorDB | System Model Manager with isolated model sets (SMM) |
+| Relational storage | PostgreSQL | Structured metadata and DVE operations/findings records (MDG, FDM, DVE.23, DVE.25, DVE.26, DVE.28–78, DVE.78) |
+| Time-series storage | VictoriaMetrics | Field-record telemetry (FDM.1, DVE.61–62, 64) |
 | **Frontend & UI** | | |
 | Frontend framework | Next.js ^14.2 (React ^18.3) | Operations Panel (DVE) |
 | Graph visualization | React Flow ^12.11 | Model browsing, search/filter, and non-destructive structural editing (DVE.17, DVE.19–20) |
@@ -522,16 +522,16 @@ The technology choices below implement the WBS deliverables (§1) and are tracea
 | Containerization | Docker Compose | Single-team deployment with no orchestration overhead |
 | Deployment target | On-premises / private data center | LDAP and config-mgmt DB integration |
 | **Background Processing & Status** | | |
-| Background task execution | Procrastinate (PostgreSQL) | Long-running/concurrent operations with status, retries, chaining, and isolation (DVE.27, DVE.77, CSM.30, DVE.78) |
+| Background task execution | Procrastinate (PostgreSQL) | Long-running/concurrent operations with status, retries, chaining, and isolation (DVE.27, DVE.77, SMM.30, DVE.78) |
 | Status delivery | SSE (UI) + REST polling (CLI) | Operation status delivery (DVE.15–16, 27) |
 | **External Integrations** | | |
 | External-integration architecture | Ports and Adapters (Hexagonal) | Real adapters in production; fake adapters in development, DI-selected |
-| Source code repository adapter | Git over HTTPS (token auth) | Source code, scripts, and config files (MSG.3, 17–20) |
-| Package repository adapter | REST API (Artifactory/Nexus-style) | System Software Units Package Repository (MSG.4) |
-| Configuration management DB adapter | Generic SQL adapter (SQLAlchemy) | External configuration management database (MSG.2, 8, 10–13) |
+| Source code repository adapter | Git over HTTPS (token auth) | Source code, scripts, and config files (MDG.3, 17–20) |
+| Package repository adapter | REST API (Artifactory/Nexus-style) | System Software Units Package Repository (MDG.4) |
+| Configuration management DB adapter | Generic SQL adapter (SQLAlchemy) | External configuration management database (MDG.2, 8, 10–13) |
 | **Reporting & Data Handling** | | |
 | Report generation | PDF (WeasyPrint/ReportLab) + JSON | Summary/detailed reports; JSON shared with evaluator (DVE.26, DVE.78) |
-| Raw upload retention | Discard after parsing | Minimum storage footprint (TDM.2) |
+| Raw upload retention | Discard after parsing | Minimum storage footprint (FDM.2) |
 | **Testing** | | |
 | Testing | pytest (backend) + Playwright (frontend/E2E) | Unit and full E2E coverage |
 

@@ -1,6 +1,6 @@
 # Yazılım Geliştirme Planı (SDP): System as a Graph (SaaG)
 
-**Tanım:** Bu Yazılım Geliştirme Planı (SDP), System as a Graph (SaaG) Yazılım Kırılım Öğesinin (CSCI) yazılım geliştirme çalışmasının nasıl yürütüleceğini planlar. SRS'te tanımlanan işi, işlevsel teslimatlardan oluşan bir İş Kırılım Yapısına (WBS) ayrıştırır ve bu teslimatları bir dizi artımlı yapıya (increment) sıralar. Her WBS teslimatı ve her artım, temel sistem kabiliyetlerini §7 üzerinden dağıtan SRS'in CSU kapsamlı isterlerine izlenebilir durumdadır.
+**Tanım:** Bu Yazılım Geliştirme Planı (SDP), System as a Graph (SaaG) Yazılım Kırılım Öğesinin (CSCI) yazılım geliştirme çalışmasının nasıl yürütüleceğini planlar. SRS'te tanımlanan işi, işlevsel teslimatlardan oluşan bir İş Kırılım Yapısına (WBS) ayrıştırır ve bu teslimatları bir dizi artımlı yapıya (increment) sıralar. Her WBS teslimatı ve her artım, SRS'in CSU kapsamlı isterlerine izlenebilir durumdadır.
 
 **Amaç:** İş Kırılım Yapısı (§1), Yazılım Komponenti (CSC) ve Yazılım Birimi (CSU) bazında organize edilmiş şekilde geliştirme çalışmasının tam kapsamını ortaya koyar. Artımlı Geliştirme Planı (§2), bu çalışmayı — bağımlılık açısından güvenli bir sırayla, tek seferde bir artım olacak şekilde — tamamen ardışık bir yapı dizisine sıralar. Her artım; bir veya daha fazla CSC'nin/CSU'nun yanı sıra, ilgili olduğu ölçüde TDM'nin (Operasyonlar ve Görselleştirme, SaaG'ın ön yüz kullanıcı arayüzü bileşeni) karşılık gelen dilimini de kapsayacak şekilde belirlenmiştir; böylece her artım uçtan uca, gösterilebilir bir yetenek üretir.
 
@@ -12,31 +12,31 @@
 
 | No | Bileşen | Kısaltma | CSU Sayısı | Teslimat Sayısı |
 |---|---|---|---|---|
-| 1 | Model Kurulum Üreteci | SaaG-MKU | 1 | 1 |
+| 1 | Model Veri Üreteci | SaaG-MVU | 1 | 1 |
 | 2 | Senaryo Üreteci | SaaG-SUR | 1 | 1 |
-| 3 | Telemetri Veri Yöneticisi | SaaG-TVY | 1 | 1 |
+| 3 | Saha Veri Yöneticisi | SaaG-SVY | 1 | 1 |
 | 4 | Analitik Veri Yöneticisi | SaaG-AVY | 1 | 2 |
-| 5 | Çekirdek Sistem Modeli | SaaG-CSM | 1 | 2 |
+| 5 | Sistem Model Yöneticisi | SaaG-SMY | 1 | 2 |
 | 6 | Tasarım Doğrulama Motoru | SaaG-TDM | 1 | 10 |
 | **TOPLAM** | | | **6** | **17** |
 
 Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 - **SaaG**
-  - **SaaG-MKU**
-    - **MKU: Model Kurulum Üreteci** (MKU.1–23)
+  - **SaaG-MVU**
+    - **MVU: Model Veri Üreteci** (MVU.1–23)
   - **SaaG-SUR**
     - **SUR: Senaryo Üreteci** (SUR.1–7)
-  - **SaaG-TVY**
-    - **TVY: Telemetri Veri Yöneticisi** (TVY.1–5)
+  - **SaaG-SVY**
+    - **SVY: Saha Veri Yöneticisi** (SVY.1–5)
   - **SaaG-AVY**
     - **AVY: Analitik Veri Yöneticisi**
       - Sentetik Veri Hazırlama (AVY.1, 3, 4, 6)
       - Saha Verisi Hazırlama (AVY.2, 5)
-  - **SaaG-CSM**
-    - **CSM: Çekirdek Sistem Modeli**
-      - Yapısal Model İnşası (CSM.1–31)
-      - Analitik Veri Bağlama (CSM.32–37)
+  - **SaaG-SMY**
+    - **SMY: Sistem Model Yöneticisi**
+      - Yapısal Model İnşası (SMY.1–31)
+      - Analitik Veri Bağlama (SMY.32–37)
   - **SaaG-TDM**
     - **TDM: Tasarım Doğrulama Motoru**
       - Operasyonlar ve Görselleştirme (TDM.1–27)
@@ -64,11 +64,11 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | # | Artım | Teslim Edilen CSU'lar | Tamamlanan CSC'ler |
 |---|---|---|---|
 | 0 | Proje İskeleti | — | — |
-| 1 | Model Kurulum Verisi Üretimi | MKU | SaaG-MKU |
-| 2 | Yapısal Model İnşası | CSM (yapısal dilim) | — |
+| 1 | Model Verisi Üretimi | MVU | SaaG-MVU |
+| 2 | Yapısal Model İnşası | SMY (yapısal dilim) | — |
 | 3 | Yapısal Tasarım Doğrulama | TDM (doğrulama dilimi) | — |
 | 4 | Sentetik Veri Hattı | SUR, AVY (sentetik dilim) | SaaG-SUR |
-| 5 | Saha Verisi Hattı | CSM (bağlama dilimi), TVY, AVY (saha dilimi) | SaaG-TVY, SaaG-AVY, SaaG-CSM |
+| 5 | Saha Verisi Hattı | SMY (bağlama dilimi), SVY, AVY (saha dilimi) | SaaG-SVY, SaaG-AVY, SaaG-SMY |
 | 6 | Davranışsal Tasarım Analizi | TDM (analiz dilimi) | — |
 | 7 | Kurulum Uygunluk Değerlendirmesi | TDM (değerlendirme ve operasyonlar tamamlandı) | SaaG-TDM |
 
@@ -95,51 +95,51 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 - [x] İskelet temiz şekilde derleniyor, lint kontrolünden geçiyor ve dağıtılıyor
 - [x] Demo uçtan uca çalıştırıldı
 
-### Artım 1: Model Kurulum Verisi Üretimi
+### Artım 1: Model Verisi Üretimi
 
 | CSU | Teslimat |
 |---|---|
-| MKU *(tamamlandı)* | Model Kurulum Verisi Üretimi (MKU.1–23) |
+| MVU *(tamamlandı)* | Model Verisi Üretimi (MVU.1–23) |
 | TDM *(devam ediyor)* | Oturum Açma ve Model Verisi Kurulumu (TDM.1–8) |
 
-**Tamamlar:** SaaG-MKU
+**Tamamlar:** SaaG-MVU
 
-**Tasarım:** MKU (SRS MKU.1–23) ve oturum açma/MKU kontrol ekranı (TDM.1–8) tam olarak tasarlanmıştır. Hâlâ açık olan konular: her dış bağlantı ve LDAP için kesin protokol, topoloji alım yöntemi ve zorunlu dosya listesi (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
+**Tasarım:** MVU (SRS MVU.1–23) ve oturum açma/MVU kontrol ekranı (TDM.1–8) tam olarak tasarlanmıştır. Hâlâ açık olan konular: her dış bağlantı ve LDAP için kesin protokol, topoloji alım yöntemi ve zorunlu dosya listesi (CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24).
 
-**Geliştirme:** MKU arka ucu inşa edilir — dört dış kaynaktan veriye bağlanma, doğrulama ve derleme — ayrıca oturum açma/oturum yönetimi eklenir. Ön yüzde: oturum açma, proje/platform/sürüm seçimi, kaynak yapılandırması ve bir MKU üretim/durum ekranı.
+**Geliştirme:** MVU arka ucu inşa edilir — dört dış kaynaktan veriye bağlanma, doğrulama ve derleme — ayrıca oturum açma/oturum yönetimi eklenir. Ön yüzde: oturum açma, proje/platform/sürüm seçimi, kaynak yapılandırması ve bir MVU üretim/durum ekranı.
 
-**Test:** MKU'nin beş işi (kaynak bağlantıları, konfigürasyon alımı, sürüm takibi, dosya aktarımı, doğrulama/derleme) ile oturum açma/üretim ekranları doğrulanır; ardından uçtan uca bir MKU dosyası üretimi çalıştırılır.
+**Test:** MVU'nin beş işi (kaynak bağlantıları, konfigürasyon alımı, sürüm takibi, dosya aktarımı, doğrulama/derleme) ile oturum açma/üretim ekranları doğrulanır; ardından uçtan uca bir MVU dosyası üretimi çalıştırılır.
 
-**Paketleme:** MKU ve web servisleri; bir metadata veritabanı, dört kaynak ile LDAP için bir ayar şablonu ve demo amaçlı yerine geçen (stand-in) dış sistemlerle birlikte ayağa kaldırılır.
+**Paketleme:** MVU ve web servisleri; bir metadata veritabanı, dört kaynak ile LDAP için bir ayar şablonu ve demo amaçlı yerine geçen (stand-in) dış sistemlerle birlikte ayağa kaldırılır.
 
-**Demo:** Bir operatör LDAP üzerinden kimlik doğrular, bir proje/platform/sistem sürümü seçer, dört dış veri kaynağının tamamını yapılandırır ve bunlara bağlanır, Model Kurulum Verisi üretimini uçtan uca tetikler ve erişilebilirlik durumunu ve olası hataları gözlemler; sonuçta geçerli ve doğrulanmış bir Model Kurulum Verisi dosyası üretilir.
+**Demo:** Bir operatör LDAP üzerinden kimlik doğrular, bir proje/platform/sistem sürümü seçer, dört dış veri kaynağının tamamını yapılandırır ve bunlara bağlanır, Model Verisi üretimini uçtan uca tetikler ve erişilebilirlik durumunu ve olası hataları gözlemler; sonuçta geçerli ve doğrulanmış bir Model Verisi dosyası üretilir.
 
 **Tamamlanma Tanımı:**
-- [ ] MKU (MKU.1–23) ve oturum açma/MKU kontrolü (TDM.1–8) inşa edildi ve çalışıyor
+- [ ] MVU (MVU.1–23) ve oturum açma/MVU kontrolü (TDM.1–8) inşa edildi ve çalışıyor
 - [ ] CDR-09, CDR-10, CDR-17, CDR-18, CDR-19, CDR-20, CDR-22, CDR-24 çözümlendi veya ertelendi
-- [ ] MKU ve oturum açma/iş akışı testleri geçiyor
-- [ ] MKU/web servisleri birlikte dağıtılıyor
+- [ ] MVU ve oturum açma/iş akışı testleri geçiyor
+- [ ] MVU/web servisleri birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
 
 ### Artım 2: Yapısal Model İnşası
 
 | CSU | Teslimat |
 |---|---|
-| CSM *(devam ediyor)* | Yapısal Model İnşası (CSM.1–31) |
+| SMY *(devam ediyor)* | Yapısal Model İnşası (SMY.1–31) |
 | TDM *(devam ediyor)* | Modelin Oluşturulması ve Görüntülenmesi (TDM.9, 19–20) |
 
-**Tasarım:** Çekirdek Sistem Modeli (SRS CSM.1–31) ve model inşa/gezinme ekranı (TDM.9, 19–20) tam olarak tasarlanmıştır. En büyük açık: modelin depolama teknolojisi ve şeması henüz kararlaştırılmamıştır (CDR-29–30); eşzamanlılık sınırları ve TDM okuma protokolü de açıktır (CDR-16, CDR-28).
+**Tasarım:** Sistem Model Yöneticisi (SRS SMY.1–31) ve model inşa/gezinme ekranı (TDM.9, 19–20) tam olarak tasarlanmıştır. En büyük açık: modelin depolama teknolojisi ve şeması henüz kararlaştırılmamıştır (CDR-29–30); eşzamanlılık sınırları ve TDM okuma protokolü de açıktır (CDR-16, CDR-28).
 
-**Geliştirme:** Model Yöneticisi arka ucu bir graf veritabanı üzerinde inşa edilir — Model Kurulum Verisini bir grafa dönüştürme, eşzamanlı erişim altında güvende tutma, izole değerlendirme kopyalarını destekleme. Ön yüzde: model gezinme (arama/süzme/yakınlaştırma/kaydırma/öznitelikler).
+**Geliştirme:** Model Yöneticisi arka ucu bir graf veritabanı üzerinde inşa edilir — Model Verisini bir grafa dönüştürme, eşzamanlı erişim altında güvende tutma, izole değerlendirme kopyalarını destekleme. Ön yüzde: model gezinme (arama/süzme/yakınlaştırma/kaydırma/öznitelikler).
 
 **Test:** Modelin doğru şekilde inşa edildiği, tüm düğüm/ilişki türlerini temsil ettiği, eşzamanlı erişim altında tutarlı kaldığı ve gezinmenin çalıştığı doğrulanır — Artım 1'in iş akışı testini tamamlayacak şekilde uçtan uca.
 
 **Paketleme:** Model Yöneticisi servisi; bir graf veritabanı ve eşzamanlılık için arka plan iş (background-job) yönetimiyle birlikte ayağa kaldırılır.
 
-**Demo:** Bir operatör, Artım 1'deki Model Kurulum Verisi dosyasından Çekirdek Sistem Modelini inşa eder; ortaya çıkan düğüm-ilişki yapısında gezinir ve görsel olarak dolaşır (arama/süzme, yakınlaştırma/kaydırma, öznitelik gösterimi); bu sırada model, eşzamanlı çoklu oturum erişimine açık şekilde sunulur.
+**Demo:** Bir operatör, Artım 1'deki Model Verisi dosyasından Sistem Model Yöneticisini inşa eder; ortaya çıkan düğüm-ilişki yapısında gezinir ve görsel olarak dolaşır (arama/süzme, yakınlaştırma/kaydırma, öznitelik gösterimi); bu sırada model, eşzamanlı çoklu oturum erişimine açık şekilde sunulur.
 
 **Tamamlanma Tanımı:**
-- [ ] Çekirdek Sistem Modeli (CSM.1–31) ve gezinme ekranı (TDM.9, 19–20) inşa edildi ve çalışıyor
+- [ ] Sistem Model Yöneticisi (SMY.1–31) ve gezinme ekranı (TDM.9, 19–20) inşa edildi ve çalışıyor
 - [ ] CDR-16, CDR-28, CDR-29–30 çözümlendi veya ertelendi
 - [ ] Model Yöneticisi ve gezinme testleri, Artım 1'inkini tamamlayacak şekilde geçiyor
 - [ ] Model Yöneticisi servisi ve graf veritabanı birlikte dağıtılıyor
@@ -160,7 +160,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Paketleme:** Tasarım Doğrulayıcı servisi ayağa kaldırılır — yeni bir depolama yoktur; modeli okur ve bulguları Artım 1'in veritabanına yazar.
 
-**Demo:** Bir operatör, Çekirdek Sistem Modelinden türetilen bir çalışma modeli sandbox'ını düzenler (düğüm/ilişki ekleme-çıkarma, öznitelik güncelleme) ve buna karşı tasarım doğrulama çalıştırır — QoS uygunluğu, yayımlayıcı/tüketici eşleşmesi, kaynak/yük dengeleme kontrolleri, döngüsel bağımlılık ve mimari kural ihlali tespiti — bulgular sunulur, sınıflandırılır ve süzülebilir hâlde gösterilir.
+**Demo:** Bir operatör, Sistem Model Yöneticisinden türetilen bir çalışma modeli sandbox'ını düzenler (düğüm/ilişki ekleme-çıkarma, öznitelik güncelleme) ve buna karşı tasarım doğrulama çalıştırır — QoS uygunluğu, yayımlayıcı/tüketici eşleşmesi, kaynak/yük dengeleme kontrolleri, döngüsel bağımlılık ve mimari kural ihlali tespiti — bulgular sunulur, sınıflandırılır ve süzülebilir hâlde gösterilir.
 
 **Tamamlanma Tanımı:**
 - [ ] Yapısal Tasarım Doğrulama (TDM.28–49) ve düzenleyici/bulgu ekranı (TDM.17–18, 21–24) inşa edildi ve çalışıyor
@@ -200,25 +200,25 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 | CSU | Teslimat |
 |---|---|
-| CSM *(tamamlandı)* | Analitik Veri Bağlama (CSM.32–37) |
-| TVY *(tamamlandı)* | Telemetri Veri Yöneticisi (TVY.1–5) |
+| SMY *(tamamlandı)* | Analitik Veri Bağlama (SMY.32–37) |
+| SVY *(tamamlandı)* | Saha Veri Yöneticisi (SVY.1–5) |
 | AVY *(tamamlandı)* | Saha Verisi Hazırlama (AVY.2, 5) |
 | TDM *(devam ediyor)* | Saha Verisinin Seçilmesi ve İzlenmesi (TDM.10, 12, 16) |
 
-**Tamamlar:** SaaG-TVY, SaaG-AVY, SaaG-CSM
+**Tamamlar:** SaaG-SVY, SaaG-AVY, SaaG-SMY
 
-**Tasarım:** Analitik Veri Bağlama (SRS CSM.32–37) ve Telemetri Veri Yöneticisi (TVY.1–5), saha kaydı kaynak seçimi ve bağlama durumu ekranlarıyla (TDM.10, 12, 16) birlikte tam olarak tasarlanmıştır. Hâlâ açık olan konular: saha kaydı depolama kapasitesi, TVY dış arayüz protokolü, TVY→AVY ve AVY→CSM devir teslimleri ve bir önceki artımdan devreden Analitik Değerlendirme Verisi format kararı (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
+**Tasarım:** Analitik Veri Bağlama (SRS SMY.32–37) ve Saha Veri Yöneticisi (SVY.1–5), saha kaydı kaynak seçimi ve bağlama durumu ekranlarıyla (TDM.10, 12, 16) birlikte tam olarak tasarlanmıştır. Hâlâ açık olan konular: saha kaydı depolama kapasitesi, SVY dış arayüz protokolü, SVY→AVY ve AVY→SMY devir teslimleri ve bir önceki artımdan devreden Analitik Değerlendirme Verisi format kararı (CDR-15, CDR-21, CDR-26, CDR-27, CDR-12).
 
-**Geliştirme:** Telemetri Veri Yöneticisi (yükleme/kataloglama/arama), Analitik Veri Yöneticisinin saha-alım yarısı ve Veri Bağlayıcısı (davranışsal veriyi modeli değiştirmeden bağlama) inşa edilir. Ön yüzde: saha kaydı kaynak seçimi, yükleme/kataloglama ve bağlama durumu ekranları.
+**Geliştirme:** Saha Veri Yöneticisi (yükleme/kataloglama/arama), Analitik Veri Yöneticisinin saha-alım yarısı ve Veri Bağlayıcısı (davranışsal veriyi modeli değiştirmeden bağlama) inşa edilir. Ön yüzde: saha kaydı kaynak seçimi, yükleme/kataloglama ve bağlama durumu ekranları.
 
 **Test:** Kayıtların doğru şekilde yüklendiği/katalogladığı, saha alımı/derlemesinin (sentetik veriyle asla karışmadan) tamamlandığı ve bağlamanın veriyi modeli değiştirmeden modelle eşleştirdiği doğrulanır — Artım 2'deki modelin dokunulmamış kaldığının kontrolü dâhil, uçtan uca.
 
-**Paketleme:** Telemetri Veri Yöneticisi ve Veri Bağlayıcısı servisleri, telemetri için bir zaman serisi veritabanıyla birlikte ayağa kaldırılır; ham yüklemeler ayrıştırıldıktan sonra atılır.
+**Paketleme:** Saha Veri Yöneticisi ve Veri Bağlayıcısı servisleri, telemetri için bir zaman serisi veritabanıyla birlikte ayağa kaldırılır; ham yüklemeler ayrıştırıldıktan sonra atılır.
 
-**Demo:** Artım 4'teki sentetik kaynaklı Analitik Değerlendirme Verisi, düğümlerini/ilişkilerini değiştirmeden Çekirdek Sistem Modeline bağlanır; bağlama durumu ve veri kökeni operatöre görünür şekilde sunulur. Operatör ardından Analitik Değerlendirme Verisi kaynağı olarak Sistem Saha Kayıtlarını seçer, Sistem Saha Kayıtlarını yükler (proje, platform, sürüm, kaynak veya yükleme zamanına göre listeleyerek/arayarak/seçerek) ve ortaya çıkan saha kaynaklı Analitik Değerlendirme Verisi aynı kaynaktan bağımsız bağlayıcı üzerinden modele bağlanır — böylece SaaG-TVY, SaaG-AVY (hem sentetik hem saha yolları artık uçtan uca çalışır durumdadır) ve SaaG-CSM tamamlanmış olur.
+**Demo:** Artım 4'teki sentetik kaynaklı Analitik Değerlendirme Verisi, düğümlerini/ilişkilerini değiştirmeden Sistem Model Yöneticisine bağlanır; bağlama durumu ve veri kökeni operatöre görünür şekilde sunulur. Operatör ardından Analitik Değerlendirme Verisi kaynağı olarak Sistem Saha Kayıtlarını seçer, Sistem Saha Kayıtlarını yükler (proje, platform, sürüm, kaynak veya yükleme zamanına göre listeleyerek/arayarak/seçerek) ve ortaya çıkan saha kaynaklı Analitik Değerlendirme Verisi aynı kaynaktan bağımsız bağlayıcı üzerinden modele bağlanır — böylece SaaG-SVY, SaaG-AVY (hem sentetik hem saha yolları artık uçtan uca çalışır durumdadır) ve SaaG-SMY tamamlanmış olur.
 
 **Tamamlanma Tanımı:**
-- [ ] Analitik Veri Bağlama (CSM.32–37), TVY (TVY.1–5) ve saha seçimi/bağlama durumu ekranları (TDM.10, 12, 16) inşa edildi ve çalışıyor
+- [ ] Analitik Veri Bağlama (SMY.32–37), SVY (SVY.1–5) ve saha seçimi/bağlama durumu ekranları (TDM.10, 12, 16) inşa edildi ve çalışıyor
 - [ ] CDR-15, CDR-21, CDR-26, CDR-27, CDR-12 çözümlendi veya ertelendi
 - [ ] Saha kaydı, bağlayıcı ve saha veri yolu testleri, Artım 4'ünkini tamamlayacak şekilde geçiyor
 - [ ] Yeni servisler ve telemetri veritabanı birlikte dağıtılıyor
@@ -285,7 +285,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | Artım | Başlangıç | Bitiş | Süre |
 |---|---|---|---|
 | 0 — Proje İskeleti | 2026-07-20 | 2026-07-31 | 2 hf |
-| 1 — Model Kurulum Verisi Üretimi | 2026-08-03 | 2026-08-28 | 4 hf |
+| 1 — Model Verisi Üretimi | 2026-08-03 | 2026-08-28 | 4 hf |
 | 2 — Model Yöneticisi | 2026-08-31 | 2026-10-02 | 5 hf |
 | 3 — Tasarım Doğrulayıcı | 2026-10-05 | 2026-11-06 | 5 hf |
 | 4 — Sentetik Veri Hattı | 2026-11-09 | 2026-12-04 | 4 hf |
@@ -307,15 +307,15 @@ gantt
     Proje İskeleti (2 hf)      :scaffold1, 2026-07-20, 2026-07-31
     Artım 0 Demo (0g)               :milestone, demo0, after scaffold1, 0d
 
-    section SaaG-MKU — Model Kurulum Verisi Üretimi
-    Model Kurulum Verisi Üretimi MKU (4 hf)               :msd, 2026-08-03, 2026-08-28
-    Artım 1 Demo (0g)                                    :milestone, demo1, after msd, 0d
+    section SaaG-MVU — Model Verisi Üretimi
+    Model Verisi Üretimi MVU (4 hf)               :mvu, 2026-08-03, 2026-08-28
+    Artım 1 Demo (0g)                                    :milestone, demo1, after mvu, 0d
 
     section SaaG-SUR — Senaryo Üreteci
     Senaryo Üreteci SUR (10g)                       :scg, 2026-11-09, 2026-11-20
 
-    section SaaG-TVY — Telemetri Veri Yöneticisi
-    Telemetri Veri Yöneticisi TVY (8g)                    :frd, 2026-12-18, 2026-12-29
+    section SaaG-SVY — Saha Veri Yöneticisi
+    Saha Veri Yöneticisi SVY (8g)                    :svy, 2026-12-18, 2026-12-29
 
     section SaaG-AVY — Analitik Veri Yöneticisi
     Sentetik Veri Hazırlama AVY (10g)          :adpa, 2026-11-23, 2026-12-04
@@ -323,10 +323,10 @@ gantt
     Saha Verisi Hazırlama AVY (3g)                :adpb, 2026-12-30, 2027-01-01
     Artım 5 Demo (0g)                                    :milestone, demo5, after adpb, 0d
 
-    section SaaG-CSM — Çekirdek Sistem Modeli
-    Yapısal Model İnşası CSM (5 hf)                         :csm01, 2026-08-31, 2026-10-02
-    Artım 2 Demo (0g)                                    :milestone, demo2, after csm01, 0d
-    Analitik Veri Bağlama CSM (9g)                          :csm02, 2026-12-07, 2026-12-17
+    section SaaG-SMY — Sistem Model Yöneticisi
+    Yapısal Model İnşası SMY (5 hf)                         :smy01, 2026-08-31, 2026-10-02
+    Artım 2 Demo (0g)                                    :milestone, demo2, after smy01, 0d
+    Analitik Veri Bağlama SMY (9g)                          :smy02, 2026-12-07, 2026-12-17
 
     section SaaG-TDM — Doğrulama, Analiz, Değerlendirme
     Oturum Açma ve Model Verisi Kurulumu TDM (4 hf)        :vae01a, 2026-08-03, 2026-08-28
@@ -369,7 +369,7 @@ system-as-a-graph/
 ├── web/                               # TDM web uygulaması
 ├── cli/                               # TDM komut satırı uygulaması
 │
-├── msd/                               # CSC-1: Model Kurulum Verisi Üretimi
+├── msd/                               # CSC-1: Model Verisi Üretimi
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -387,7 +387,7 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── frd/                               # CSC-3: Telemetri Veri Yöneticisi
+├── frd/                               # CSC-3: Saha Veri Yöneticisi
 │   ├── src/
 │   │   ├── api/
 │   │   ├── use_cases/
@@ -405,8 +405,8 @@ system-as-a-graph/
 │   │   └── adapters/
 │   └── tests/
 │
-├── csm/                               # CSC-5: Çekirdek Sistem Modeli
-│   ├── model_manager/                 # CSM: Yapısal Model İnşası
+├── csm/                               # CSC-5: Sistem Model Yöneticisi
+│   ├── model_manager/                 # SMY: Yapısal Model İnşası
 │   │   ├── src/
 │   │   │   ├── api/
 │   │   │   ├── use_cases/
@@ -414,7 +414,7 @@ system-as-a-graph/
 │   │   │   ├── ports/
 │   │   │   └── adapters/
 │   │   └── tests/
-│   └── data_binder/                   # CSM: Analitik Veri Bağlama
+│   └── data_binder/                   # SMY: Analitik Veri Bağlama
 │       ├── src/
 │       │   ├── api/
 │       │   ├── use_cases/
@@ -466,11 +466,11 @@ system-as-a-graph/
 |---|---|
 | `web/` | Operatörler için TDM web uygulaması |
 | `cli/` | Otomasyon istemcileri için TDM komut satırı uygulaması |
-| `msd/` | SaaG-MKU CSC'si; MKU'yu içerir |
+| `msd/` | SaaG-MVU CSC'si; MVU'yu içerir |
 | `scg/` | SaaG-SUR CSC'si; SUR'u içerir |
-| `frd/` | SaaG-TVY CSC'si; TVY'yi içerir |
+| `frd/` | SaaG-SVY CSC'si; SVY'yi içerir |
 | `adp/` | SaaG-AVY CSC'si; AVY'yi içerir |
-| `csm/` | SaaG-CSM CSC'si; CSM'yi içerir |
+| `csm/` | SaaG-SMY CSC'si; SMY'yi içerir |
 | `vae/` | SaaG-TDM arka yüz CSC'si; TDM'yi içerir |
 | `shared/contracts/` | CSC'ler arası istek, yanıt, olay ve dosya şemaları |
 | `shared/types/` | CSC'ler arası değer nesneleri ve ilkel paylaşılan türler |
@@ -501,13 +501,13 @@ Aşağıdaki teknoloji seçimleri, WBS teslimatlarını (§1) gerçekleştirir v
 | Alan | Teknoloji | Kullanım |
 |---|---|---|
 | **Arka Uç ve API** | | |
-| Arka uç dili/çalışma zamanı | Python (FastAPI) | Arka uç servisleri (MKU/SUR/TVY/AVY/CSM/TDM) |
+| Arka uç dili/çalışma zamanı | Python (FastAPI) | Arka uç servisleri (MVU/SUR/SVY/AVY/SMY/TDM) |
 | API stili | REST (JSON over HTTP) | İşlem Paneli ve CLI/Jenkins entegrasyonu (TDM.27) |
 | CLI çerçevesi | Python (Click/Typer) | Otomasyon istemcisi arayüzü (TDM.27) |
 | **Veri Depolama** | | |
-| Graf depolama | FalkorDB | İzole model setleriyle Çekirdek Sistem Modeli (CSM) |
-| İlişkisel depolama | PostgreSQL | Yapılandırılmış metadata ve TDM işlem/bulgu kayıtları (MKU, TVY, TDM.23, TDM.25, TDM.26, TDM.28–78, TDM.78) |
-| Zaman serisi depolama | VictoriaMetrics | Saha kaydı telemetrisi (TVY.1, TDM.61–62, 64) |
+| Graf depolama | FalkorDB | İzole model setleriyle Sistem Model Yöneticisi (SMY) |
+| İlişkisel depolama | PostgreSQL | Yapılandırılmış metadata ve TDM işlem/bulgu kayıtları (MVU, SVY, TDM.23, TDM.25, TDM.26, TDM.28–78, TDM.78) |
+| Zaman serisi depolama | VictoriaMetrics | Saha kaydı telemetrisi (SVY.1, TDM.61–62, 64) |
 | **Ön Yüz ve Kullanıcı Arayüzü** | | |
 | Ön yüz çerçevesi | Next.js ^14.2 (React ^18.3) | İşlem Paneli (TDM) |
 | Graf görselleştirme | React Flow ^12.11 | Model gezinme, arama/süzme ve yıkıcı olmayan yapısal düzenleme (TDM.17, TDM.19–20) |
@@ -522,15 +522,15 @@ Aşağıdaki teknoloji seçimleri, WBS teslimatlarını (§1) gerçekleştirir v
 | Konteynerleştirme | Docker Compose | Orkestrasyon yükü olmadan tek ekip dağıtımı |
 | Dağıtım hedefi | Kurum içi / özel veri merkezi | LDAP ve konfigürasyon yönetimi veritabanı entegrasyonu |
 | **Arka Plan İşleme ve Durum** | | |
-| Arka plan görev yürütme | Procrastinate (PostgreSQL) | Durum, yeniden deneme, zincirleme ve izolasyona sahip uzun süreli/eşzamanlı işlemler (TDM.27, TDM.77, CSM.30, TDM.78) |
+| Arka plan görev yürütme | Procrastinate (PostgreSQL) | Durum, yeniden deneme, zincirleme ve izolasyona sahip uzun süreli/eşzamanlı işlemler (TDM.27, TDM.77, SMY.30, TDM.78) |
 | Durum iletimi | SSE (arayüz) + REST polling (CLI) | İşlem durumu iletimi (TDM.15–16, 27) |
 | **Dış Entegrasyonlar** | | |
 | Dış entegrasyon mimarisi | Portlar ve Adaptörler (Altıgen Mimari) | Üretimde gerçek adaptörler; geliştirmede DI ile seçilen sahte (fake) adaptörler |
-| Kaynak kodu deposu adaptörü | Git over HTTPS (token auth) | Kaynak kodu, betikler ve konfigürasyon dosyaları (MKU.3, 17–20) |
-| Paket deposu adaptörü | REST API (Artifactory/Nexus-style) | Sistem Yazılım Birimleri Paket Deposu (MKU.4) |
-| Konfigürasyon yönetimi veritabanı adaptörü | Generic SQL adapter (SQLAlchemy) | Dış konfigürasyon yönetimi veritabanı (MKU.2, 8, 10–13) |
+| Kaynak kodu deposu adaptörü | Git over HTTPS (token auth) | Kaynak kodu, betikler ve konfigürasyon dosyaları (MVU.3, 17–20) |
+| Paket deposu adaptörü | REST API (Artifactory/Nexus-style) | Sistem Yazılım Birimleri Paket Deposu (MVU.4) |
+| Konfigürasyon yönetimi veritabanı adaptörü | Generic SQL adapter (SQLAlchemy) | Dış konfigürasyon yönetimi veritabanı (MVU.2, 8, 10–13) |
 | **Raporlama ve Veri İşleme** | | |
 | Rapor üretimi | PDF (WeasyPrint/ReportLab) + JSON | Özet/ayrıntılı raporlar; değerlendirici ile paylaşılan JSON (TDM.26, TDM.78) |
-| Ham yükleme saklama politikası | Ayrıştırma sonrası atma | Asgari depolama ayak izi (TVY.2) |
+| Ham yükleme saklama politikası | Ayrıştırma sonrası atma | Asgari depolama ayak izi (SVY.2) |
 | **Test** | | |
 | Test | pytest (backend) + Playwright (frontend/E2E) | Birim ve tam E2E kapsamı |
