@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Digital System Model</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='fonts/fonts.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='app.css') }}"
+    />
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+      sizes="any"
+    />
+  </head>
+  <body>
+    <div class="sessionbar" id="sessionbar" hidden>
+      <i class="lucide lucide-circle-user"></i>
+      <span class="sessionbar__user" id="sessionbar-user"></span>
+      <span class="sessionbar__divider"></span>
+      <button
+        type="button"
+        class="linkbtn"
+        data-signout
+        title="Sign out"
+        aria-label="Sign out"
+      >
+        <i class="lucide lucide-log-out"></i>
+      </button>
+    </div>
+
+    <div class="shell" id="shell">
+      <ol class="stepper" id="stepper" hidden>
+        <li class="stepper__item" id="stepper-sources" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="sources">
+            <span class="stepper__mark">
+              <i class="lucide lucide-check"></i>
+              <span class="stepper__num">1</span>
+            </span>
+            <span class="stepper__name">Sources</span>
+          </button>
+        </li>
+        <li class="stepper__item" id="stepper-select" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="select">
+            <span class="stepper__mark">
+              <i class="lucide lucide-check"></i>
+              <span class="stepper__num">2</span>
+            </span>
+            <span class="stepper__name">Context</span>
+          </button>
+        </li>
+        <li class="stepper__item" id="stepper-files" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="files">
+            <span class="stepper__mark">
+              <i class="lucide lucide-check"></i>
+              <span class="stepper__num">3</span>
+            </span>
+            <span class="stepper__name">Files</span>
+          </button>
+        </li>
+        <li class="stepper__item" id="stepper-inventory" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="inventory">
+            <span class="stepper__mark">
+              <i class="lucide lucide-check"></i>
+              <span class="stepper__num">4</span>
+            </span>
+            <span class="stepper__name">Inventory</span>
+          </button>
+        </li>
+        <li class="stepper__item" id="stepper-run" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="run">
+            <span class="stepper__mark">
+              <i class="lucide lucide-check"></i>
+              <span class="stepper__num">5</span>
+            </span>
+            <span class="stepper__name">Produce</span>
+          </button>
+        </li>
+        <li class="stepper__item" id="stepper-model" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="model">
+            <span class="stepper__mark">
+              <i class="lucide lucide-check"></i>
+              <span class="stepper__num">6</span>
+            </span>
+            <span class="stepper__name">Model</span>
+          </button>
+        </li>
+      </ol>
+
+      <main class="card" id="card" data-view="boot">
+        <div class="card__blur"></div>
+        <div class="card__corners"></div>
+
+        <div class="card__body">
+          <h1 class="title" id="title">Digital System Model</h1>
+          <img
+            class="logo"
+            id="logo"
+            src="{{ url_for('static', filename='img/logo.png') }}"
+            alt=""
+            width="227"
+            height="248"
+            hidden
+          />
+          <i class="lucide lucide-database brand-icon" id="brand-icon" hidden></i>
+          <p class="subtitle" id="subtitle">Secure Access</p>
+
+          <!-- Boot: shown until GET /api/session says where to resume. -->
+          <section class="view" id="view-boot">
+            <div class="empty empty--busy">
+              <span class="empty__seal"><span class="spinner"></span></span>
+              <p class="empty__title">Restoring session</p>
+            </div>
+          </section>
+
+          <!-- Sign-in (req 3). -->
+          <section class="view" id="view-login" hidden>
+            <form id="login-form" novalidate>
+              <label class="field">
+                <i class="lucide lucide-user"></i>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  placeholder="USERNAME"
+                  autocomplete="username"
+                  aria-describedby="login-message"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  required
+                />
+              </label>
+
+              <label class="field">
+                <i class="lucide lucide-key"></i>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="PASSWORD"
+                  autocomplete="current-password"
+                  aria-describedby="login-message"
+                  required
+                />
+                <button
+                  type="button"
+                  class="reveal"
+                  data-reveal="password"
+                  aria-label="Show password"
+                >
+                  <i class="lucide lucide-eye-off"></i>
+                </button>
+              </label>
+
+              <p class="message" id="login-message" role="alert"></p>
+
+              <div class="actions">
+                <button type="submit" class="submit" id="login-submit">
+                  <span class="submit__label">Authenticate</span
+                  ><i class="lucide lucide-arrow-right submit__arrow"></i>
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Data sources: one tile per source, each opening the connection modal (req 4, 7). -->
+          <section class="view" id="view-sources" hidden>
+            <div class="sources" id="sources-grid"></div>
+
+            <p class="message" id="sources-message" role="alert"></p>
+
+            <div class="actions">
+              <button type="button" class="submit" id="sources-submit" disabled>
+                <span class="submit__label">Continue</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+            </div>
+          </section>
+
+          <!-- Context: project, platform and system version (req 4). -->
+          <section class="view" id="view-select" hidden>
+            <form id="select-form" novalidate>
+              <div class="picker">
+                <label class="label" for="project">Project</label>
+                <div class="picker__control">
+                  <select id="project"></select>
+                  <i class="lucide lucide-chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="picker picker--disabled" id="picker-platform">
+                <label class="label" for="platform">Platform</label>
+                <div class="picker__control">
+                  <select id="platform" disabled></select>
+                  <i class="lucide lucide-chevron-down"></i>
+                </div>
+              </div>
+
+              <div class="picker picker--disabled" id="picker-version">
+                <label class="label" for="version">System version</label>
+                <div class="picker__control">
+                  <select id="version" disabled></select>
+                  <i class="lucide lucide-chevron-down"></i>
+                </div>
+              </div>
+
+              <p class="message" id="select-message" role="alert"></p>
+
+              <div class="actions">
+                <button type="submit" class="submit" id="select-submit" disabled>
+                  <span class="submit__label">Continue</span
+                  ><i class="lucide lucide-arrow-right submit__arrow"></i>
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Produced Model Setup Data files for the selected context (req 5). -->
+          <section class="view" id="view-files" hidden>
+            <div class="files" id="run-files-panel" hidden>
+              <span class="files__label"
+                ><i class="lucide lucide-hard-drive"></i>Previously produced</span
+              >
+              <ul class="files__list" id="run-files"></ul>
+              <div class="empty" id="run-files-empty" hidden>
+                <span class="empty__seal"><i class="lucide lucide-hard-drive"></i></span>
+                <p class="empty__title">Nothing produced yet</p>
+                <p class="empty__note">
+                  Start a production to create the first Model Setup Data file for this context.
+                </p>
+              </div>
+            </div>
+
+            <p class="message" id="files-message" role="alert"></p>
+
+            <div class="actions">
+              <button type="button" class="submit" id="files-primary">
+                <span class="submit__label">Produce new</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+            </div>
+          </section>
+
+          <!-- Software Unit Version Inventory (SRS DSM-MDG req 10) and the candidate version (req 11). -->
+          <section class="view" id="view-inventory" hidden>
+            <div class="context">
+              <div class="context__cell" title="Project">
+                <span class="context__key">Project</span>
+                <span class="context__value" id="context-project"></span>
+              </div>
+              <div class="context__cell" title="Platform">
+                <span class="context__key">Platform</span>
+                <span class="context__value" id="context-platform"></span>
+              </div>
+              <div class="context__cell" title="System version">
+                <span class="context__key">Version</span>
+                <span class="context__value" id="context-version"></span
+                ><span class="context__flag" id="context-current" hidden>
+                  &middot; Current</span
+                >
+              </div>
+            </div>
+
+            <div class="units">
+              <label class="units__search">
+                <i class="lucide lucide-search"></i>
+                <input
+                  id="unit-filter"
+                  type="text"
+                  placeholder="FILTER UNITS"
+                  aria-label="Filter software units"
+                  aria-controls="unit-list"
+                  autocomplete="off"
+                  autocapitalize="none"
+                  spellcheck="false"
+                />
+                <span class="units__count" id="unit-count"></span>
+              </label>
+
+              <div class="units__list" id="unit-list"></div>
+
+              <div class="units__candidate">
+                <span class="units__candidate-key">Evaluate</span>
+                <div class="picker picker--inline">
+                  <div class="picker__control">
+                    <select
+                      id="candidate-unit"
+                      aria-label="Software unit to evaluate"
+                      disabled
+                    ></select>
+                    <i class="lucide lucide-chevron-down"></i>
+                  </div>
+                </div>
+                <span class="units__candidate-key">at</span>
+                <div
+                  class="picker picker--inline picker--disabled"
+                  id="picker-candidate-version"
+                >
+                  <div class="picker__control">
+                    <select
+                      id="candidate-version"
+                      aria-label="Candidate version"
+                      disabled
+                    ></select>
+                    <i class="lucide lucide-chevron-down"></i>
+                    <span class="spinner picker__spinner" aria-label="Reading published versions"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="candidate__note" id="candidate-note" role="status"></p>
+            <p class="message" id="inventory-message" role="alert"></p>
+
+            <div class="actions">
+              <button type="button" class="submit" id="inventory-next">
+                <span class="submit__label">Produce data</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+            </div>
+          </section>
+
+          <!-- Production run: the task's state and the worker's log (req 6, 8). -->
+          <section class="view" id="view-run" hidden>
+            <div class="runpanel" id="run-status" data-tone="idle">
+              <div class="runpanel__bar">
+                <div
+                  class="runpanel__bar-progress"
+                  id="run-progress"
+                  hidden
+                  role="progressbar"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                ></div>
+                <i class="lucide lucide-rocket runpanel__rocket"></i>
+                <span class="runpanel__value" id="run-status-value"
+                  >Not started</span
+                >
+                <span class="runpanel__percent" id="run-percent" hidden></span>
+                <button
+                  type="button"
+                  class="submit submit--ghost submit--compact runpanel__stop"
+                  id="run-cancel"
+                  hidden
+                >
+                  <i class="lucide lucide-circle-x"></i
+                  ><span class="submit__label">Cancel</span>
+                </button>
+              </div>
+
+              <div
+                class="console console--empty"
+                id="console"
+                aria-live="polite"
+                tabindex="0"
+              >
+                <div class="empty">
+                  <span class="empty__seal"><i class="lucide lucide-rocket"></i></span>
+                  <p class="empty__title">Awaiting launch</p>
+                  <p class="empty__note">Start a production to watch it here.</p>
+                </div>
+              </div>
+            </div>
+
+            <p class="message" id="run-message" role="alert"></p>
+
+            <div class="actions">
+              <button type="button" class="submit" id="run-start">
+                <span class="submit__label">Start production</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+
+              <button
+                type="button"
+                class="submit submit--ok"
+                id="run-model"
+                hidden
+              >
+                <span class="submit__label">View Model</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+            </div>
+          </section>
+
+          <!-- Core System Model: the produced file, one panel per part (req 8). -->
+          <section class="view" id="view-model" hidden>
+            <div class="context" id="model-context" hidden>
+              <div class="context__cell" title="Project">
+                <span class="context__key">Project</span>
+                <span class="context__value" id="model-project"></span>
+              </div>
+              <div class="context__cell" title="Platform">
+                <span class="context__key">Platform</span>
+                <span class="context__value" id="model-platform"></span>
+              </div>
+              <div class="context__cell" title="System version">
+                <span class="context__key">Version</span>
+                <span class="context__value" id="model-version"></span
+                ><span class="context__flag" id="model-current" hidden>
+                  &middot; Current</span
+                >
+              </div>
+              <div class="context__cell" title="Generated">
+                <span class="context__key">Generated</span>
+                <span class="context__value" id="model-generated"></span>
+              </div>
+            </div>
+
+            <a
+              class="submit submit--compact model__download"
+              id="model-download"
+              href="#"
+              download
+            >
+              <i class="lucide lucide-download"></i
+              ><span class="submit__label">Download</span>
+            </a>
+
+            <div class="empty empty--busy" id="model-loading" hidden>
+              <span class="empty__seal"><span class="spinner"></span></span>
+              <p class="empty__title">Reading model</p>
+            </div>
+
+            <div class="model__grid" id="model-grid" hidden>
+              <div class="model__column">
+                <div class="mpanel">
+                  <div class="mpanel__blur"></div>
+                  <div class="mpanel__corners"></div>
+                  <div class="mpanel__bar">
+                    <i class="lucide lucide-box-select"></i>Model Scale
+                  </div>
+                  <div class="scale" id="model-scale"></div>
+                </div>
+
+                <div class="mpanel mpanel--grow">
+                  <div class="mpanel__blur"></div>
+                  <div class="mpanel__corners"></div>
+                  <div class="mpanel__bar">
+                    <i class="lucide lucide-package"></i>Software Unit Inventory
+                    <span class="mpanel__count" id="model-unit-count"></span>
+                  </div>
+                  <div class="mpanel__body" id="model-units"></div>
+                </div>
+              </div>
+
+              <div class="model__column">
+                <div class="mpanel mpanel--grow">
+                  <div class="mpanel__blur"></div>
+                  <div class="mpanel__corners"></div>
+                  <div class="mpanel__bar">
+                    <i class="lucide lucide-list-checks"></i>Acquisition Log
+                    <span class="mpanel__count" id="model-log-count"></span>
+                  </div>
+                  <div class="mpanel__body" id="model-log"></div>
+                </div>
+
+                <div class="mpanel mpanel--grow">
+                  <div class="mpanel__blur"></div>
+                  <div class="mpanel__corners"></div>
+                  <div class="mpanel__bar">
+                    <i class="lucide lucide-triangle-alert"></i>Errors
+                    <span class="mpanel__count" id="model-error-count"></span>
+                  </div>
+                  <div class="mpanel__body" id="model-errors"></div>
+                </div>
+              </div>
+            </div>
+
+            <p class="message" id="model-message" role="alert"></p>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Connection details for the clicked source tile; one modal serves every source. -->
+    <div class="modal" id="modal" hidden>
+      <div class="modal__scrim" data-modal-close></div>
+      <div
+        class="modal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
+        <button
+          type="button"
+          class="linkbtn modal__close"
+          data-modal-close
+          title="Close"
+          aria-label="Close"
+        >
+          <i class="lucide lucide-x"></i>
+        </button>
+
+        <h1 class="title" id="modal-title"></h1>
+        <i class="lucide brand-icon" id="modal-icon"></i>
+        <p class="subtitle">Connection Details</p>
+
+        <form id="modal-form" novalidate>
+          <label class="field">
+            <i class="lucide lucide-server"></i>
+            <input
+              id="source-address"
+              type="text"
+              placeholder="CONNECTION ADDRESS"
+              aria-label="Connection address"
+              aria-describedby="modal-message"
+              autocapitalize="none"
+              spellcheck="false"
+            />
+          </label>
+
+          <label class="field">
+            <i class="lucide lucide-user"></i>
+            <input
+              id="source-username"
+              type="text"
+              placeholder="USERNAME"
+              aria-label="Source username"
+              aria-describedby="modal-message"
+              autocomplete="off"
+              autocapitalize="none"
+              spellcheck="false"
+            />
+          </label>
+
+          <label class="field">
+            <i class="lucide lucide-key"></i>
+            <input
+              id="source-password"
+              type="password"
+              placeholder="PASSWORD"
+              aria-label="Source password"
+              aria-describedby="modal-message"
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              class="reveal"
+              data-reveal="source-password"
+              aria-label="Show password"
+            >
+              <i class="lucide lucide-eye-off"></i>
+            </button>
+          </label>
+
+          <p class="hint">Asked once &mdash; the connection stays open for this session.</p>
+
+          <p class="message" id="modal-message" role="alert"></p>
+
+          <div class="actions">
+            <button type="submit" class="submit" id="modal-submit">
+              <span class="submit__label">Connect</span
+              ><i class="lucide lucide-arrow-right submit__arrow"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

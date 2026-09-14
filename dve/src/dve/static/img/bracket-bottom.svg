@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" viewBox="0 0 70 70">
+  <!-- Bottom-left corner bracket with its glow baked in: a 38x38 L with a
+       3px stroke and a 14px outer radius, inset 16px so the halo fits the
+       box. Mirrored by CSS for the right corners. -->
+  <defs>
+    <filter id="wide" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="near" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+  <path d="M17.5 16 V40 A12.5 12.5 0 0 0 30 52.5 H54" fill="none" stroke="#22e6f5" stroke-width="4" opacity="0.55" filter="url(#wide)"/>
+  <path d="M17.5 16 V40 A12.5 12.5 0 0 0 30 52.5 H54" fill="none" stroke="#22e6f5" stroke-width="3" opacity="0.9" filter="url(#near)"/>
+  <path d="M17.5 16 V40 A12.5 12.5 0 0 0 30 52.5 H54" fill="none" stroke="#22e6f5" stroke-width="3"/>
+</svg>
