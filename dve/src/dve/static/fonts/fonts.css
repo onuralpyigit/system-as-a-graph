@@ -1,0 +1,148 @@
+/*!
+ * Barlow v1.408 (https://fonts.google.com/specimen/Barlow)
+ * Copyright (c) 2017 The Barlow Project Authors
+ * Licensed under the SIL Open Font License 1.1 (https://openfontlicense.org)
+ *
+ * The latin subset Google Fonts (v13) serves for weight 400, stored as it
+ * arrived. The app sets Barlow at 400 only, so adding a heavier Barlow
+ * rule to app.css means adding a face here too — without one the browser
+ * fakes the bold. Fetched with:
+ * curl -o barlow.woff2 https://fonts.gstatic.com/s/barlow/v13/7cHpv4kjgoGqM7E_DMs5.woff2
+ */
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("barlow.woff2") format("woff2");
+}
+
+/*!
+ * Orbitron v2.001 (https://fonts.google.com/specimen/Orbitron)
+ * Copyright (c) 2009 The Orbitron Project Authors
+ * Licensed under the SIL Open Font License 1.1 (https://openfontlicense.org)
+ *
+ * The latin subset Google Fonts (v35) serves for weight 600 alone, a static
+ * face. The app sets Orbitron at 600 only. A second weight has to come as
+ * another static file, not the variable font Google serves when several
+ * weights are requested at once: Firefox < 100 does not instance a variable
+ * font from a single-value font-weight descriptor. Fetched with:
+ * curl -o orbitron.woff2 https://fonts.gstatic.com/s/orbitron/v35/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1nyxSmBoWgz.woff2
+ */
+@font-face {
+  font-family: "Orbitron";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("orbitron.woff2") format("woff2");
+}
+
+/*!
+ * Lucide v1.43.0 icon font (https://lucide.dev/)
+ * Copyright (c) 2026 Lucide Icons and Contributors
+ * Licensed under ISC (https://github.com/lucide-icons/lucide/blob/main/LICENSE)
+ *
+ * Subset of the lucide-static font: only the glyphs this app renders are
+ * kept, so the face is a few kilobytes instead of ~280. Adding an icon to
+ * the markup means re-subsetting for its codepoint, read from the
+ * .icon-<name> rule in the package's font/lucide.css, and adding the rule
+ * below. Built with fontTools from
+ * https://cdn.jsdelivr.net/npm/lucide-static@1.43.0/font/lucide.woff2:
+ * pyftsubset lucide.woff2 --unicodes=U+e048,... --flavor=woff2 --output-file=lucide.woff2
+ */
+@font-face {
+  font-family: lucide;
+  font-display: block;
+  src: url("lucide.woff2") format("woff2");
+}
+
+.lucide::before,
+[class^="lucide-"]::before,
+[class*=" lucide-"]::before {
+  display: inline-block;
+  font-family: lucide !important;
+  font-style: normal;
+  font-weight: 400 !important;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: -0.125em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.lucide-arrow-left::before {
+  content: "\e048";
+}
+.lucide-arrow-right::before {
+  content: "\e049";
+}
+.lucide-box-select::before {
+  content: "\e1cb";
+}
+.lucide-check::before {
+  content: "\e06c";
+}
+.lucide-chevron-down::before {
+  content: "\e06d";
+}
+.lucide-circle-check::before {
+  content: "\e226";
+}
+.lucide-circle-user::before {
+  content: "\e461";
+}
+.lucide-circle-x::before {
+  content: "\e084";
+}
+.lucide-database::before {
+  content: "\e0ad";
+}
+.lucide-download::before {
+  content: "\e0b2";
+}
+.lucide-eye::before {
+  content: "\e0ba";
+}
+.lucide-eye-off::before {
+  content: "\e0bb";
+}
+.lucide-file-code::before {
+  content: "\e0c3";
+}
+.lucide-hard-drive::before {
+  content: "\e0ed";
+}
+.lucide-key::before {
+  content: "\e0fd";
+}
+.lucide-list-checks::before {
+  content: "\e1d0";
+}
+.lucide-log-out::before {
+  content: "\e10e";
+}
+.lucide-network::before {
+  content: "\e125";
+}
+.lucide-package::before {
+  content: "\e129";
+}
+.lucide-rocket::before {
+  content: "\e286";
+}
+.lucide-search::before {
+  content: "\e151";
+}
+.lucide-server::before {
+  content: "\e153";
+}
+.lucide-triangle-alert::before {
+  content: "\e193";
+}
+.lucide-user::before {
+  content: "\e19f";
+}
+.lucide-x::before {
+  content: "\e1b2";
+}

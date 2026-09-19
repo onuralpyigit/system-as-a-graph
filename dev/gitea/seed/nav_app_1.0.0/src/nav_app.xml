@@ -1,0 +1,4 @@
+<unit>
+  <topic name="nav_position" role="pub"/>
+  <topic name="sensor_data" role="sub"/>
+</unit>

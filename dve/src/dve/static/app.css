@@ -1,0 +1,1884 @@
+:root {
+  --cyan: #22e6f5;
+  --cyan-dim: rgba(34, 230, 245, 0.45);
+  --line: rgba(34, 230, 245, 0.18);
+  --ink: #dfeef2;
+  --muted: rgba(223, 238, 242, 0.55);
+  --danger: #ff6b7a;
+  --danger-dim: rgba(255, 107, 122, 0.45);
+  --ok: #35e07f;
+  --ok-dim: rgba(53, 224, 127, 0.45);
+  --warn: #ffc46b;
+  --warn-dim: rgba(255, 196, 107, 0.45);
+
+  /* Fills: the resting tint of a control, and the stronger one a hover takes. */
+  --tint-cyan: rgba(34, 230, 245, 0.08);
+  --tint-cyan-strong: rgba(34, 230, 245, 0.14);
+  --tint-ok: rgba(53, 224, 127, 0.08);
+  --tint-ok-strong: rgba(53, 224, 127, 0.14);
+  --tint-danger: rgba(255, 107, 122, 0.08);
+  --tint-danger-strong: rgba(255, 107, 122, 0.14);
+  --tint-ink: rgba(223, 238, 242, 0.06);
+
+  /* The glow a lit box carries: a 1px ring and a soft halo. */
+  --glow-cyan: 0 0 0 1px rgba(34, 230, 245, 0.35), 0 0 16px rgba(34, 230, 245, 0.28);
+  --glow-ok: 0 0 0 1px rgba(53, 224, 127, 0.35), 0 0 16px rgba(53, 224, 127, 0.28);
+  --glow-danger: 0 0 0 1px rgba(255, 107, 122, 0.35), 0 0 16px rgba(255, 107, 122, 0.28);
+
+  /* The one transition duration. */
+  --t: 0.2s;
+
+  /* Card header rhythm: title, mark, subtitle, content, command bar. */
+  --gap-mark: 16px;
+  --gap-lead: 22px;
+  --gap-body: 32px;
+  --gap-actions: 24px;
+  --gap-actions-tight: 8px;
+
+  /* Card widths and radii. */
+  --card-pad: 28px 26px;
+  --w-signin: min(292px, 100%);
+  --w-form: min(392px, 100%);
+  --w-list: min(480px, 100%);
+  --w-full: min(1180px, 100%);
+  --r-card: 14px;
+  --r-panel: 8px;
+  --r-control: 6px;
+  --r-pill: 999px;
+
+  --fs-display: 24px;
+  --fs-title: 20px;
+  --fs-control: 13px;
+  --fs-row: 12.5px;
+  --fs-value: 11.5px;
+  --fs-sub: 11px;
+  --fs-info: 11px;
+  --fs-detail: 10.5px;
+  --fs-label: 9.5px;
+  --fs-chip: 9px;
+  --ls-sub: 0.2em;
+  --ls-label: 0.18em;
+  --ls-tight: 0.14em;
+  --ls-text: 0.04em;
+
+  --icon-xs: 10px;
+  --icon-sm: 13px;
+  --icon-md: 16px;
+  --icon-lg: 19px;
+  --icon-xl: 34px;
+  --icon-size: 60px;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: Barlow, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ink);
+  background-image: url("img/bg.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* The hidden attribute wins over any display the rules below set. */
+[hidden] {
+  display: none !important;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  width: var(--w-list);
+  margin: auto;
+}
+
+/* Who is signed in, pinned to the page corner. */
+.sessionbar {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: var(--fs-row);
+  letter-spacing: var(--ls-tight);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sessionbar > .lucide {
+  flex: none;
+  font-size: var(--icon-lg);
+  color: var(--cyan);
+  opacity: 0.85;
+}
+
+.sessionbar__user {
+  max-width: 60%;
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sessionbar__divider {
+  flex: none;
+  width: 1px;
+  height: 21px;
+  background-color: var(--line);
+}
+
+.linkbtn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--icon-lg);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--t);
+}
+
+.linkbtn:hover {
+  color: var(--cyan);
+}
+
+/* Stepper: completed stages green, the current one cyan, the rest muted. */
+.stepper {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stepper__item {
+  position: relative;
+  flex: 0 0 64px;
+}
+
+/* A reached stage is a way back to it; an unreached one is inert. */
+.stepper__button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+}
+
+.stepper__button:disabled {
+  cursor: default;
+}
+
+.stepper__button:not(:disabled):hover .stepper__mark {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.stepper__button:not(:disabled):hover .stepper__name {
+  color: var(--cyan);
+}
+
+/* The connector to a stage's left. */
+.stepper__item::before {
+  content: "";
+  position: absolute;
+  top: 13px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--line);
+}
+
+.stepper__item:first-child::before {
+  display: none;
+}
+
+.stepper__item[data-state="done"]::before,
+.stepper__item[data-state="current"]::before {
+  background-color: var(--ok);
+  box-shadow: 0 0 10px var(--ok-dim);
+}
+
+/* 28px including the border, so the connector lands on the circle's centre. */
+.stepper__mark {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background-color: #06202b;
+  color: var(--muted);
+  font-size: var(--fs-info);
+  line-height: 1;
+  transition: border-color var(--t), color var(--t), box-shadow var(--t);
+}
+
+.stepper__num {
+  display: block;
+  line-height: 1;
+}
+
+.stepper__item[data-state="done"] .stepper__mark {
+  border-color: var(--ok);
+  color: var(--ok);
+  box-shadow: var(--glow-ok);
+}
+
+.stepper__item[data-state="current"] .stepper__mark {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+/* A completed stage swaps its number for a check. */
+.stepper__mark .lucide {
+  display: none;
+  font-size: var(--icon-sm);
+  line-height: 1;
+}
+
+.stepper__item[data-state="done"] .lucide-check {
+  display: block;
+}
+
+.stepper__item[data-state="done"] .stepper__num {
+  display: none;
+}
+
+.stepper__name {
+  font-size: var(--fs-chip);
+  white-space: nowrap;
+  letter-spacing: var(--ls-tight);
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color var(--t);
+}
+
+.stepper__item[data-state="done"] .stepper__name {
+  color: var(--ok);
+}
+
+.stepper__item[data-state="current"] .stepper__name {
+  color: var(--cyan);
+}
+
+@media (max-width: 420px) {
+  .stepper__item {
+    flex-basis: 56px;
+  }
+}
+
+/* The frame shared by a stage card and each panel of the model deck. */
+.card,
+.mpanel {
+  position: relative;
+  box-sizing: border-box;
+  border: 2px solid rgba(34, 230, 245, 0.3);
+  border-radius: var(--r-card);
+  box-shadow: inset 0 0 60px rgba(34, 230, 245, 0.06);
+}
+
+.card {
+  width: var(--w-form);
+  padding: var(--card-pad);
+}
+
+.card[data-view="boot"],
+.card[data-view="login"] {
+  width: var(--w-signin);
+}
+
+/* One height for the cards that differ in content, so the card does not resize between stages. */
+.card[data-view="sources"] .card__body,
+.card[data-view="select"] .card__body,
+.card[data-view="inventory"] .card__body,
+.card[data-view="files"] .card__body {
+  min-height: 268px;
+}
+
+/* Frosted fill: a clipped copy of the pre-blurred page background, since Firefox 90 has no backdrop-filter. */
+.card__blur,
+.mpanel__blur {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--r-card) - 2px);
+  z-index: 0;
+}
+
+/* bg-blur.jpeg is bg.jpeg at half size with a 1.5px blur; fixed attachment keeps it registered with the page. */
+.card__blur::before,
+.mpanel__blur::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("img/bg-blur.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.card__blur::after,
+.mpanel__blur::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(6, 26, 36, 0.42);
+}
+
+/* Four corner brackets with the glow baked into the SVG: 38px bracket plus a 16px halo, offset onto the frame's corner. */
+.card::before,
+.card::after,
+.card__corners::before,
+.card__corners::after,
+.mpanel::before,
+.mpanel::after,
+.mpanel__corners::before,
+.mpanel__corners::after {
+  content: "";
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  background: url("img/bracket-bottom.svg") no-repeat;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.card__corners,
+.mpanel__corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.card::before,
+.card::after,
+.mpanel::before,
+.mpanel::after {
+  height: 94px;
+  background-image: url("img/bracket-top.svg");
+}
+
+.card::before,
+.mpanel::before {
+  top: -18px;
+  left: -18px;
+}
+
+.card::after,
+.mpanel::after {
+  top: -18px;
+  right: -18px;
+  transform: scaleX(-1);
+}
+
+.card__corners::before,
+.mpanel__corners::before {
+  bottom: -18px;
+  left: -18px;
+}
+
+.card__corners::after,
+.mpanel__corners::after {
+  bottom: -18px;
+  right: -18px;
+  transform: scaleX(-1);
+}
+
+.card__body {
+  position: relative;
+  z-index: 1;
+}
+
+.title {
+  margin: 0;
+  font-family: Orbitron, Barlow, sans-serif;
+  font-weight: 600;
+  font-size: var(--fs-title);
+  line-height: 1.3;
+  letter-spacing: var(--ls-text);
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(34, 230, 245, 0.35);
+}
+
+/* The product mark on the sign-in card; logo.png carries its glow in a 28px padding, taken back out by the margins. */
+.logo {
+  display: block;
+  width: auto;
+  height: 119px;
+  margin: calc(var(--gap-mark) - 14px) auto -14px;
+}
+
+/* Glyph for a card about one thing rather than the product. */
+.brand-icon {
+  display: block;
+  margin: var(--gap-mark) auto 0;
+  font-size: var(--icon-size);
+  line-height: 1;
+  text-align: center;
+  color: var(--cyan);
+  text-shadow: 0 0 14px rgba(34, 230, 245, 0.35);
+}
+
+.subtitle {
+  margin: var(--gap-lead) 0 var(--gap-body);
+  font-family: Orbitron, Barlow, sans-serif;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--ls-sub);
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.card[data-view="inventory"],
+.card[data-view="files"] {
+  width: var(--w-list);
+}
+
+/* The run and model decks are sized by the viewport rather than by their content. */
+.shell--run,
+.shell--model {
+  width: var(--w-full);
+  align-self: stretch;
+  margin: 0 auto;
+}
+
+.card[data-view="run"],
+.card[data-view="model"] {
+  width: 100%;
+}
+
+/* Height flows card, body, view, panel, console; each link needs min-height 0 to shrink. */
+.shell--run .card,
+.shell--run .card__body,
+.shell--run #view-run,
+.shell--run .runpanel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  border: 1px solid var(--cyan-dim);
+  border-radius: var(--r-control);
+  background-color: rgba(4, 22, 31, 0.5);
+  transition: border-color var(--t), box-shadow var(--t);
+}
+
+.field > .lucide {
+  padding: 0 12px;
+  font-size: var(--icon-md);
+  color: var(--cyan);
+  opacity: 0.85;
+}
+
+.field input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--cyan);
+  font: inherit;
+  font-size: var(--fs-control);
+  outline: none;
+}
+
+.field input::placeholder {
+  color: var(--muted);
+  letter-spacing: var(--ls-tight);
+}
+
+.field input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  -webkit-box-shadow: 0 0 0 1000px #08242f inset;
+}
+
+.reveal {
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--icon-md);
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--t);
+}
+
+.reveal:hover {
+  color: var(--cyan);
+}
+
+/* Message strip: hidden until it carries text, neutral unless a modifier says error or ok. */
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background-color: var(--tint-ink);
+  color: var(--ink);
+  font-size: var(--fs-value);
+  line-height: 1.35;
+  letter-spacing: var(--ls-text);
+  animation: message-in var(--t) ease-out;
+}
+
+.message:empty {
+  display: none;
+}
+
+.message .lucide {
+  flex: none;
+  font-size: var(--icon-sm);
+  line-height: 1.2;
+}
+
+.message--error {
+  border-color: var(--danger-dim);
+  background-color: var(--tint-danger);
+  color: var(--danger);
+}
+
+.message--ok {
+  border-color: var(--cyan-dim);
+  background-color: var(--tint-cyan);
+  color: var(--cyan);
+}
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+#view-sources .message:not(:empty) {
+  margin-top: 18px;
+}
+
+/* The action row owns the gap above itself. */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: var(--gap-actions);
+}
+
+.message:not(:empty) + .actions {
+  margin-top: var(--gap-actions-tight);
+}
+
+/* Command bar; hover fills it solid cyan. */
+.submit {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--cyan);
+  border-radius: var(--r-control);
+  background-color: var(--tint-cyan);
+  color: var(--cyan);
+  font: inherit;
+  font-size: var(--fs-control);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--t), box-shadow var(--t), background-color var(--t), color var(--t);
+}
+
+.submit__arrow {
+  margin-left: 10px;
+  font-size: var(--icon-md);
+  line-height: 1;
+  transition: transform var(--t), text-shadow var(--t);
+}
+
+.submit:hover:not(:disabled) {
+  background-color: var(--cyan);
+  color: #04222c;
+  box-shadow: var(--glow-cyan);
+}
+
+.submit:hover:not(:disabled) .submit__arrow {
+  transform: translateX(4px);
+  text-shadow: 0 0 6px rgba(34, 230, 245, 0.7);
+}
+
+.submit:disabled {
+  cursor: not-allowed;
+  border-color: var(--cyan-dim);
+  color: var(--muted);
+}
+
+.submit:disabled .submit__arrow {
+  display: none;
+}
+
+/* Secondary action: same bar, no fill. */
+.submit--ghost {
+  border-color: var(--line);
+  background-color: transparent;
+  color: var(--muted);
+  font-size: var(--fs-info);
+  letter-spacing: var(--ls-tight);
+}
+
+/* Sized to its own label rather than the row. */
+.submit--compact {
+  flex: none;
+  gap: 8px;
+  width: auto;
+  padding: 10px 14px;
+  font-size: var(--fs-info);
+  letter-spacing: var(--ls-tight);
+}
+
+.submit--ghost:hover:not(:disabled) {
+  background-color: transparent;
+  border-color: var(--cyan-dim);
+  color: var(--cyan);
+  box-shadow: none;
+}
+
+/* The bar a finished run hands over, in the page's green. */
+.submit--ok {
+  border-color: var(--ok);
+  background-color: var(--tint-ok);
+  color: var(--ok);
+}
+
+.submit--ok:hover:not(:disabled) {
+  background-color: var(--ok);
+  color: #04220f;
+  box-shadow: var(--glow-ok);
+}
+
+.submit--ok:disabled {
+  border-color: var(--ok-dim);
+}
+
+.spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+  border: 2px solid rgba(34, 230, 245, 0.25);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+.submit__label .spinner {
+  margin-right: 9px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The one micro-label for captions, panel bars and tile names. */
+.label,
+.units__candidate-key,
+.scale__label,
+.source__name,
+.source__state,
+.files__label,
+.mpanel__bar {
+  line-height: 1.2;
+  font-size: var(--fs-label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.label {
+  display: block;
+  margin: 0 0 5px;
+}
+
+.picker {
+  margin-bottom: 12px;
+}
+
+.picker__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--cyan-dim);
+  border-radius: var(--r-control);
+  background-color: rgba(4, 22, 31, 0.5);
+  transition: border-color var(--t), box-shadow var(--t), opacity var(--t);
+}
+
+.picker__control .lucide {
+  position: absolute;
+  right: 11px;
+  font-size: var(--icon-sm);
+  color: var(--cyan);
+  pointer-events: none;
+}
+
+/* Platform chrome dropped; the chevron stands in for it. */
+.picker select {
+  width: 100%;
+  padding: 10px 32px 10px 12px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-control);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+/* The dropdown list is painted by the OS, so it needs its own colours. */
+.picker select option {
+  background-color: #06202b;
+  color: var(--ink);
+}
+
+.picker select:disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+}
+
+.picker--disabled .picker__control {
+  border-color: var(--line);
+  opacity: 0.6;
+}
+
+/* While the list is read, the spinner stands where the chevron does. */
+.picker__spinner {
+  display: none;
+  position: absolute;
+  right: 9px;
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+  border-width: 1px;
+  pointer-events: none;
+}
+
+.picker--loading .picker__control > .lucide {
+  display: none;
+}
+
+.picker--loading .picker__spinner {
+  display: inline-block;
+}
+
+/* One tile per data source, each opening the connection modal. */
+.sources {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 360px) {
+  .sources {
+    grid-template-columns: 1fr;
+  }
+}
+
+.source__tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 104px;
+  padding: 16px 10px;
+  box-sizing: border-box;
+  border: 1px solid var(--cyan-dim);
+  border-radius: var(--r-panel);
+  background-color: rgba(4, 22, 31, 0.5);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+
+.source__tile:hover {
+  border-color: var(--cyan);
+  box-shadow: var(--glow-cyan);
+}
+
+.source__icon {
+  font-size: var(--icon-xl);
+  line-height: 1;
+  color: var(--cyan);
+  text-shadow: 0 0 10px rgba(34, 230, 245, 0.35);
+}
+
+.source__name {
+  line-height: 1.3;
+  text-align: center;
+}
+
+.source[data-state="on"] .source__tile {
+  border-color: var(--ok-dim);
+}
+
+.source[data-state="on"] .source__name {
+  color: var(--ink);
+}
+
+.source__state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 9px 0 0;
+}
+
+.source__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--muted);
+}
+
+.source[data-state="on"] .source__state {
+  color: var(--ok);
+}
+
+.source[data-state="on"] .source__dot {
+  background-color: var(--ok);
+  box-shadow: 0 0 8px rgba(53, 224, 127, 0.9);
+}
+
+/* Connection details, as an overlay over the card. */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.modal__scrim {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(3, 16, 23, 0.72);
+}
+
+/* A card at compact scale: the header tokens are restated three-quarters the size. */
+.modal__panel {
+  --fs-title: 15px;
+  --icon-size: 40px;
+  --gap-mark: 10px;
+  --gap-lead: 14px;
+  --gap-body: 22px;
+
+  position: relative;
+  box-sizing: border-box;
+  width: min(340px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 26px 26px 24px;
+  border: 2px solid rgba(34, 230, 245, 0.3);
+  border-radius: var(--r-card);
+  background-color: #06202b;
+  box-shadow: inset 0 0 60px rgba(34, 230, 245, 0.06),
+    0 0 40px rgba(3, 16, 23, 0.6);
+  animation: modal-in var(--t) ease-out;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.modal__panel .title {
+  padding: 0 20px;
+}
+
+/* The confirmed context as one slash-separated line, in the subtitle's box. */
+.context {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin: var(--gap-lead) 0 var(--gap-body);
+  overflow: hidden;
+}
+
+.context__cell {
+  min-width: 0;
+  overflow: hidden;
+  font-family: Orbitron, Barlow, sans-serif;
+  font-size: var(--fs-sub);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--ls-sub);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--cyan);
+}
+
+.context__cell + .context__cell::before {
+  content: "/";
+  margin-right: 8px;
+  color: var(--muted);
+}
+
+/* The cell's key is read aloud, never drawn. */
+.context__key {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.context__flag {
+  color: var(--ok);
+}
+
+/* ------------------------------------------------ list primitives */
+
+/* Every list on the page is the same object: a bordered box, a bar naming it, a stack of rows. */
+.units,
+.files,
+.runpanel {
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  overflow: hidden;
+}
+
+/* The inventory and the files panel swap in the same slot, so they share one height. */
+.units,
+.files {
+  display: flex;
+  flex-direction: column;
+  height: min(268px, calc(22vh + 78px));
+}
+
+.units {
+  transition: border-color var(--t), box-shadow var(--t);
+}
+
+/* The bar across the top of a panel. */
+.units__search,
+.files__label,
+.runpanel__bar,
+.mpanel__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background-color: rgba(4, 22, 31, 0.5);
+}
+
+.files__label,
+.mpanel__bar {
+  font-family: Orbitron, Barlow, sans-serif;
+  font-weight: 600;
+  color: var(--cyan);
+}
+
+.units__search > .lucide,
+.files__label .lucide,
+.mpanel__bar .lucide {
+  flex: none;
+  font-size: var(--icon-sm);
+  color: var(--cyan);
+  opacity: 0.85;
+}
+
+/* How many rows the panel shows, at the bar's far end. */
+.units__count,
+.mpanel__count {
+  flex: none;
+  margin-left: auto;
+  font-family: Barlow, sans-serif;
+  font-size: var(--fs-info);
+  font-weight: 400;
+  letter-spacing: var(--ls-text);
+  white-space: nowrap;
+  color: var(--muted);
+}
+
+/* One row of a list. */
+.units__row,
+.filerow,
+.mrow {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.units__row:last-child,
+.filerow:last-child,
+.mrow:last-child {
+  border-bottom: 0;
+}
+
+.units__row,
+.filerow,
+.mrow__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+/* A name that gives way first, and a value in cyan that never does. */
+.units__name,
+.mrow__name,
+.filerow__when {
+  font-size: var(--fs-row);
+}
+
+.units__name,
+.mrow__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.units__version,
+.mrow__value,
+.filerow__by {
+  flex: none;
+  font-size: var(--fs-value);
+  letter-spacing: var(--ls-text);
+  color: var(--cyan);
+}
+
+.mrow__detail,
+.filerow__scale {
+  font-size: var(--fs-detail);
+  color: var(--muted);
+}
+
+/* Every muted aside: a note or a hint. */
+.hint,
+.candidate__note {
+  margin: 0;
+  font-size: var(--fs-info);
+  line-height: 1.35;
+  letter-spacing: var(--ls-text);
+  color: var(--muted);
+}
+
+.hint {
+  margin-top: 2px;
+  text-align: center;
+}
+
+/* ------------------------------------------------ empty states */
+
+/* The one empty state: a sealed glyph, a short verdict, and one line saying what it covers. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 26px 18px;
+  text-align: center;
+}
+
+.empty__seal {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--cyan-dim);
+  border-radius: 50%;
+  background-color: var(--tint-cyan);
+  box-shadow: var(--glow-cyan);
+  color: var(--cyan);
+  font-size: var(--icon-lg);
+}
+
+.empty__title {
+  margin: 0;
+  font-family: Orbitron, Barlow, sans-serif;
+  font-weight: 600;
+  font-size: var(--fs-sub);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.empty__note {
+  margin: 0;
+  max-width: 34ch;
+  font-size: var(--fs-info);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* A good verdict, in the page's green. */
+.empty--ok .empty__seal {
+  border-color: var(--ok-dim);
+  background-color: var(--tint-ok);
+  box-shadow: var(--glow-ok);
+  color: var(--ok);
+}
+
+.empty--ok .empty__title {
+  color: var(--ok);
+}
+
+/* Something being read: a spinner in the seal. */
+.empty--busy .empty__seal .spinner {
+  width: var(--icon-md);
+  height: var(--icon-md);
+  vertical-align: 0;
+}
+
+/* Inside a list box or the console the block takes the room the rows would. */
+.units__list > .empty,
+.files > .empty,
+.console--empty > .empty {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.card[data-view="boot"] .empty {
+  padding: 6px 0 2px;
+}
+
+#model-loading {
+  padding: 60px 18px;
+}
+
+/* ------------------------------------------------ inventory card */
+
+.units__search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--cyan);
+  font: inherit;
+  font-size: var(--fs-row);
+  outline: none;
+}
+
+.units__search input::placeholder {
+  color: var(--muted);
+  letter-spacing: var(--ls-tight);
+}
+
+/* Only the rows scroll; the filter and the candidate row stay pinned. */
+.units__list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.units__list > .units__row {
+  flex: none;
+}
+
+/* Marks a candidate version (SRS DSM-MDG req 11). */
+.units__badge {
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid var(--ok-dim);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-chip);
+  letter-spacing: var(--ls-tight);
+  text-transform: uppercase;
+  color: var(--ok);
+}
+
+/* The candidate row as the inventory box's last row: "evaluate <unit> at <version>". */
+.units__candidate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  background-color: rgba(4, 22, 31, 0.5);
+}
+
+.units__candidate-key {
+  flex: none;
+}
+
+.units__candidate .picker {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* A picker inside a list box: quieter border, tighter metrics. */
+.picker--inline .picker__control {
+  border-color: var(--line);
+}
+
+.picker--inline select {
+  padding: 6px 25px 6px 10px;
+  font-size: var(--fs-value);
+}
+
+.picker--inline .picker__control .lucide {
+  right: 9px;
+  font-size: var(--icon-xs);
+}
+
+/* What the version list is doing, or why it is empty; gone when it has nothing to say. */
+.candidate__note {
+  margin-top: 8px;
+}
+
+.candidate__note:empty {
+  display: none;
+}
+
+.candidate__note--error {
+  color: var(--danger);
+}
+
+/* ------------------------------------------------ files card */
+
+/* Rendered after the empty block, filling what the bar leaves. */
+.files__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  order: 1;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+/* A row that opens its file; hover lights its left edge. */
+.filerow {
+  align-items: center;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 0 var(--cyan);
+  transition: background-color var(--t), box-shadow var(--t);
+}
+
+.filerow:hover {
+  background-color: var(--tint-cyan-strong);
+  box-shadow: inset 2px 0 0 0 var(--cyan);
+}
+
+.filerow__when {
+  transition: color var(--t);
+}
+
+.filerow:hover .filerow__when {
+  color: var(--cyan);
+}
+
+.filerow:hover .filerow__go {
+  transform: translateX(4px);
+  text-shadow: 0 0 6px rgba(34, 230, 245, 0.7);
+}
+
+.filerow__go {
+  flex: none;
+  font-size: var(--icon-md);
+  line-height: 1;
+  color: var(--cyan);
+  transition: transform var(--t), text-shadow var(--t);
+}
+
+.filerow__main {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 10px;
+  min-width: 0;
+}
+
+.filerow__scale {
+  flex-basis: 100%;
+}
+
+/* ------------------------------------------------ run card */
+
+/* State bar over the console, in one panel (req 6). */
+.runpanel {
+  position: relative;
+  background-color: rgba(2, 14, 20, 0.72);
+}
+
+.runpanel__bar {
+  position: relative;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  overflow: hidden;
+}
+
+/* Cancel, at bar scale and in the danger colour. */
+.runpanel__stop {
+  margin-left: auto;
+  gap: 6px;
+  padding: 3px 9px;
+  border-color: var(--danger-dim);
+  color: var(--danger);
+  font-size: var(--fs-info);
+  line-height: 1;
+}
+
+.runpanel__stop .lucide {
+  font-size: var(--icon-sm);
+}
+
+.runpanel__stop:hover:not(:disabled) {
+  border-color: var(--danger);
+  background-color: var(--tint-danger-strong);
+  color: var(--danger);
+}
+
+.runpanel__stop .spinner {
+  width: var(--icon-xs);
+  height: var(--icon-xs);
+  vertical-align: -1px;
+  border-width: 1px;
+  border-color: var(--tint-danger-strong);
+  border-top-color: var(--danger);
+}
+
+.runpanel__stop .submit__label .spinner {
+  margin-right: 6px;
+}
+
+.runpanel__stop:disabled {
+  border-color: var(--danger-dim);
+  color: var(--danger);
+  opacity: 0.7;
+  cursor: default;
+}
+
+.runpanel__rocket {
+  flex: none;
+  font-size: var(--icon-lg);
+  line-height: 1;
+  color: var(--muted);
+}
+
+.runpanel__value {
+  white-space: nowrap;
+  font-family: Orbitron, Barlow, sans-serif;
+  font-size: var(--fs-control);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Progress fill behind the bar's content, scaled from the left by the script. */
+.runpanel__bar .runpanel__bar-progress {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--t) ease-out;
+  background: linear-gradient(90deg, transparent, var(--tint-cyan-strong));
+  pointer-events: none;
+}
+
+.runpanel__bar > * {
+  position: relative;
+}
+
+.runpanel__percent {
+  font-family: Orbitron, Barlow, sans-serif;
+  font-size: var(--fs-info);
+  font-weight: 600;
+  letter-spacing: var(--ls-label);
+  color: var(--cyan);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The panel's chrome takes the run's tone. */
+.runpanel,
+.runpanel__rocket,
+.runpanel__value {
+  transition: border-color var(--t), color var(--t);
+}
+
+.runpanel[data-tone="busy"] {
+  border-color: var(--cyan-dim);
+}
+
+.runpanel[data-tone="busy"] .runpanel__rocket {
+  color: var(--cyan);
+  text-shadow: 0 0 8px rgba(34, 230, 245, 0.9);
+}
+
+.runpanel[data-tone="busy"] .runpanel__value {
+  color: var(--cyan);
+}
+
+.runpanel[data-tone="ok"] {
+  border-color: var(--ok-dim);
+}
+
+.runpanel[data-tone="ok"] .runpanel__rocket {
+  color: var(--ok);
+  text-shadow: 0 0 8px rgba(53, 224, 127, 0.9);
+}
+
+.runpanel[data-tone="ok"] .runpanel__value {
+  color: var(--ok);
+  text-shadow: 0 0 14px rgba(53, 224, 127, 0.55);
+}
+
+.runpanel[data-tone="ok"] .runpanel__percent {
+  color: var(--ok);
+}
+
+.runpanel[data-tone="ok"] .runpanel__bar-progress {
+  background: linear-gradient(90deg, transparent, var(--tint-ok-strong));
+}
+
+.runpanel[data-tone="bad"] {
+  border-color: var(--danger-dim);
+}
+
+.runpanel[data-tone="bad"] .runpanel__rocket {
+  color: var(--danger);
+  text-shadow: 0 0 8px rgba(255, 107, 122, 0.8);
+}
+
+.runpanel[data-tone="bad"] .runpanel__value {
+  color: var(--danger);
+  text-shadow: 0 0 14px rgba(255, 107, 122, 0.5);
+}
+
+.runpanel[data-tone="bad"] .runpanel__percent {
+  color: var(--danger);
+}
+
+.runpanel[data-tone="bad"] .runpanel__bar-progress {
+  background: linear-gradient(90deg, transparent, var(--tint-danger-strong));
+}
+
+/* A status label on a model row. */
+.chip {
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-chip);
+  letter-spacing: var(--ls-tight);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* The worker's log; contained so appends lay out and paint the box alone. */
+.console {
+  height: clamp(280px, 46vh, 460px);
+  overflow-y: auto;
+  contain: content;
+  padding: 10px 12px;
+  font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  font-size: var(--fs-value);
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+/* On the run view the console takes what the bar and the actions leave. */
+.shell--run .console {
+  height: auto;
+  flex: 1 1 auto;
+  min-height: 140px;
+}
+
+.shell--run .runpanel__bar,
+.shell--run #run-message,
+.shell--run .actions {
+  flex: none;
+}
+
+.console--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* One log line as three columns: clock, level, message. The level column holds CRITICAL at its smaller size and spacing. */
+.console__line {
+  display: grid;
+  contain: layout style;
+  grid-template-columns: auto 7.5ch minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: baseline;
+  padding: 1px 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* A line not formatted as time, level, message. */
+.console__line--plain {
+  display: block;
+}
+
+.console__time {
+  color: var(--muted);
+  font-size: 0.9em;
+  letter-spacing: var(--ls-text);
+}
+
+.console__level {
+  color: var(--muted);
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: var(--ls-tight);
+  white-space: nowrap;
+}
+
+.console__text {
+  min-width: 0;
+}
+
+.console__level[data-level="INFO"] {
+  color: var(--cyan);
+}
+
+.console__level[data-level="WARNING"] {
+  color: var(--warn);
+}
+
+.console__level[data-level="ERROR"],
+.console__level[data-level="CRITICAL"] {
+  color: var(--danger);
+}
+
+/* A failed line stays findable when scrolling back. */
+.console__line[data-level="ERROR"],
+.console__line[data-level="CRITICAL"] {
+  margin: 0 -12px;
+  padding: 0 12px;
+  background-color: var(--tint-danger);
+}
+
+/* The count of lines the row cap trimmed from the top. */
+.console__trimmed {
+  margin: 0 0 4px;
+  text-align: center;
+  font-size: var(--fs-chip);
+  letter-spacing: var(--ls-text);
+  color: var(--muted);
+}
+
+/* ------------------------------------------ core system model card */
+
+/* The deck of panels has no card frame of its own. */
+.card[data-view="model"] {
+  padding: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.card[data-view="model"]::before,
+.card[data-view="model"]::after,
+.card[data-view="model"] .card__blur,
+.card[data-view="model"] .card__corners {
+  display: none;
+}
+
+/* A deeper tint on the panels keeps their rows legible over the background. */
+.mpanel__blur::after {
+  background-color: rgba(6, 26, 36, 0.7);
+}
+
+/* Two columns of two panels; the gap leaves room for the corner glows. */
+.model__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 22px;
+}
+
+.model__column {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Sized by the viewport, so the deck lands on one screen. */
+.shell--model .card,
+.shell--model .card__body,
+.shell--model #view-model {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The grid gives up height; its single row is bounded so panels stay on screen. */
+.shell--model .model__grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.shell--model .context,
+.shell--model #model-loading,
+.shell--model #model-message {
+  flex: none;
+}
+
+/* The download hangs in the header's right margin. */
+#view-model {
+  position: relative;
+}
+
+.model__download {
+  position: absolute;
+  top: 12px;
+  right: 0;
+  z-index: 2;
+  border-radius: var(--r-pill);
+}
+
+/* One panel per part of the file: a bar naming it, a body holding its rows. */
+.mpanel {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  min-height: 0;
+}
+
+/* The lists share out what the fixed panels leave; basis 0 so a long list cannot claim the column. */
+.mpanel--grow {
+  flex: 1 1 0;
+}
+
+.mpanel__bar {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  border-radius: calc(var(--r-card) - 2px) calc(var(--r-card) - 2px) 0 0;
+}
+
+.mpanel__body {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  border-radius: 0 0 calc(var(--r-card) - 2px) calc(var(--r-card) - 2px);
+  overflow-y: auto;
+}
+
+/* The four counts the file's metadata carries. */
+.scale {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  border-radius: 0 0 calc(var(--r-card) - 2px) calc(var(--r-card) - 2px);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background-color: var(--line);
+}
+
+.scale__cell {
+  padding: 12px;
+  background-color: rgba(2, 14, 20, 0.55);
+  text-align: center;
+}
+
+.scale__value {
+  display: block;
+  font-family: Orbitron, Barlow, sans-serif;
+  font-size: var(--fs-display);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--cyan);
+}
+
+.scale__label {
+  display: block;
+  margin-top: 4px;
+}
+
+.mrow__head {
+  gap: 8px;
+}
+
+/* The record's own detail under its name. */
+.mrow__detail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 8px;
+  margin-top: 6px;
+}
+
+/* The status dot in front of an error row. */
+.dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--muted);
+}
+
+.dot[data-level="missing_data"] {
+  background-color: var(--warn);
+  box-shadow: 0 0 6px rgba(255, 196, 107, 0.7);
+}
+
+.dot[data-level="error"] {
+  background-color: var(--danger);
+  box-shadow: 0 0 6px rgba(255, 107, 122, 0.7);
+}
+
+.chip[data-status="OK"] {
+  border-color: var(--ok-dim);
+  color: var(--ok);
+}
+
+.chip[data-status="MISSING_DATA"] {
+  border-color: var(--warn-dim);
+  color: var(--warn);
+}
+
+.chip[data-status="ERROR"] {
+  border-color: var(--danger-dim);
+  color: var(--danger);
+}
+
+/* On a narrow strip the timestamp cell is dropped. */
+@media (max-width: 560px) {
+  #model-context .context__cell:last-child {
+    display: none;
+  }
+}
+
+/* One column under 860px, sized by content, with the download back in the flow. */
+@media (max-width: 860px) {
+  .model__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell--model .model__grid,
+  .mpanel--grow {
+    flex: none;
+  }
+
+  .shell--model .model__grid {
+    grid-template-rows: none;
+  }
+
+  .mpanel__body {
+    max-height: 320px;
+  }
+
+  .model__download {
+    position: static;
+    margin: 0 auto 22px;
+  }
+}
+
+/* ------------------------------------------------ keyboard focus */
+
+/* One focus ring for every control on the page. */
+.submit:focus-visible,
+.source__tile:focus-visible,
+.filerow:focus-visible,
+.stepper__button:focus-visible,
+.linkbtn:focus-visible,
+.reveal:focus-visible,
+.console:focus-visible,
+.field:focus-within,
+.picker__control:focus-within,
+.units:focus-within {
+  outline: none;
+  box-shadow: var(--glow-cyan);
+}
+
+.field:focus-within,
+.picker__control:focus-within,
+.units:focus-within {
+  border-color: var(--cyan);
+}
