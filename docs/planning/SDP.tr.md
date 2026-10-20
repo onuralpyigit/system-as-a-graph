@@ -55,7 +55,7 @@ Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 ## 2. Artımlı Geliştirme Planı
 
-Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini kurar. Bunu izleyen yedi işlevsel artım, bağımlılık açısından güvenli bir sırayla, tek seferde bir tanesi olacak şekilde inşa edilir. Her artım, bir veya daha fazla CSC'nin kalan CSU'larını ve bunlara karşılık gelen TDM (Operasyonlar ve Görselleştirme) dilimini teslim eder. Her artım ayrıca, teslimatı için gereken tasarım, geliştirme, test ve paketleme çalışmasını ve demo senaryosunu belirtir. SDD, UXD, CDR ve STD, her artımın kendi CSU'larını kapsayacak şekilde her artım içinde güncellenir.
+Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini kurar. Bunu izleyen yedi işlevsel artım ile kurumsal kabullendirmeyi sağlayan üç kapatma artımı (Artım 8–10), bağımlılık açısından güvenli bir sırayla, tek seferde bir tanesi olacak şekilde inşa edilir. Kapatma artımları (8–10) yeni CSU teslim etmez; tam yığın sertleştirme, pilot operasyon ve kabullendirme çalışmasını kapsar. Her artım, bir veya daha fazla CSC'nin kalan CSU'larını ve bunlara karşılık gelen TDM (Operasyonlar ve Görselleştirme) dilimini teslim eder. Her artım ayrıca, teslimatı için gereken tasarım, geliştirme, test ve paketleme çalışmasını ve demo senaryosunu belirtir. SDD, UXD, CDR ve STD, her artımın kendi CSU'larını kapsayacak şekilde her artım içinde güncellenir.
 
 **Tamamlanma Tanımı (DoD — her artım için geçerlidir):** Bir artım şu durumda Tamamlanmış sayılır: (1) CSU/Teslimat tablosundaki her teslimat gerçekleştirilmiş ve ilgili SRS isterini/isterlerini karşılıyor; (2) Tasarım paragrafında atıfta bulunulan her CDR maddesi, gerekçesi kayıt altına alınmış şekilde Çözümlenmiş veya Ertelenmiş durumda; (3) Test paragrafındaki her şey geçiyor; (4) Paketleme paragrafındaki her servis temiz şekilde derleniyor ve dağıtılıyor; (5) Demo senaryosu uçtan uca çalışıyor.
 
@@ -71,6 +71,9 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | 5 | Saha Verisi Hattı | SMY (bağlama dilimi), SVY, AVY (saha dilimi) | SaaG-SVY, SaaG-AVY, SaaG-SMY |
 | 6 | Davranışsal Tasarım Analizi | TDM (analiz dilimi) | — |
 | 7 | Kurulum Uygunluk Değerlendirmesi | TDM (değerlendirme ve operasyonlar tamamlandı) | SaaG-TDM |
+| 8 | Bütünleştirme Sertleştirmesi ve Kapasite Doğrulama | — | — |
+| 9 | Pilot Operasyon, Eğitim ve Dokümantasyon | — | — |
+| 10 | Kabullendirme ve Üretime Geçiş | — | — (CSCI kabulü) |
 
 ### Artım 0: Proje İskeleti
 
@@ -274,74 +277,151 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 - [ ] Tam servis yığını birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı — altı bileşenin tamamı tamamlandı
 
+### Artım 8: Bütünleştirme Sertleştirmesi ve Kapasite Doğrulama
+
+| CSU | Teslimat |
+|---|---|
+| — | Tam yığın bütünleştirme sertleştirmesi, performans/kapasite ve güvenlik doğrulama |
+
+**Tasarım:** Herhangi yeni SRS isteri gerçekleştirilmez; STD'deki tüm test tanımları tam yığın üzerinde uygulanır. Sertleştirme hedefleri, önceki artımlardaki CDR kararlarıyla tanımlanır: eşzamanlı işlemin kullanıcı/işlem sayısı (CDR-16) ve saha kaydı depolama kapasitesi (CDR-15).
+
+**Geliştirme:** Uçtan uca (acceptance) regresyon paketi tamamlanır; arka plan iş kuyruğu, yeniden deneme ve kurtarma davranışları sertleştirilir; LDAP/JWT/yetki matrisi güvenlik denetimi yürütülür; üretim ayarlı Docker Compose konfigürasyonu ve çalışma zamanı izleme (log/metrik) eklenir.
+
+**Test:** Tüm STD test paketleri tam yığın üzerinde geçer; eşzamanlı yükleme/hacim testleri CDR-15 ve CDR-16 hedeflerini karşılar; 72 saatlik soak (kalıcılık) koşusu planlanan sapma olmadan tamamlanır.
+
+**Paketleme:** Üretim aday yığını: tüm servisler üretim ayarlarıyla tek compose dağıtımında ayağa kaldırılır.
+
+**Demo:** Yedi artımın tüm yetenekleri tek yığında, çok oturumlu eşzamanlı yük altında 72 saat kesintisiz çalışır; doğrulama, analiz ve değerlendirme sonuçları üretilmeye devam eder.
+
+**Tamamlanma Tanımı:**
+- [ ] Tüm STD test paketleri tam yığın üzerinde geçiyor
+- [ ] Performans/hacim hedefleri (CDR-15, CDR-16) karşılanıyor
+- [ ] Güvenlik denetimi (LDAP/JWT/yetki matrisi) kapatıldı
+- [ ] 72 saatlik soak kesintisiz tamamlandı
+- [ ] Kalan hata listesi Artım 9'a devir için onaylandı
+
+### Artım 9: Pilot Operasyon, Eğitim ve Dokümantasyon
+
+| CSU | Teslimat |
+|---|---|
+| — | Kurumsal pilot operasyonu, operatör eğitimi ve dokümantasyonunun tamamlanması |
+
+**Tasarım:** Yeni ister tasarımı yapılmaz. Pilot senaryoları, artım demo senaryolarının kurumsal verilerle yeniden koşumu olarak tanımlanır; kullanıcı el kitabı ve işletim runbook'ları tamamlanır.
+
+**Geliştirme:** Pilot geri bildirimlerinden doğan kullanılabilirlik (usability) işleri yakıt olarak kullanılarak kapatılır; rapor çıktısı (CDR-13 biçimi) gerçek verilerle doğrulanır; eğitim materyalleri üretilir.
+
+**Test:** Pilot operatör ekip desteği olmaksızın tam iş akışlarını koşar; geri bildirim kaynaklı her değişiklik tam regresyonu tetikler ve geçirir.
+
+**Paketleme:** Pilot ortamı ayrı bir compose dağıtımı olarak kurulur; üretim adayı yayın pilot ortamında doğrulanır.
+
+**Demo:** Pilot operatörler uçtan uca akışları — model verisi üretiminden CLI üzerinden kurulum uygunluk değerlendirmesine — ekip desteği olmaksızın gerçekleştirir.
+
+**Tamamlanma Tanımı:**
+- [ ] Pilot senaryoları rehbersiz tamamlandı
+- [ ] Geri bildirim (usability) listesi kapandı veya gerekçeli ertelendi
+- [ ] Kullanıcı el kitabı ve runbook'lar yayınlandı
+- [ ] Üretim aday yayını pilot ortamında doğrulandı
+
+### Artım 10: Kabullendirme ve Üretime Geçiş
+
+| CSU | Teslimat |
+|---|---|
+| — | CSCI kabullendirmesi, CDR kaydının kapanması ve üretime geçiş |
+
+**Tasarım:** Yeni ister tasarımı yapılmaz. CDR kaydındaki tüm maddeler Resolved veya Deferred (gerekçeli) durumuna getirilir; SRS, SDD, UXD ve STD belge seti dondurularak temel çizim (baseline) oluşturulur.
+
+**Geliştirme:** Son hata arındırma yürütülür; pilot verisinin üretime aktarımı (veri geçişi) ve geri dönüş planı hazırlanır; temel destek devralma paketi tamamlanır.
+
+**Test:** Altı CSC'nin tamamını kapsayan kabullendirme koşusu — her artım demosunun genel tekrarı — ve tam Tamamlanma Tanımı gözden geçirmesi gerçekleştirilir.
+
+**Paketleme:** Üretim dağıtımı uygulanır; geri dönüş planı tatbikatla doğrulanır.
+
+**Demo:** Kabul koşusu: MVU → SMY → TDM doğrulama → SUR/AVY → SVY → analiz → değerlendirme/CLI uçtan uca çalışır; altı CSC'nin tamamı kabul edilir ve CSCI kabullendirilir.
+
+**Tamamlanma Tanımı:**
+- [ ] Altı CSC'nin tamamı kabul edildi; CSCI kabullendirildi
+- [ ] CDR kaydındaki tüm maddeler Resolved veya Deferred
+- [ ] Belge seti donduruldu (baseline freeze)
+- [ ] Üretime geçiş ve geri dönüş planı uygulandı
+- [ ] Kapanış raporu yayınlandı
+
 ---
 
 ## 3. Geliştirme Takvimi
 
-**Tahmini tamamlanma: 2027-03-12.** §2'ye göre, Artım 0 ile birlikte yedi işlevsel artım, **2026-07-20** tarihinde başlayarak, bağımlılık açısından güvenli bir sırayla tamamen ardışık şekilde inşa edilir. Her işlevsel artım; arka uç ve İşlem Paneli arayüz çalışmasının eşzamanlı yürütüldüğü, 3-6 hafta süren, gösterilebilir, uçtan uca bir dilimdir. Bir hafta = 5 iş günü (hafta sonları hariç).
+**Tahmini tamamlanma: 2028-06-30.** §2'ye göre, Artım 0 ile birlikte yedi işlevsel artım ve bunları izleyen üç kapatma artımı (Artım 8–10), **2026-07-06** tarihinde başlayarak, bağımlılık açısından güvenli bir sırayla tamamen ardışık şekilde inşa edilir ve **2028-06-30**'da tamamlanır — toplam **104 iş haftası**. Kapsam ve ağırlıklarına göre boyutlandırılan işlevsel artımlar **7–13 hafta** süren, arka uç ve İşlem Paneli arayüz çalışmasının eşzamanlı yürüdüğü, gösterilebilir, uçtan uca dilimlerdir; kapatma artımları **8–16 hafta** sürer. Bir hafta = 5 iş günü (hafta sonları hariç).
 
 **Tablo 3. Artım Takvimi Özeti**
 
 | Artım | Başlangıç | Bitiş | Süre |
 |---|---|---|---|
-| 0 — Proje İskeleti | 2026-07-20 | 2026-07-31 | 2 hf |
-| 1 — Model Verisi Üretimi | 2026-08-03 | 2026-08-28 | 4 hf |
-| 2 — Model Yöneticisi | 2026-08-31 | 2026-10-02 | 5 hf |
-| 3 — Tasarım Doğrulayıcı | 2026-10-05 | 2026-11-06 | 5 hf |
-| 4 — Sentetik Veri Hattı | 2026-11-09 | 2026-12-04 | 4 hf |
-| 5 — Saha Verisi Hattı | 2026-12-07 | 2027-01-01 | 4 hf |
-| 6 — Tasarım Analizcisi | 2027-01-04 | 2027-02-12 | 6 hf |
-| 7 — Tasarım Değerlendiricisi | 2027-02-15 | 2027-03-12 | 4 hf |
+| 0 — Proje İskeleti | 2026-07-06 | 2026-07-17 | 2 hf |
+| 1 — Model Verisi Üretimi | 2026-07-20 | 2026-09-04 | 7 hf |
+| 2 — Yapısal Model İnşası | 2026-09-07 | 2026-11-06 | 9 hf |
+| 3 — Yapısal Tasarım Doğrulama | 2026-11-09 | 2027-01-22 | 11 hf |
+| 4 — Sentetik Veri Hattı | 2027-01-25 | 2027-03-12 | 7 hf |
+| 5 — Saha Verisi Hattı | 2027-03-15 | 2027-05-14 | 9 hf |
+| 6 — Davranışsal Tasarım Analizi | 2027-05-17 | 2027-08-13 | 13 hf |
+| 7 — Kurulum Uygunluk Değerlendirmesi | 2027-08-16 | 2027-10-08 | 8 hf |
+| 8 — Bütünleştirme Sertleştirmesi ve Kapasite Doğrulama | 2027-10-11 | 2028-01-28 | 16 hf |
+| 9 — Pilot Operasyon, Eğitim ve Dokümantasyon | 2028-01-31 | 2028-05-05 | 14 hf |
+| 10 — Kabullendirme ve Üretime Geçiş | 2028-05-08 | 2028-06-30 | 8 hf |
 
 **Şekil 1. SaaG Geliştirme Takvimi**
 
 ```mermaid
 %%{init: { 'themeVariables': { 'excludeBkgColor': 'rgba(128,128,128,0.08)' } } }%%
 gantt
-    title SaaG Geliştirme Takvimi (Tahmini Tamamlanma: Mar 2027)
+    title SaaG Geliştirme Takvimi (Tahmini Tamamlanma: Haz 2028)
     dateFormat YYYY-MM-DD
     axisFormat %b %Y
     excludes weekends
 
     section Proje İskeleti
-    Proje İskeleti (2 hf)      :scaffold1, 2026-07-20, 2026-07-31
+    Proje İskeleti (2 hf)      :scaffold1, 2026-07-06, 2026-07-17
     Artım 0 Demo (0g)               :milestone, demo0, after scaffold1, 0d
 
     section SaaG-MVU — Model Verisi Üretimi
-    Model Verisi Üretimi MVU (4 hf)               :mvu, 2026-08-03, 2026-08-28
+    Model Verisi Üretimi MVU (7 hf)               :mvu, 2026-07-20, 2026-09-04
     Artım 1 Demo (0g)                                    :milestone, demo1, after mvu, 0d
 
     section SaaG-SUR — Senaryo Üreteci
-    Senaryo Üreteci SUR (10g)                       :scg, 2026-11-09, 2026-11-20
+    Senaryo Üreteci SUR (3 hf)                       :scg, 2027-01-25, 2027-02-12
 
     section SaaG-SVY — Saha Veri Yöneticisi
-    Saha Veri Yöneticisi SVY (8g)                    :svy, 2026-12-18, 2026-12-29
+    Saha Veri Yöneticisi SVY (3 hf)                    :svy, 2027-04-12, 2027-04-30
 
     section SaaG-AVY — Analitik Veri Yöneticisi
-    Sentetik Veri Hazırlama AVY (10g)          :adpa, 2026-11-23, 2026-12-04
+    Sentetik Veri Hazırlama AVY (4 hf)          :adpa, 2027-02-15, 2027-03-12
     Artım 4 Demo (0g)                                    :milestone, demo4, after adpa, 0d
-    Saha Verisi Hazırlama AVY (3g)                :adpb, 2026-12-30, 2027-01-01
+    Saha Verisi Hazırlama AVY (2 hf)                :adpb, 2027-05-03, 2027-05-14
     Artım 5 Demo (0g)                                    :milestone, demo5, after adpb, 0d
 
     section SaaG-SMY — Sistem Model Yöneticisi
-    Yapısal Model İnşası SMY (5 hf)                         :smy01, 2026-08-31, 2026-10-02
+    Yapısal Model İnşası SMY (9 hf)                         :smy01, 2026-09-07, 2026-11-06
     Artım 2 Demo (0g)                                    :milestone, demo2, after smy01, 0d
-    Analitik Veri Bağlama SMY (9g)                          :smy02, 2026-12-07, 2026-12-17
+    Analitik Veri Bağlama SMY (4 hf)                          :smy02, 2027-03-15, 2027-04-09
 
     section SaaG-TDM — Doğrulama, Analiz, Değerlendirme
-    Oturum Açma ve Model Verisi Kurulumu TDM (4 hf)        :vae01a, 2026-08-03, 2026-08-28
-    Modelin Oluşturulması ve Görüntülenmesi TDM (5 hf)               :vae01b, 2026-08-31, 2026-10-02
-    Modelin Düzenlenmesi ve Bulguların Görüntülenmesi TDM (5 hf)       :vae01c, 2026-10-05, 2026-11-06
-    Sentetik Verinin Yapılandırılması ve İzlenmesi TDM (4 hf) :vae01de, 2026-11-09, 2026-12-04
-    Saha Verisinin Seçilmesi ve İzlenmesi TDM (20g) :vae01f, 2026-12-07, 2027-01-01
-    Simülasyon Senaryolarının Kaydedilmesi TDM (6 hf)           :vae01g, 2027-01-04, 2027-02-12
-    CLI Üzerinden Raporlama ve Otomasyon TDM (4 hf)             :vae01h, 2027-02-15, 2027-03-12
-    Yapısal Tasarım Doğrulama TDM (5 hf)                   :vae02, 2026-10-05, 2026-11-06
+    Oturum Açma ve Model Verisi Kurulumu TDM (7 hf)        :vae01a, 2026-07-20, 2026-09-04
+    Modelin Oluşturulması ve Görüntülenmesi TDM (9 hf)               :vae01b, 2026-09-07, 2026-11-06
+    Modelin Düzenlenmesi ve Bulguların Görüntülenmesi TDM (11 hf)       :vae01c, 2026-11-09, 2027-01-22
+    Sentetik Verinin Yapılandırılması ve İzlenmesi TDM (7 hf) :vae01de, 2027-01-25, 2027-03-12
+    Saha Verisinin Seçilmesi ve İzlenmesi TDM (9 hf) :vae01f, 2027-03-15, 2027-05-14
+    Simülasyon Senaryolarının Kaydedilmesi TDM (13 hf)           :vae01g, 2027-05-17, 2027-08-13
+    CLI Üzerinden Raporlama ve Otomasyon TDM (8 hf)             :vae01h, 2027-08-16, 2027-10-08
+    Yapısal Tasarım Doğrulama TDM (11 hf)                   :vae02, 2026-11-09, 2027-01-22
     Artım 3 Demo (0g)                                    :milestone, demo3, after vae02, 0d
-    Davranışsal Simülasyon ve Analiz TDM (6 hf)             :vae03, 2027-01-04, 2027-02-12
+    Davranışsal Simülasyon ve Analiz TDM (13 hf)             :vae03, 2027-05-17, 2027-08-13
     Artım 6 Demo (0g)                                    :milestone, demo6, after vae03, 0d
-    Kurulum Uygunluk Değerlendirmesi TDM (4 hf)                 :vae04, 2027-02-15, 2027-03-12
-    Artım 7 Demo / Tahmini Tamamlanma (0g)             :milestone, completion, after vae04, 0d
+    Kurulum Uygunluk Değerlendirmesi TDM (8 hf)                 :vae04, 2027-08-16, 2027-10-08
+    Artım 7 Demo / Mühendislik Tamamlandı (0g)             :milestone, engdone, after vae04, 0d
+
+    section Sertleştirme ve Kabullendirme
+    Bütünleştirme Sertleştirmesi ve Kapasite (16 hf) :hard, 2027-10-11, 2028-01-28
+    Pilot Operasyon, Eğitim ve Dokümantasyon (14 hf) :pilot, 2028-01-31, 2028-05-05
+    Kabullendirme ve Üretime Geçiş (8 hf) :accept, 2028-05-08, 2028-06-30
+    Artım 10 Demo / Program Tamamlanma (0g)             :milestone, completion, after accept, 0d
 ```
 
 ---
