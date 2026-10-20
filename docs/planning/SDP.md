@@ -55,7 +55,7 @@ Each leaf bullet below cites the exact SRS requirement ID range it realizes.
 
 ## 2. Incremental Development Plan
 
-Increment 0 establishes the repository scaffolding, shared infrastructure, and documentation skeleton. The seven functional increments that follow are built one at a time, in dependency-safe order. Each increment delivers one or more CSCs' remaining CSUs plus the matching slice of DVE (Operations and Visualization). Each increment also states the design, development, test, and packaging work needed to deliver it, plus its demo scenario. The SDD, UXD, CDR, and STD are updated within every increment to cover that increment's CSUs.
+Increment 0 establishes the repository scaffolding, shared infrastructure, and documentation skeleton. The seven functional increments that follow, plus three closing increments (Increments 8–10) that bring the program to institutional acceptance, are built one at a time, in dependency-safe order. The closing increments (8–10) deliver no new CSUs; they cover full-stack hardening, pilot operations, and acceptance. Each increment delivers one or more CSCs' remaining CSUs plus the matching slice of DVE (Operations and Visualization). Each increment also states the design, development, test, and packaging work needed to deliver it, plus its demo scenario. The SDD, UXD, CDR, and STD are updated within every increment to cover that increment's CSUs.
 
 **Definition of Done (applies to every increment):** an increment is Done when (1) every deliverable in its CSU/Deliverable table is implemented and satisfies its SRS requirement(s); (2) every CDR item cited in its Design paragraph is Resolved or Deferred with a recorded reason; (3) everything in its Test paragraph passes; (4) every service in its Packaging paragraph builds and deploys cleanly; (5) its Demo scenario runs end-to-end.
 
@@ -71,6 +71,9 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | 5 | Field Data Pipeline | SMM (binding slice), FDM, ADM (field slice) | SaaG-FDM, SaaG-ADM, SaaG-SMM |
 | 6 | Behavioral Design Analysis | DVE (analysis slice) | — |
 | 7 | Installation Suitability Evaluation | DVE (evaluation & ops complete) | SaaG-DVE |
+| 8 | Integration Hardening & Capacity Verification | — | — |
+| 9 | Pilot Operations, Training & Documentation | — | — |
+| 10 | Acceptance & Production Handover | — | — (CSCI accepted) |
 
 ### Increment 0: Project Scaffolding
 
@@ -274,74 +277,151 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 - [ ] Full service stack deploys together
 - [ ] Demo run end-to-end — all six components complete
 
+### Increment 8: Integration Hardening & Capacity Verification
+
+| CSU | Deliverable |
+|---|---|
+| — | Full-stack integration hardening, performance/capacity, and security verification |
+
+**Design:** No new SRS requirement is realized; every STD test definition is executed against the full stack. Hardening targets are defined by prior CDR decisions: the concurrent user/operation count (CDR-16) and the field-record storage capacity (CDR-15).
+
+**Development:** Complete the end-to-end (acceptance) regression suite; harden the background-job queue, retry, and recovery behavior; run a security audit of the LDAP/JWT/authorization matrix; add a production-tuned Docker Compose configuration with runtime observability (logs/metrics).
+
+**Test:** All STD test packages pass on the full stack; concurrent load/volume tests meet the CDR-15 and CDR-16 targets; a 72-hour soak run completes without unplanned deviation.
+
+**Packaging:** Release-candidate stack: all services online in one production-tuned compose deployment.
+
+**Demo:** All capabilities from the seven increments run on one stack, under concurrent multi-session load, for 72 hours without interruption, continuing to produce verification, analysis, and evaluation results.
+
+**Definition of Done:**
+- [ ] All STD test packages pass on the full stack
+- [ ] Performance/capacity targets (CDR-15, CDR-16) met
+- [ ] Security audit (LDAP/JWT/authorization matrix) closed
+- [ ] 72-hour soak completed without interruption
+- [ ] Residual defect list approved for handover to Increment 9
+
+### Increment 9: Pilot Operations, Training & Documentation
+
+| CSU | Deliverable |
+|---|---|
+| — | Institutional pilot operation, operator training, and documentation completion |
+
+**Design:** No new requirement design. Pilot scenarios are defined as re-runs of the increment demo scenarios against institutional data; the user manual and operations runbooks are completed.
+
+**Development:** Burn down usability items raised from pilot feedback; validate report output (the CDR-13 format) on real data; produce training materials.
+
+**Test:** Pilot operators run full workflows without team support; every feedback-driven change triggers and passes full regression.
+
+**Packaging:** The pilot environment is installed as a separate compose deployment; the release-candidate publication is validated in the pilot environment.
+
+**Demo:** Pilot operators carry out the end-to-end flows — from Model Data production to CLI-driven installation suitability evaluation — without team support.
+
+**Definition of Done:**
+- [ ] Pilot scenarios completed unassisted
+- [ ] Usability feedback list closed or deferred with recorded reason
+- [ ] User manual and runbooks published
+- [ ] Release-candidate publication validated in the pilot environment
+
+### Increment 10: Acceptance & Production Handover
+
+| CSU | Deliverable |
+|---|---|
+| — | CSCI acceptance, CDR register closure, and production handover |
+
+**Design:** No new requirement design. Every CDR register item is moved to Resolved or Deferred (with reason); the SRS, SDD, UXD, and STD document set is frozen as the baseline.
+
+**Development:** Final defect burn-down; prepare the pilot-to-production data migration and rollback plan; complete the tier-one support handover package.
+
+**Test:** Acceptance run covering all six CSCs — a full re-performance of every increment demo — plus a complete Definition-of-Done review.
+
+**Packaging:** Production deployment applied; rollback plan verified by drill.
+
+**Demo:** Acceptance run: MDG → SMM → DVE verification → SCG/ADM → FDM → analysis → evaluation/CLI runs end to end; all six CSCs are accepted and the CSCI is accepted.
+
+**Definition of Done:**
+- [ ] All six CSCs accepted; CSCI accepted
+- [ ] Every CDR register item Resolved or Deferred
+- [ ] Document set frozen (baseline freeze)
+- [ ] Production handover and rollback plan executed
+- [ ] Closeout report published
+
 ---
 
 ## 3. Development Schedule
 
-**Estimated completion: 2027-03-12.** Per §2, Increment 0 plus the seven functional increments are built strictly serially in dependency-safe order, starting **2026-07-20**. Each functional increment is a 3–6 week, demoable, end-to-end slice with backend and Operations Panel UI work running concurrently. One week = 5 business days (weekends excluded).
+**Estimated completion: 2028-06-30.** Per §2, Increment 0, the seven functional increments, and the three closing increments are built strictly serially in dependency-safe order, starting **2026-07-06** and completing on **2028-06-30** — **104 business weeks** in total. Sized to scope and weight, the functional increments are 7–13 week demoable, end-to-end slices with backend and Operations Panel UI work running concurrently; the closing increments run 8–16 weeks. One week = 5 business days (weekends excluded).
 
 **Table 3. Increment Schedule Summary**
 
 | Increment | Start | End | Duration |
 |---|---|---|---|
-| 0 — Project Scaffolding | 2026-07-20 | 2026-07-31 | 2w |
-| 1 — Model Data Generation | 2026-08-03 | 2026-08-28 | 4w |
-| 2 — Model Manager | 2026-08-31 | 2026-10-02 | 5w |
-| 3 — Design Verifier | 2026-10-05 | 2026-11-06 | 5w |
-| 4 — Synthetic Data Pipeline | 2026-11-09 | 2026-12-04 | 4w |
-| 5 — Field Data Pipeline | 2026-12-07 | 2027-01-01 | 4w |
-| 6 — Design Analyzer | 2027-01-04 | 2027-02-12 | 6w |
-| 7 — Design Evaluator | 2027-02-15 | 2027-03-12 | 4w |
+| 0 — Project Scaffolding | 2026-07-06 | 2026-07-17 | 2w |
+| 1 — Model Data Generation | 2026-07-20 | 2026-09-04 | 7w |
+| 2 — System Model Construction | 2026-09-07 | 2026-11-06 | 9w |
+| 3 — Structural Design Verification | 2026-11-09 | 2027-01-22 | 11w |
+| 4 — Synthetic Data Pipeline | 2027-01-25 | 2027-03-12 | 7w |
+| 5 — Field Data Pipeline | 2027-03-15 | 2027-05-14 | 9w |
+| 6 — Behavioral Design Analysis | 2027-05-17 | 2027-08-13 | 13w |
+| 7 — Installation Suitability Evaluation | 2027-08-16 | 2027-10-08 | 8w |
+| 8 — Integration Hardening & Capacity Verification | 2027-10-11 | 2028-01-28 | 16w |
+| 9 — Pilot Operations, Training & Documentation | 2028-01-31 | 2028-05-05 | 14w |
+| 10 — Acceptance & Production Handover | 2028-05-08 | 2028-06-30 | 8w |
 
 **Figure 1. SaaG Development Schedule**
 
 ```mermaid
 %%{init: { 'themeVariables': { 'excludeBkgColor': 'rgba(128,128,128,0.08)' } } }%%
 gantt
-    title SaaG Development Schedule (Estimated Completion: Mar 2027)
+    title SaaG Development Schedule (Estimated Completion: Jun 2028)
     dateFormat YYYY-MM-DD
     axisFormat %b %Y
     excludes weekends
 
     section Project Scaffolding
-    Project Scaffolding (2w)      :scaffold1, 2026-07-20, 2026-07-31
+    Project Scaffolding (2w)      :scaffold1, 2026-07-06, 2026-07-17
     Inc 0 Demo (0d)               :milestone, demo0, after scaffold1, 0d
 
     section SaaG-MDG — Model Data Generation
-    Model Data Generation MDG (4w)               :mdg, 2026-08-03, 2026-08-28
+    Model Data Generation MDG (7w)               :mdg, 2026-07-20, 2026-09-04
     Inc 1 Demo (0d)                                    :milestone, demo1, after mdg, 0d
 
     section SaaG-SCG — Scenario Generator
-    Scenario Generator SCG (10d)                       :scg, 2026-11-09, 2026-11-20
+    Scenario Generator SCG (3w)                       :scg, 2027-01-25, 2027-02-12
 
     section SaaG-FDM — Field Data Manager
-    Field Data Manager FDM (8d)                    :fdm, 2026-12-18, 2026-12-29
+    Field Data Manager FDM (3w)                    :fdm, 2027-04-12, 2027-04-30
 
     section SaaG-ADM — Analytical Data Manager
-    Synthetic-Path Data Preparation ADM (10d)          :adpa, 2026-11-23, 2026-12-04
+    Synthetic-Path Data Preparation ADM (4w)          :adpa, 2027-02-15, 2027-03-12
     Inc 4 Demo (0d)                                    :milestone, demo4, after adpa, 0d
-    Field-Path Data Preparation ADM (3d)                :adpb, 2026-12-30, 2027-01-01
+    Field-Path Data Preparation ADM (2w)                :adpb, 2027-05-03, 2027-05-14
     Inc 5 Demo (0d)                                    :milestone, demo5, after adpb, 0d
 
     section SaaG-SMM — System Model Manager
-    Structural Model Construction SMM (5w)             :smm01, 2026-08-31, 2026-10-02
+    Structural Model Construction SMM (9w)             :smm01, 2026-09-07, 2026-11-06
     Inc 2 Demo (0d)                                    :milestone, demo2, after smm01, 0d
-    Analytical Data Binding SMM (9d)                   :smm02, 2026-12-07, 2026-12-17
+    Analytical Data Binding SMM (4w)                   :smm02, 2027-03-15, 2027-04-09
 
     section SaaG-DVE — Verification, Analysis, Evaluation
-    Logging In & Setting Up Model Data DVE (4w)        :vae01a, 2026-08-03, 2026-08-28
-    Building & Viewing the Model DVE (5w)               :vae01b, 2026-08-31, 2026-10-02
-    Editing the Model & Viewing Findings DVE (5w)       :vae01c, 2026-10-05, 2026-11-06
-    Setting Up & Tracking Synthetic Data DVE (4w) :vae01de, 2026-11-09, 2026-12-04
-    Selecting & Tracking Field Data DVE (20d) :vae01f, 2026-12-07, 2027-01-01
-    Recording Simulation Scenarios DVE (6w)           :vae01g, 2027-01-04, 2027-02-12
-    Reporting & Automating via CLI DVE (4w)             :vae01h, 2027-02-15, 2027-03-12
-    Structural Design Verification DVE (5w)            :vae02, 2026-10-05, 2026-11-06
+    Logging In & Setting Up Model Data DVE (7w)        :vae01a, 2026-07-20, 2026-09-04
+    Building & Viewing the Model DVE (9w)               :vae01b, 2026-09-07, 2026-11-06
+    Editing the Model & Viewing Findings DVE (11w)       :vae01c, 2026-11-09, 2027-01-22
+    Setting Up & Tracking Synthetic Data DVE (7w) :vae01de, 2027-01-25, 2027-03-12
+    Selecting & Tracking Field Data DVE (9w) :vae01f, 2027-03-15, 2027-05-14
+    Recording Simulation Scenarios DVE (13w)           :vae01g, 2027-05-17, 2027-08-13
+    Reporting & Automating via CLI DVE (8w)             :vae01h, 2027-08-16, 2027-10-08
+    Structural Design Verification DVE (11w)            :vae02, 2026-11-09, 2027-01-22
     Inc 3 Demo (0d)                                    :milestone, demo3, after vae02, 0d
-    Behavioral Simulation & Analysis DVE (6w)          :vae03, 2027-01-04, 2027-02-12
+    Behavioral Simulation & Analysis DVE (13w)          :vae03, 2027-05-17, 2027-08-13
     Inc 6 Demo (0d)                                    :milestone, demo6, after vae03, 0d
-    Installation Suitability Evaluation DVE (4w)      :vae04, 2027-02-15, 2027-03-12
-    Inc 7 Demo / Estimated Completion (0d)             :milestone, completion, after vae04, 0d
+    Installation Suitability Evaluation DVE (8w)      :vae04, 2027-08-16, 2027-10-08
+    Inc 7 Demo / Engineering Complete (0d)             :milestone, engdone, after vae04, 0d
+
+    section Hardening & Acceptance
+    Integration Hardening & Capacity (16w) :hard, 2027-10-11, 2028-01-28
+    Pilot Operations, Training & Docs (14w) :pilot, 2028-01-31, 2028-05-05
+    Acceptance & Production Handover (8w) :accept, 2028-05-08, 2028-06-30
+    Inc 10 Demo / Program Completion (0d)             :milestone, completion, after accept, 0d
 ```
 
 ---
