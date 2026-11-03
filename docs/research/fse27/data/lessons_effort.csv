@@ -1,0 +1,4 @@
+# Lessons (protocol §6) — data-acquisition effort for Platform R. source_or_item is a configuration source, or a summary item.
+# Use records where they exist; set basis = records | estimate.
+source_or_item,format,owner_org,access_lead_time_days,fields_reconciled,conflicts_found,descriptor_errors_found,person_weeks,approval_outcome,basis,notes
+,,,,,,,,,,

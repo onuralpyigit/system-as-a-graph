@@ -1,0 +1,11 @@
+# RQ1 oracle (protocol §1.4) — SaaG-P verdict vs. the DDS middleware's own matching result, per sampled mutant pair.
+# middleware: program middleware | Cyclone DDS <version> | other. middleware_incompatible: 1 if *_INCOMPATIBLE_QOS fired / no SUBSCRIPTION_MATCHED.
+operator,middleware,n_sampled,n_saag_flags,n_middleware_incompatible,n_agree,n_saag_only,n_middleware_only,notes
+M1,,,,,,,,
+M2,,,,,,,,
+M3,,,,,,,,
+M4,,,,,,,,
+M5,,,,,,,,
+M12,,,,,,,,
+B1,,,,,,,,
+B2,,,,,,,,

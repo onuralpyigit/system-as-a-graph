@@ -1,0 +1,4 @@
+# Sensitivity (protocol §5). parameter = alpha_app | alpha_broker | beta | qos_<factor> | joint_random.
+# subject = rq1_mutants | platform_r.
+parameter,perturbation,subject,n_findings,frac_severity_changed,frac_gate_flipped,kendall_tau,notes
+,,,,,,,

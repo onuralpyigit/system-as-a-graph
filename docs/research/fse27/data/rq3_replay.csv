@@ -1,0 +1,4 @@
+# RQ3 (protocol §3) — one row per historical defect, selected by the rule written in selection_rule (repeat it per row).
+# phase_found: integration | HAT | SAT | field. flagged: 1/0. reason_missed: not_implemented | data_absent | out_of_scope | "".
+defect_id,selection_rule,fault_class,phase_found,flagged,rule,severity,reason_missed,cost_bucket,notes
+,,,,,,,,,

@@ -1,0 +1,4 @@
+# RQ2 (protocol §2.2) — replay of the last k change sets of Platform R.
+# blocked_justified = delta-gating blocks an architect judged correct.
+n_change_sets,window_start,window_end,blocked_absolute,blocked_delta,blocked_justified,waiver_entries,notes
+,,,,,,,

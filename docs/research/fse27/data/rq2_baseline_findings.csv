@@ -1,0 +1,4 @@
+# RQ2 (protocol §2.1) — absolute audit of Platform R, one row per (rule, severity).
+# Triage verdicts: TP-fix, TP-debt, FP-model, FP-data, unknown. kappa is on the double-triaged sample; repeat it per row.
+rule,severity,n_findings,tp_fix,tp_debt,fp_model,fp_data,unknown,median_triage_min,kappa_sample_n,kappa,notes
+,,,,,,,,,,,

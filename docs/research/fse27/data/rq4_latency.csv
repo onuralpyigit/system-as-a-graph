@@ -1,0 +1,10 @@
+# RQ4 (protocol §4). Generated-profile rows are the Middleware '26 numbers (mean of 500 evaluations, 5 seeds, 20 warm-up).
+# Platform R row and the pipeline row are new.
+subject,nodes,components,edges,n_runs,construct_s,analysis_s,total_s,p95_s,provenance,notes
+Maritime Surveillance Aircraft,1,1500,4800,500,11.110,4.416,15.526,17.270,generated,
+Coastal Surveillance,25,2200,7100,500,24.493,14.071,38.565,38.935,generated,
+Unmanned Sea Surface Vehicle,1,2200,7000,500,23.525,21.898,45.423,47.625,generated,
+Amphibious Ship,65,2800,9600,500,44.521,41.345,85.866,87.677,generated,
+Corvette Ship,20,3300,11500,500,52.344,47.813,100.157,102.312,generated,
+Platform R,,,,,,,,,industrial,
+full_pipeline,,,,,,,,,industrial,n pipelines and window in notes

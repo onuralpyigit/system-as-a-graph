@@ -1,0 +1,25 @@
+# RQ1 (protocol §1) — one row per (operator, profile). Pool rows in the paper, keep them separate here.
+# kind: faulty | benign | clean_baseline. expected: detect | known_miss | pass.
+# n_located = findings at the mutated element; n_flagged_elsewhere = findings not at the mutated element (false positives).
+# exit1_correct = mutants whose exit code matched the expected gate decision. sev_agree = severity matched the expected one.
+operator,kind,expected,profile,n_mutants,n_located,n_flagged_elsewhere,exit1_correct,sev_agree,notes
+M1,faulty,detect,,,,,,,
+M2,faulty,detect,,,,,,,
+M3,faulty,detect,,,,,,,
+M4,faulty,,,,,,,,decision D1
+M5,faulty,,,,,,,,decision D1
+M6,faulty,detect,,,,,,,
+M7,faulty,detect,,,,,,,
+M8,faulty,detect,,,,,,,cycle length in notes
+M9,faulty,detect,,,,,,,
+M10,faulty,known_miss,,,,,,,
+M11,faulty,known_miss,,,,,,,
+M12,faulty,detect,,,,,,,record whether the flagged writer is the mutated one
+B1,benign,pass,,,,,,,
+B2,benign,pass,,,,,,,
+B3,benign,pass,,,,,,,
+B4,benign,pass,,,,,,,
+B5,benign,pass,,,,,,,
+B6,benign,pass,,,,,,,
+B7,benign,pass,,,,,,,
+none,clean_baseline,pass,,,,,,,

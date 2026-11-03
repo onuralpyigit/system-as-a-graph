@@ -1,0 +1,7 @@
+# RQ2 (protocol §2.3) — what diagnostic mode surfaced on Platform R and what the team actually did. Only real outcomes.
+# action: refactored | ticket_opened | rejected_harmless | pending.
+item_type,n_found,size_or_detail,action,n_acted_on,effort_or_effect,notes
+scc,,,,,,
+orphan_topic,,,,,,
+unreferenced_library,,,,,,
+high_weight_broker,,,,,,
