@@ -1,49 +1,44 @@
-"""Loads dve.ini: the data source addresses, the API, the worker and the Redis
-container settings (SRS DSM-DVE req 4, 7)."""
+"""Loads dve.ini: the data source addresses and the API settings, and configures
+the logging of the process that loaded it (SRS DSM-DVE req 4, 7, 8)."""
 
 from __future__ import annotations
 
 import configparser
+import logging
+import sys
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from mdg import DataSourceConfig, SourceType
 
 DVE_INI = Path(__file__).resolve().parent / "dve.ini"
 
+APP_LOGGERS = ("dve", "mdg")
+"""The logger trees DSM owns: the only ones whose records reach a task's log, and
+the ones `configure_logging` brings up to the configured level."""
+
+_console: Optional[logging.StreamHandler] = None
+"""The console handler this module installed, so a second call replaces its own."""
+
 
 @dataclass(frozen=True)
 class ApiConfig:
-    """Where the API listens and how long a session cookie lives, in seconds."""
+    """Where the API listens, how long a session cookie lives, in seconds, how
+    large a file an upload may carry, in megabytes, and how verbose the logs are."""
     host: str = "127.0.0.1"
     port: int = 8080
     secret_key: str = "dev-insecure-change-me"
     session_lifetime: int = 86400
-
-
-@dataclass(frozen=True)
-class WorkerConfig:
-    """The Celery broker and result backend."""
-    broker_url: str = "redis://localhost:6379/0"
-    result_backend: str = "redis://localhost:6379/1"
-
-
-@dataclass(frozen=True)
-class RedisConfig:
-    """The Redis container the dsm command starts, with its port mapped to the host."""
-    container: str = "dsm-redis"
-    image: str = "redis:8.4"
-    port: int = 6379
+    max_upload_mb: int = 50
+    log_level: str = "INFO"
 
 
 @dataclass(frozen=True)
 class Config:
     data_sources: List[DataSourceConfig] = field(default_factory=list)
     api: ApiConfig = field(default_factory=ApiConfig)
-    worker: WorkerConfig = field(default_factory=WorkerConfig)
-    redis: RedisConfig = field(default_factory=RedisConfig)
 
 
 def load(path: Path = DVE_INI) -> Config:
@@ -71,15 +66,8 @@ def load(path: Path = DVE_INI) -> Config:
             port=ini.getint("api", "port", fallback=ApiConfig.port),
             secret_key=text("api", "secret_key", ApiConfig.secret_key),
             session_lifetime=ini.getint("api", "session_lifetime", fallback=ApiConfig.session_lifetime),
-        ),
-        worker=WorkerConfig(
-            broker_url=text("worker", "broker_url", WorkerConfig.broker_url),
-            result_backend=text("worker", "result_backend", WorkerConfig.result_backend),
-        ),
-        redis=RedisConfig(
-            container=text("redis", "container", RedisConfig.container),
-            image=text("redis", "image", RedisConfig.image),
-            port=ini.getint("redis", "port", fallback=RedisConfig.port),
+            max_upload_mb=ini.getint("api", "max_upload_mb", fallback=ApiConfig.max_upload_mb),
+            log_level=text("api", "log_level", ApiConfig.log_level).upper(),
         ),
     )
 
@@ -88,3 +76,36 @@ def load(path: Path = DVE_INI) -> Config:
 def config() -> Config:
     """The shipped dve.ini, loaded once."""
     return load()
+
+
+def log_level_of(name: str) -> int:
+    """A level name from dve.ini as a logging level; an unknown name is INFO."""
+    level = logging.getLevelName((name or "").strip().upper())
+    return level if isinstance(level, int) else logging.INFO
+
+
+def configure_logging(level: Optional[int] = None, task_id: Optional[str] = None) -> None:
+    """The one place DSM configures logging, called once per process: one console
+    handler on the root logger, the root left at WARNING and `APP_LOGGERS` raised to
+    `level` (the ini's when none is given), so a record of another library is never
+    created and can never reach a task's log (req 8). `task_id` only says which task
+    a child's lines belong to on the shared terminal; calling this again replaces the
+    handler this installed and nothing else."""
+    global _console
+    if level is None:
+        level = log_level_of(config().api.log_level)
+    root = logging.getLogger()
+    if _console is not None:
+        root.removeHandler(_console)
+    console = logging.StreamHandler(sys.stderr)
+    console.setFormatter(
+        logging.Formatter(
+            (f"[dve-task-{task_id[:8]}] " if task_id else "") + "%(asctime)s %(levelname)s %(name)s: %(message)s"
+        )
+    )
+    console.dsm_console = True
+    root.addHandler(console)
+    _console = console
+    root.setLevel(logging.WARNING)
+    for name in APP_LOGGERS:
+        logging.getLogger(name).setLevel(level)

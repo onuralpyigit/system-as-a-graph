@@ -8,41 +8,88 @@ from pathlib import Path
 
 import mdg
 import pytest
+from flask.testing import FlaskClient
 
 from fakes import seed
 from fakes.fake_config_management_repository import FakeConfigManagementRepository
-from fakes.fake_production_log import FakeProductionLog
-from fakes.fake_production_runner import FakeProductionRunner
+from dve.adapters.in_memory_task_log import InMemoryTaskLog
 from fakes.fake_source_code_repository import FakeSourceCodeRepository
+from fakes.fake_task_runner import FakeTaskRunner
 from dve import Runtime
 from dve.adapters.ldap_directory_service import LdapDirectoryService
 from dve.api import create_app
-from dve.services.data_source_connections import DataSourceConnections
+from dve.services.data_source_service import DataSourceService
+from dve.services.task_service import TaskService
+
+
+def _refused_token(response) -> bool:
+    """Whether this 403 is the API's "send a fresh CSRF token" answer."""
+    payload = response.get_json(silent=True)
+    return isinstance(payload, dict) and payload.get("csrf") is True
+
+
+class CsrfClient(FlaskClient):
+    """A client that carries the X-CSRFToken an unsafe request gets from the UI's browser:
+    read once from GET /api/csrf-token and sent on every state-changing request. Like the UI
+    it answers a refused token with one fresh read and a retry, which is how a test signs out
+    and back in on one client. A test that sends its own X-CSRFToken is left alone, which is
+    how it sends a forged one."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._token = None
+
+    def open(self, *args, **kwargs):
+        if kwargs.get("method") in (None, "GET", "HEAD", "OPTIONS"):
+            return super().open(*args, **kwargs)
+        headers = dict(kwargs.pop("headers", None) or {})
+        if any(name.lower() == "x-csrftoken" for name in headers):
+            return super().open(*args, headers=headers, **kwargs)
+        for _attempt in (1, 2):
+            headers["X-CSRFToken"] = self.token()
+            response = super().open(*args, headers=headers, **kwargs)
+            if response.status_code != 403 or not _refused_token(response):
+                return response
+            self._token = None
+        return response
+
+    def token(self) -> str:
+        if self._token is None:
+            self._token = self.get("/api/csrf-token").get_json()["csrf_token"]
+        return self._token
 
 
 @pytest.fixture
 def make_runtime():
     """Factory of a Runtime over fakes; mdg's real file store serves `workspace`."""
-    def factory(workspace: Path = None, production_runner=None, source_repo=None, config_repo=None) -> Runtime:
+    def factory(workspace: Path = None, task_runner=None, task_log=None, source_repo=None, config_repo=None) -> Runtime:
         config_repo_factory = lambda source: config_repo or FakeConfigManagementRepository()
         source_repo_factory = lambda source: source_repo or FakeSourceCodeRepository()
         return Runtime(
             defaults=seed.DEFAULTS,
-            connections=DataSourceConnections(seed.DEFAULTS, config_repo_factory, source_repo_factory),
+            data_sources=DataSourceService(seed.DEFAULTS, config_repo_factory, source_repo_factory),
             config_repo_factory=config_repo_factory,
             source_repo_factory=source_repo_factory,
             directory_service=LdapDirectoryService(),
-            production_runner=production_runner or FakeProductionRunner(),
-            production_log=FakeProductionLog(),
+            tasks=TaskService(task_runner or FakeTaskRunner(), task_log or InMemoryTaskLog()),
             model_setup_data_store=mdg.model_setup_data_store(workspace or Path("/nonexistent-workspace")),
         )
     return factory
 
 
 @pytest.fixture
-def make_client(make_runtime):
+def make_client_for():
+    """Factory of a client over an application the test built itself."""
+    def factory(app):
+        app.test_client_class = CsrfClient
+        return app.test_client()
+    return factory
+
+
+@pytest.fixture
+def make_client(make_runtime, make_client_for):
     """Factory of a test client over a runtime, the default one when none is given."""
-    return lambda runtime=None: create_app(runtime or make_runtime()).test_client()
+    return lambda runtime=None: make_client_for(create_app(runtime or make_runtime()))
 
 
 @pytest.fixture
