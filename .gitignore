@@ -221,5 +221,8 @@ __marimo__/
 # The MDG run workspace: cloned repositories and produced Model Setup Data files.
 workspace/
 
+# Kilo agent plans and session state.
+.kilo/
+
 # macOS
 .DS_Store
