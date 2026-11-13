@@ -17,7 +17,11 @@ def _repository() -> MysqlConfigManagementRepository:
 
 def test_data_source_address_and_user_info_are_split():
     assert _repository()._connection == {
-        "host": "localhost", "port": 3306, "user": "dsm", "password": "dsm", "database": "cmdb",
+        "host": "localhost",
+        "port": 3306,
+        "user": "dsm",
+        "password": "dsm",  # NOSONAR dev-stack stand-in from dev/compose.yaml, not a real credential
+        "database": "cmdb",
     }
 
 

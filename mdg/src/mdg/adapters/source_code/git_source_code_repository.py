@@ -4,6 +4,7 @@ tag from one organization on a git server (SRS DSM-MDG req 2.2, 11, 13-16)."""
 from __future__ import annotations
 
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -28,6 +29,12 @@ CLONE_TIMEOUT_SECONDS = 300
 LS_REMOTE_TIMEOUT_SECONDS = 60
 CHECK_TIMEOUT_SECONDS = 15
 _TAG_PREFIX = "refs/tags/"
+# Answers git's credential request from the environment, so the password never
+# appears in the command line, the URL or the cloned repository's config.
+_CREDENTIAL_HELPER = (
+    '!f() { test "$1" = get && printf "username=%s\\npassword=%s\\n" '
+    '"$DSM_GIT_USER" "$DSM_GIT_PASSWORD"; }; f'
+)
 
 
 class GitSourceCodeRepository(ISourceCodeRepository):
@@ -106,19 +113,33 @@ class GitSourceCodeRepository(ISourceCodeRepository):
         )
 
     def _url(self, unit_name: str) -> str:
-        scheme, _, rest = self._base_url.partition("://")
-        return f"{scheme}://{self._user}:{self._password}@{rest}/{self._org}/{unit_name}.git"
+        return f"{self._base_url}/{self._org}/{unit_name}.git"
+
+    def _redact(self, text: str) -> str:
+        return text.replace(self._password, "***") if self._password else text
 
     def _git(self, args: List[str], attempt: str, timeout: int) -> subprocess.CompletedProcess:
-        """Runs one git command; every failure raises SourceRepoAuthError or
-        SourceRepoAccessError (req 16)."""
-        command = ["git", "-c", "http.sslVerify=false", *args]
+        """Runs one git command with the credentials passed by environment;
+        every failure raises SourceRepoAuthError or SourceRepoAccessError (req 16)."""
+        command = [
+            "git",
+            "-c", "http.sslVerify=false",
+            "-c", "credential.helper=",
+            "-c", f"credential.helper={_CREDENTIAL_HELPER}",
+            *args,
+        ]
+        env = {
+            **os.environ,
+            "DSM_GIT_USER": self._user,
+            "DSM_GIT_PASSWORD": self._password,
+            "GIT_TERMINAL_PROMPT": "0",
+        }
         try:
-            result = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=timeout, env=env)
         except (subprocess.TimeoutExpired, OSError) as exc:
-            raise SourceRepoAccessError(f"Could not {attempt}: {exc}") from exc
+            raise SourceRepoAccessError(f"Could not {attempt}: {self._redact(str(exc))}") from exc
         if result.returncode != 0:
-            stderr = result.stderr.strip()
+            stderr = self._redact(result.stderr.strip())
             if "Authentication" in stderr or "401" in stderr or "403" in stderr:
                 raise SourceRepoAuthError(f"Authentication failed, could not {attempt}: {stderr}")
             raise SourceRepoAccessError(f"Could not {attempt}: {stderr}")

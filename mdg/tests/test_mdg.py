@@ -31,7 +31,8 @@ def _file(result: dict) -> dict:
 def test_result_names_the_file_the_units_the_scale_and_no_errors(tmp_path: Path):
     result = _produce(tmp_path, produced_by=seed.PRODUCER)
 
-    assert set(result) == {"run_id", "file", "units", "scale", "candidate", "errors"}
+    assert set(result) == {"run_id", "file", "units", "scale", "acquired_files", "candidates", "errors"}
+    assert result["acquired_files"] == 4
     assert result["run_id"] == seed.RUN_1
     assert Path(result["file"]) == tmp_path / "ws" / seed.PROJECT / seed.PLATFORM / seed.VERSION / seed.RUN_1 / FILE_NAME
     assert result["units"] == [
@@ -39,8 +40,8 @@ def test_result_names_the_file_the_units_the_scale_and_no_errors(tmp_path: Path)
         {"unit_name": seed.NAV_APP, "version": seed.VERSION, "is_candidate": False, "status": "ok"},
         {"unit_name": seed.SENSOR_APP, "version": seed.VERSION, "is_candidate": False, "status": "ok"},
     ]
-    assert result["scale"] == {"apps": 2, "topics": 2, "nodes": 2, "libraries": 1}
-    assert result["candidate"] is None
+    assert result["scale"] == {"apps": 2, "topics": 2, "messages": 2, "nodes": 2, "libraries": 1, "networks": 2}
+    assert result["candidates"] == []
     assert result["errors"] == []
 
 
@@ -63,23 +64,42 @@ def test_saved_file_holds_the_whole_model_setup_data(tmp_path: Path):
     assert graph["relationships"]["runs_on"] == [{"from": "A0", "to": "N0"}, {"from": "A1", "to": "N1"}]
     assert graph["relationships"]["publishes_to"] == [{"from": "A0", "to": "T0"}, {"from": "A1", "to": "T1"}]
     assert graph["relationships"]["subscribes_to"] == [{"from": "A0", "to": "T1"}]
+    assert [(m["id"], m["message_id"], m["name"]) for m in graph["messages"]] == [
+        ("M0", "MSG-001", seed.MSG_NAV_POSITION), ("M1", "MSG-002", seed.MSG_SENSOR_DATA),
+    ]
+    assert graph["relationships"]["sends"] == [{"from": "A0", "to": "M0"}, {"from": "A1", "to": "M1"}]
+    assert graph["relationships"]["receives"] == [{"from": "A1", "to": "M0"}, {"from": "A0", "to": "M1"}]
+    assert {n["name"]: n["group"] for n in graph["nodes"]} == {seed.NODE_0: "processors", seed.NODE_1: "processors"}
+    assert [(w["id"], w["name"]) for w in graph["networks"]] == [("W0", seed.SWITCH_0), ("W1", seed.SWITCH_1)]
+    assert graph["relationships"]["connects_to"] == [
+        {"from": "N0", "to": "W0", "device": "eth0", "dev_raw": "ens1f0", "bandwidth": 1.0},
+        {"from": "N1", "to": "W0", "device": "eth0", "dev_raw": "ens1f0", "bandwidth": 1.0},
+        {"from": "N0", "to": "W1", "device": "eth1", "dev_raw": "ens1f1", "bandwidth": 0.1},
+    ]
 
 
 def test_no_producer_is_recorded_when_none_is_named(tmp_path: Path):
     assert _file(_produce(tmp_path))["produced_by"] is None
 
 
-def test_candidate_version_is_cloned_and_flagged_in_the_inventory(tmp_path: Path):
+def test_candidate_versions_are_cloned_and_flagged_in_the_inventory(tmp_path: Path):
     source_repo = FakeSourceCodeRepository()
-    candidate = mdg.CandidateUnitVersion(seed.SENSOR_APP, seed.CANDIDATE_VERSION)
+    candidates = [
+        mdg.CandidateUnitVersion(seed.SENSOR_APP, seed.CANDIDATE_VERSION),
+        mdg.CandidateUnitVersion(seed.NAV_APP, "2.0.0"),
+    ]
 
-    result = _produce(tmp_path, source_repo=source_repo, candidate=candidate)
+    result = _produce(tmp_path, source_repo=source_repo, candidates=candidates)
 
     assert (seed.SENSOR_APP, seed.CANDIDATE_VERSION) in source_repo.cloned
-    assert result["candidate"] == candidate.to_dict()
+    assert (seed.NAV_APP, "2.0.0") in source_repo.cloned
+    assert result["candidates"] == [c.to_dict() for c in candidates]
     payload = _file(result)
+    assert payload["inventory"]["units"][1] == {"unit_name": seed.NAV_APP, "version": "2.0.0", "is_candidate": True}
     assert payload["inventory"]["units"][2] == {"unit_name": seed.SENSOR_APP, "version": seed.CANDIDATE_VERSION, "is_candidate": True}
-    assert {a["name"]: a["version"] for a in payload["graph"]["applications"]}[seed.SENSOR_APP] == seed.CANDIDATE_VERSION
+    versions = {a["name"]: a["version"] for a in payload["graph"]["applications"]}
+    assert versions[seed.SENSOR_APP] == seed.CANDIDATE_VERSION
+    assert versions[seed.NAV_APP] == "2.0.0"
 
 
 def test_clone_failure_and_missing_file_land_in_errors_and_unit_status(tmp_path: Path):
@@ -124,4 +144,20 @@ def test_progress_reports_the_percent_and_phase_after_each_work_unit(tmp_path: P
 
     _produce(tmp_path, progress=lambda percent, phase: reports.append((percent, phase)))
 
-    assert reports == [(16, "system"), (33, "clone"), (50, "clone"), (66, "parse"), (83, "parse"), (100, "finalize")]
+    assert reports == [
+        (8, "context"), (16, "system"), (25, "system"), (33, "ansible"), (41, "ansible"),
+        (60, "clone"), (70, "clone"), (80, "parse"), (90, "parse"), (100, "finalize"),
+    ]
+
+
+def test_progress_never_falls_back_when_the_total_is_corrected():
+    from mdg.services.produce_model_setup_data import _Progress
+    reports = []
+    steps = _Progress(lambda percent, phase: reports.append(percent), total=10)
+    for _ in range(3):
+        steps.advance("x")
+
+    steps.retotal(2)
+    steps.advance("x")
+
+    assert reports == [10, 20, 30, 100]

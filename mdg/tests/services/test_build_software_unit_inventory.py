@@ -13,11 +13,16 @@ def test_inventory_is_the_selected_versions_rows():
     assert inventory.units == seed.inventory_rows()
 
 
-def test_candidate_is_applied_to_the_inventory():
-    candidate = CandidateUnitVersion(seed.SENSOR_APP, seed.CANDIDATE_VERSION)
+def test_candidates_are_applied_to_the_inventory():
+    candidates = [
+        CandidateUnitVersion(seed.SENSOR_APP, seed.CANDIDATE_VERSION),
+        CandidateUnitVersion(seed.NAV_APP, "2.0.0"),
+    ]
 
-    inventory = BuildSoftwareUnitInventory(FakeConfigManagementRepository()).execute(seed.CONTEXT, candidate)
+    inventory = BuildSoftwareUnitInventory(FakeConfigManagementRepository()).execute(seed.CONTEXT, candidates)
 
     assert inventory.find(seed.SENSOR_APP).version == seed.CANDIDATE_VERSION
     assert inventory.find(seed.SENSOR_APP).is_candidate is True
-    assert inventory.find(seed.NAV_APP).version == seed.VERSION
+    assert inventory.find(seed.NAV_APP).version == "2.0.0"
+    assert inventory.find(seed.NAV_APP).is_candidate is True
+    assert inventory.find(seed.COMMON_LIB).version == seed.VERSION

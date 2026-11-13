@@ -16,27 +16,66 @@ from mdg.ports.source_code_repository import SourceRepoAccessError, SourceRepoAu
 NAV_APP = SoftwareUnitVersion(seed.NAV_APP, seed.VERSION)
 
 
-def _repository() -> GitSourceCodeRepository:
-    source = DataSourceConfig(SourceType.SOURCE_CODE_REPO, "gitea", "git", seed.SOURCE_REPO_URL, seed.CREDENTIALS)
+SECRET = "s3cr3t@pw"
+
+
+def _repository(credentials: str = seed.CREDENTIALS) -> GitSourceCodeRepository:
+    source = DataSourceConfig(SourceType.SOURCE_CODE_REPO, "gitea", "git", seed.SOURCE_REPO_URL, credentials)
     return GitSourceCodeRepository.from_data_source_config(source, MandatoryFiles([seed.MAKEFILE_INCLUDE]), seed.SYSTEM_REPO)
 
 
-def _fake_git(monkeypatch, stdout="", returncode=0, stderr="", captured=None):
+def _fake_git(monkeypatch, stdout="", returncode=0, stderr="", captured=None, captured_env=None):
     def run(cmd, **kwargs):
         if captured is not None:
             captured.append(cmd)
+        if captured_env is not None:
+            captured_env.append(kwargs.get("env"))
         return subprocess.CompletedProcess(cmd, returncode, stdout=stdout, stderr=stderr)
 
     monkeypatch.setattr("mdg.adapters.source_code.git_source_code_repository.subprocess.run", run)
 
 
 def test_check_access_reads_the_system_repo_with_the_credentials(monkeypatch):
-    captured = []
-    _fake_git(monkeypatch, captured=captured)
+    captured, captured_env = [], []
+    _fake_git(monkeypatch, captured=captured, captured_env=captured_env)
 
     _repository().check_access()
 
-    assert captured[0][3:] == ["ls-remote", "--heads", "http://dsm:dsm@localhost:3000/dsm-src/system_repo.git"]
+    assert captured[0][-3:] == ["ls-remote", "--heads", "http://localhost:3000/dsm-src/system_repo.git"]
+    assert captured_env[0]["DSM_GIT_USER"] == "dsm"
+    assert captured_env[0]["DSM_GIT_PASSWORD"] == "dsm"
+    assert captured_env[0]["GIT_TERMINAL_PROMPT"] == "0"
+
+
+def test_the_password_is_kept_out_of_the_command_line(monkeypatch, tmp_path: Path):
+    captured, captured_env = [], []
+    _fake_git(monkeypatch, captured=captured, captured_env=captured_env)
+
+    _repository(f"dsm:{SECRET}").clone(NAV_APP, tmp_path)
+
+    assert not any(SECRET in arg for arg in captured[0])
+    assert captured_env[0]["DSM_GIT_PASSWORD"] == SECRET
+
+
+def test_a_timeout_maps_to_an_access_error_without_the_password(monkeypatch, tmp_path: Path):
+    def run(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd, kwargs["timeout"])
+
+    monkeypatch.setattr("mdg.adapters.source_code.git_source_code_repository.subprocess.run", run)
+
+    with pytest.raises(SourceRepoAccessError) as error:
+        _repository(f"dsm:{SECRET}").clone(NAV_APP, tmp_path)
+
+    assert SECRET not in str(error.value)
+
+
+def test_the_password_is_redacted_from_git_error_output(monkeypatch):
+    _fake_git(monkeypatch, returncode=128, stderr=f"fatal: unable to access 'http://dsm:{SECRET}@localhost/'")
+
+    with pytest.raises(SourceRepoAccessError) as error:
+        _repository(f"dsm:{SECRET}").check_access()
+
+    assert SECRET not in str(error.value) and "***" in str(error.value)
 
 
 def test_check_access_maps_refused_credentials_and_a_missing_repo(monkeypatch):
@@ -56,10 +95,10 @@ def test_clone_asks_for_the_version_tag_of_the_org_repository(monkeypatch, tmp_p
     unit_dir = _repository().clone(NAV_APP, tmp_path)
 
     assert unit_dir == tmp_path / seed.NAV_APP
-    assert captured[0][:6] == ["git", "-c", "http.sslVerify=false", "clone", "--depth", "1"]
-    assert captured[0][6:8] == ["--branch", seed.VERSION]
-    assert captured[0][8] == "http://dsm:dsm@localhost:3000/dsm-src/nav_app.git"
-    assert captured[0][9] == str(unit_dir)
+    assert captured[0][:3] == ["git", "-c", "http.sslVerify=false"]
+    assert captured[0][-7:-2] == ["clone", "--depth", "1", "--branch", seed.VERSION]
+    assert captured[0][-2] == "http://localhost:3000/dsm-src/nav_app.git"
+    assert captured[0][-1] == str(unit_dir)
 
 
 def test_git_failures_map_to_the_port_errors(monkeypatch, tmp_path: Path):

@@ -6,7 +6,7 @@ from fakes import seed
 from mdg.domain.acquired_file import AcquiredFile
 from mdg.domain.data_source import DataSourceConfig, SourceType
 from mdg.domain.error_record import ErrorStatus
-from mdg.domain.source_data import RelationKind, Topic, UnitRelation
+from mdg.domain.source_data import ConnectsTo, RelationKind, Topic, UnitRelation
 from mdg.services.check_mandatory_fields import CheckMandatoryFields, MandatoryFieldRule
 
 
@@ -40,3 +40,15 @@ def test_rule_applies_only_to_its_record_type():
     errors = CheckMandatoryFields(rules).execute([relation, source], seed.CONTEXT)
 
     assert [(e.source_name, e.source_type) for e in errors] == [("mysql", "config_mgmt_db")]
+
+
+def test_a_connect_missing_its_to_name_is_recorded_with_the_from_name_as_source():
+    errors = CheckMandatoryFields([MandatoryFieldRule("to_name", ConnectsTo)]).execute(
+        [ConnectsTo(seed.NODE_0, "", device="eth0")], seed.CONTEXT
+    )
+
+    assert len(errors) == 1
+    assert errors[0].status is ErrorStatus.MISSING_DATA
+    assert errors[0].reason == "'to_name' is missing on ConnectsTo"
+    assert errors[0].source_name == seed.NODE_0
+    assert errors[0].source_type == "source_code_repo"

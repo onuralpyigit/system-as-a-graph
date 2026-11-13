@@ -1,5 +1,6 @@
-"""Loads mdg.ini: the workspace and system repo name, the mandatory file rules,
-the source parser settings and the build switch (SRS DSM-MDG req 3, 13, 15, 19)."""
+"""Loads mdg.ini: the workspace and the system and ansible repo names, the
+mandatory file rules, the source parser settings and the build switch
+(SRS DSM-MDG req 3, 13, 15, 19)."""
 
 from __future__ import annotations
 
@@ -14,9 +15,11 @@ PACKAGE_DIR = Path(__file__).resolve().parent
 
 @dataclass(frozen=True)
 class WorkspaceConfig:
-    """Where runs are written and which inventory entry is the system repo."""
+    """Where runs are written and which inventory entries are the system
+    repo and the ansible repo."""
     path: str = "workspace"
     system_repo: str = "system_repo"
+    ansible_repo: str = "ansible_repo"
 
     def root(self) -> Path:
         """The workspace root, relative to the mdg package directory unless absolute."""
@@ -69,6 +72,7 @@ def load(path: Path = MDG_INI) -> Config:
         workspace=WorkspaceConfig(
             path=text("workspace", "path", WorkspaceConfig.path),
             system_repo=text("workspace", "system_repo", WorkspaceConfig.system_repo),
+            ansible_repo=text("workspace", "ansible_repo", WorkspaceConfig.ansible_repo),
         ),
         mandatory_files=MandatoryFilesConfig(
             makefile_include_patterns=items("mandatory_files", "makefile_include_patterns"),

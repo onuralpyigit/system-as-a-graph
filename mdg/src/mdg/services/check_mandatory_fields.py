@@ -10,7 +10,7 @@ from mdg.domain.acquired_file import AcquiredFile
 from mdg.domain.data_source import DataSourceConfig, SourceType
 from mdg.domain.error_record import ErrorRecord, ErrorStatus
 from mdg.domain.project_context import ProjectContext
-from mdg.domain.source_data import Topic, UnitRelation
+from mdg.domain.source_data import ConnectsTo, Message, Topic, UnitRelation
 
 
 @dataclass(frozen=True)
@@ -46,6 +46,8 @@ class CheckMandatoryFields:
             return record.source_name, record.source_type.value
         if isinstance(record, (AcquiredFile, UnitRelation)):
             return record.unit_name, SourceType.SOURCE_CODE_REPO.value
-        if isinstance(record, Topic):
+        if isinstance(record, ConnectsTo):
+            return record.from_name, SourceType.SOURCE_CODE_REPO.value
+        if isinstance(record, (Topic, Message)):
             return record.name, SourceType.SOURCE_CODE_REPO.value
         return type(record).__name__, "unknown"

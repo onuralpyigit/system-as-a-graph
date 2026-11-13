@@ -18,6 +18,12 @@ class IModelSetupDataStore(ABC):
         """Saves the Model Setup Data file of a run and returns its path (req 19)."""
 
     @abstractmethod
+    def add(self, content: bytes, project_id: str, platform_id: str, version_id: str, run_id: str) -> ModelSetupDataRecord:
+        """Stores a Model Setup Data file produced elsewhere, unchanged, as a run
+        of the selection; raises InvalidModelSetupData when the content is not a
+        Model Setup Data file of that selection (DSM-DVE req 5)."""
+
+    @abstractmethod
     def list(self, project_id: str, platform_id: str, version_id: str) -> List[ModelSetupDataRecord]:
         """The files produced for a selection, newest first (DSM-DVE req 5)."""
 
