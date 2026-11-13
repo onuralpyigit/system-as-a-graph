@@ -7,14 +7,14 @@
  * arrived. The app sets Barlow at 400 only, so adding a heavier Barlow
  * rule to app.css means adding a face here too — without one the browser
  * fakes the bold. Fetched with:
- * curl -o barlow.woff2 https://fonts.gstatic.com/s/barlow/v13/7cHpv4kjgoGqM7E_DMs5.woff2
+ * curl -o barlow-400.woff2 https://fonts.gstatic.com/s/barlow/v13/7cHpv4kjgoGqM7E_DMs5.woff2
  */
 @font-face {
   font-family: "Barlow";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("barlow.woff2") format("woff2");
+  src: url("barlow-400.woff2") format("woff2");
 }
 
 /*!
@@ -27,14 +27,14 @@
  * another static file, not the variable font Google serves when several
  * weights are requested at once: Firefox < 100 does not instance a variable
  * font from a single-value font-weight descriptor. Fetched with:
- * curl -o orbitron.woff2 https://fonts.gstatic.com/s/orbitron/v35/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1nyxSmBoWgz.woff2
+ * curl -o orbitron-600.woff2 https://fonts.gstatic.com/s/orbitron/v35/yMJMMIlzdpvBhQQL_SC3X9yhF25-T1nyxSmBoWgz.woff2
  */
 @font-face {
   font-family: "Orbitron";
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("orbitron.woff2") format("woff2");
+  src: url("orbitron-600.woff2") format("woff2");
 }
 
 /*!
@@ -48,12 +48,15 @@
  * .icon-<name> rule in the package's font/lucide.css, and adding the rule
  * below. Built with fontTools from
  * https://cdn.jsdelivr.net/npm/lucide-static@1.43.0/font/lucide.woff2:
- * pyftsubset lucide.woff2 --unicodes=U+e048,... --flavor=woff2 --output-file=lucide.woff2
+ * pyftsubset lucide.woff2 --unicodes=U+e049,... --flavor=woff2 --output-file=lucide-subset.woff2
+ * (37 glyphs at present; the graph stage uses the ship, layers, boxes,
+ * box, cpu, server, radio, mail and library ones, network for the
+ * hardware view's buses and monitor for its console nodes)
  */
 @font-face {
   font-family: lucide;
   font-display: block;
-  src: url("lucide.woff2") format("woff2");
+  src: url("lucide-subset.woff2") format("woff2");
 }
 
 .lucide::before,
@@ -71,14 +74,17 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.lucide-arrow-left::before {
-  content: "\e048";
-}
 .lucide-arrow-right::before {
   content: "\e049";
 }
+.lucide-box::before {
+  content: "\e061";
+}
 .lucide-box-select::before {
   content: "\e1cb";
+}
+.lucide-boxes::before {
+  content: "\e2d0";
 }
 .lucide-check::before {
   content: "\e06c";
@@ -95,6 +101,9 @@
 .lucide-circle-x::before {
   content: "\e084";
 }
+.lucide-cpu::before {
+  content: "\e0a9";
+}
 .lucide-database::before {
   content: "\e0ad";
 }
@@ -110,11 +119,20 @@
 .lucide-file-code::before {
   content: "\e0c3";
 }
+.lucide-git-fork::before {
+  content: "\e28d";
+}
 .lucide-hard-drive::before {
   content: "\e0ed";
 }
 .lucide-key::before {
   content: "\e0fd";
+}
+.lucide-layers::before {
+  content: "\e529";
+}
+.lucide-library::before {
+  content: "\e100";
 }
 .lucide-list-checks::before {
   content: "\e1d0";
@@ -122,14 +140,26 @@
 .lucide-log-out::before {
   content: "\e10e";
 }
+.lucide-mail::before {
+  content: "\e10f";
+}
 .lucide-network::before {
   content: "\e125";
 }
 .lucide-package::before {
   content: "\e129";
 }
+.lucide-pencil::before {
+  content: "\e1f9";
+}
+.lucide-radio::before {
+  content: "\e142";
+}
 .lucide-rocket::before {
   content: "\e286";
+}
+.lucide-rotate-ccw-clock::before {
+  content: "\e1f5";
 }
 .lucide-search::before {
   content: "\e151";
@@ -137,8 +167,18 @@
 .lucide-server::before {
   content: "\e153";
 }
+
+.lucide-monitor::before {
+  content: "\e11d";
+}
+.lucide-ship::before {
+  content: "\e3ba";
+}
 .lucide-triangle-alert::before {
   content: "\e193";
+}
+.lucide-upload::before {
+  content: "\e19e";
 }
 .lucide-user::before {
   content: "\e19f";
