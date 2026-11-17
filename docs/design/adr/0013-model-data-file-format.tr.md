@@ -51,7 +51,7 @@ Seçilen seçenek: "Dosya sisteminde çalıştırma başına JSON dosyası; sür
   * Üst düzeye `"schema_version": "1.0"` eklenir.
   * `mdg/schemas/model-data-1.0.schema.json` konumunda bir JSON Şeması tanımlanır.
   * MDG dosyayı kaydetmeden önce doğrular; SMM girişte yeniden doğrular (SMM.3).
-  * Şema 1.0'da bölüm adları kanonik terminolojiye göre yeniden adlandırılır (ADR-0002).
+  * `graph` bölümü, MDG'nin bugün ürettiği Software-as-a-Graph çerçeve adlarını korur (`nodes`, `applications`, `libraries`, `topics`, `relationships.{runs_on, publishes_to, subscribes_to, uses}`); çünkü bunlar Sistem Modeli şemasının terminolojisidir (ADR-0014). Sonradan eklenecek bölümler (hiyerarşi, roller, mesajlar, broker'lar, iletişim servisleri, topoloji) de adlarını ADR-0014'ten alır. ADR-0002'nin artefakt terimleri bu bölüm adlarına değil, kod tanımlayıcılarına ve dokümanlara uygulanır.
 * **Evrim:** küçük sürümler yalnızca isteğe bağlı alanlar ekler. Büyük sürüm değişikliği, önceki büyük sürüm için bir okuyucuyla birlikte gelir; böylece listeleme (DVE.5) ve model inşası mevcut dosyalarla çalışmaya devam eder.
 * **Değiştirilemezlik ve bütünlük:**
   * dosya bir kez, geçici bir adla yazılır ve sonra atomik olarak yeniden adlandırılır;
