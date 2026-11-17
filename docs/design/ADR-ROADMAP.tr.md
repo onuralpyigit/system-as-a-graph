@@ -104,7 +104,7 @@ Sütun açıklaması: **Dalga** karar son tarihidir (bkz. §5). **Kapatır** sü
 | [ADR-0011](adr/0011-network-topology-acquisition.tr.md) | Ağ topolojisi verisinin alınması | Topoloji verisi otomatik olarak nereden ve hangi biçimde gelir; elle giriş bununla nasıl bir arada bulunur? | Sistem deposunda topoloji dosyası; veri tabanı/CMDB sorgusu; ağ yönetim sistemi dışa aktarımı; yalnızca elle giriş | Karar | MDG.5–7 | CDR-09, 20 | A | Proposed |
 | [ADR-0012](adr/0012-source-repository-acquisition.tr.md) | Kaynak kod deposundan veri alımı ve zorunlu dosya seti | Yazılım birimi başına hangi dosyalar zorunludur; model verisi ayrıştırmayla mı yoksa derleme çalıştırılarak mı çıkarılır? | Statik ayrıştırma (mevcut); ana makinede isteğe bağlı `gmake regenerate_code` adımı (mevcut, varsayılan kapalı); her zaman derleme; yalıtılmış konteynerde derleme | Onaylama | MDG.17–21; QA-05 | CDR-10 | A | Proposed |
 | [ADR-0013](adr/0013-model-data-file-format.tr.md) | Model Verisi dosya biçimi ve sürümleme | Model Verisi dosyasının biçimi, şema sürümü ve saklama yeri nedir? | Proje/platform/sürüm/çalıştırma anahtarlı dosya sisteminde JSON (mevcut); ilişkisel depoda saklama; çizge veri tabanına özgü içe aktarma biçimi | Onaylama | MDG.1, 14–15, 23; SMM.2–3, 26 | CDR-29 (kısmi), CDR-30 (kısmi) | A | Proposed |
-| [ADR-0014](adr/0014-system-model-graph-schema.tr.md) | Sistem Modeli çizge şeması | Düğüm ve ilişki tipleri, kimlik anahtarları, öznitelikler ve proje/platform/sürüm kapsamı nasıl modellenir? | Tipli düğüm/kenarlı etiketli özellik çizgesi; tip özniteliği taşıyan genel düğüm; sürüm başına çizge veya sürüm özelliği | Karar | SMM.4–24; QA-03 | CDR-30 (kısmi) | A | Proposed |
+| [ADR-0014](adr/0014-system-model-graph-schema.tr.md) | Sistem Modeli çizge şeması | Düğüm ve ilişki tipleri, kimlik anahtarları, öznitelikler ve türetilmiş bağımlılık görünümü nasıl modellenir ve Software-as-a-Graph çerçeve modeliyle nasıl hizalanır? | SRS uzantı etiketli ve türetilmiş `DEPENDS_ON` görünümlü, çerçeveyle hizalı tipli özellik çizgesi (Application/Library/Topic/Broker/Node/NetworkDevice); eşlemeli SRS adlı tipli çizge; tip özniteliği taşıyan genel düğüm | Karar | SMM.1, 4–25; DVE.19, 28–49, 53–58; QA-03, QA-07 | CDR-30 (kısmi) | A | Proposed |
 | [ADR-0015](adr/0015-graph-storage-technology.tr.md) | Çizge depolama teknolojisi | Sistem Modeli hangi motorda saklanır ve sorgulanır? | FalkorDB (SDP); Neo4j; serileştirmeli süreç içi NetworkX; PostgreSQL + Apache AGE | Karar | SMM.1, 4, 27–29; DVE.28–49; QA-02, QA-07 | CDR-29 (kısmi) | A | Proposed |
 | [ADR-0016](adr/0016-model-instances.tr.md) | Model örnekleri: temel, çalışma ve aday değerlendirme modelleri | Çalışma modelleri (kurgusal düzenlemeler) ve aday değerlendirme modelleri temel Sistem Modelinden nasıl yalıtılır? | Her örnek için tam kopya; yazarken kopyalanan fark katmanı; örnek başına ayrı adlandırılmış çizge | Karar | SMM.29–31; DVE.17, 29, 51; MDG.15; QA-02, QA-03 | CDR-29 (kısmi) | A | Proposed |
 | ADR-0017 | Analitik veri bağlama ve katman ayrımı | Analitik Değerlendirme Verisi, ayrılabilir kalarak ve köken bilgisi korunarak düğüm ve ilişkilere nasıl bağlanır? | Çizgede katman özellikleri; varlık anahtarıyla birleştirilen ayrı katman deposu; varlık anahtarıyla başvurulan zaman serisi deposu | Karar | SMM.32–37; DVE.16; QA-03, QA-04 | CDR-29 (kısmi), CDR-30 (kısmi) | C | Planned |
@@ -267,7 +267,7 @@ Her SRS ister bloğu en az bir ADR tarafından yönetilir.
 | DVE.27 | 0006, 0028, 0033 |
 | DVE.28–30 | 0016, 0022 |
 | DVE.31–49 | 0022, 0023 |
-| DVE.50–58 | 0018, 0026 |
+| DVE.50–58 | 0014, 0018, 0026 |
 | DVE.59–65, 69–70 | 0021, 0026 |
 | DVE.66–68 | 0026 |
 | DVE.71–77 | 0027 |
@@ -285,7 +285,7 @@ Her SRS ister bloğu en az bir ADR tarafından yönetilir.
 | QA-04 İzlenebilirlik ve köken bilgisi | 0024, 0035 |
 | QA-05 Doğrulama ve hata raporlama | 0012, 0034 |
 | QA-06 Birlikte çalışabilirlik | 0005, 0010, 0028 |
-| QA-07 Performans ve kapasite | 0015, 0021, 0025, 0036 |
+| QA-07 Performans ve kapasite | 0014, 0015, 0021, 0025, 0036 |
 | QA-08 Güvenilirlik | 0006, 0037 |
 | QA-09 Gözlemlenebilirlik | 0038 |
 | QA-10 Kurulabilirlik ve yapılandırma | 0004, 0039, 0040 |

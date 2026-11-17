@@ -100,7 +100,7 @@ Column key: **Wave** is the decision deadline (see §5). **Closes** lists the CD
 | [ADR-0011](adr/0011-network-topology-acquisition.md) | Network topology acquisition | Where does topology data come from automatically, in what format, and how does manual entry coexist with it? | Topology file in the system repository; database/CMDB query; network-management export; manual entry only | Decide | MDG.5–7 | CDR-09, 20 | A | Proposed |
 | [ADR-0012](adr/0012-source-repository-acquisition.md) | Source-repository acquisition and mandatory file set | Which files are mandatory per software unit, and is model data extracted by parsing or by running the build? | Static parsing (as built); optional host `gmake regenerate_code` step (as built, off by default); always build; isolated container build | Ratify | MDG.17–21; QA-05 | CDR-10 | A | Proposed |
 | [ADR-0013](adr/0013-model-data-file-format.md) | Model Data file format and versioning | What is the Model Data file's format, schema version and storage location? | JSON on the filesystem keyed by project/platform/version/run (as built); stored in the relational store; graph-native import format | Ratify | MDG.1, 14–15, 23; SMM.2–3, 26 | CDR-29 (part), CDR-30 (part) | A | Proposed |
-| [ADR-0014](adr/0014-system-model-graph-schema.md) | System Model graph schema | How are the node and relationship types, identity keys, attributes and project/platform/version scoping modelled? | Labeled property graph with typed nodes/edges; generic node + type attribute; per-version graphs vs version properties | Decide | SMM.4–24; QA-03 | CDR-30 (part) | A | Proposed |
+| [ADR-0014](adr/0014-system-model-graph-schema.md) | System Model graph schema | How are the node and relationship types, identity keys, attributes and the derived dependency view modelled, and how do they align with the Software-as-a-Graph framework model? | Framework-aligned typed property graph (Application/Library/Topic/Broker/Node/NetworkDevice) with SRS extension labels and a derived `DEPENDS_ON` view; SRS-named typed graph with a mapping; generic node + type attribute | Decide | SMM.1, 4–25; DVE.19, 28–49, 53–58; QA-03, QA-07 | CDR-30 (part) | A | Proposed |
 | [ADR-0015](adr/0015-graph-storage-technology.md) | Graph storage technology | Which engine stores and queries the System Model? | FalkorDB (SDP); Neo4j; in-process NetworkX with serialization; PostgreSQL + Apache AGE | Decide | SMM.1, 4, 27–29; DVE.28–49; QA-02, QA-07 | CDR-29 (part) | A | Proposed |
 | [ADR-0016](adr/0016-model-instances.md) | Model instances: baseline, working and candidate-evaluation models | How are working models (what-if edits) and candidate-evaluation models isolated from the baseline System Model? | Full copy per instance; copy-on-write delta overlay; separate named graph per instance | Decide | SMM.29–31; DVE.17, 29, 51; MDG.15; QA-02, QA-03 | CDR-29 (part) | A | Proposed |
 | ADR-0017 | Analytical data binding and layer separation | How is Analytical Evaluation Data attached to nodes and relationships while staying separable, with its provenance kept? | Overlay properties in the graph; separate overlay store joined by entity key; time-series store referenced by entity key | Decide | SMM.32–37; DVE.16; QA-03, QA-04 | CDR-29 (part), CDR-30 (part) | C | Planned |
@@ -263,7 +263,7 @@ Every SRS requirement block is governed by at least one ADR.
 | DVE.27 | 0006, 0028, 0033 |
 | DVE.28–30 | 0016, 0022 |
 | DVE.31–49 | 0022, 0023 |
-| DVE.50–58 | 0018, 0026 |
+| DVE.50–58 | 0014, 0018, 0026 |
 | DVE.59–65, 69–70 | 0021, 0026 |
 | DVE.66–68 | 0026 |
 | DVE.71–77 | 0027 |
@@ -281,7 +281,7 @@ Every SRS requirement block is governed by at least one ADR.
 | QA-04 Traceability and provenance | 0024, 0035 |
 | QA-05 Validation and error reporting | 0012, 0034 |
 | QA-06 Interoperability | 0005, 0010, 0028 |
-| QA-07 Performance and capacity | 0015, 0021, 0025, 0036 |
+| QA-07 Performance and capacity | 0014, 0015, 0021, 0025, 0036 |
 | QA-08 Reliability | 0006, 0037 |
 | QA-09 Observability | 0038 |
 | QA-10 Deployability and configuration | 0004, 0039, 0040 |
