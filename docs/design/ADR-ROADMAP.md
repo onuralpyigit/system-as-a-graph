@@ -101,7 +101,7 @@ Column key: **Wave** is the decision deadline (see §5). **Closes** lists the CD
 | [ADR-0012](adr/0012-source-repository-acquisition.md) | Source-repository acquisition and mandatory file set | Which files are mandatory per software unit, and is model data extracted by parsing or by running the build? | Static parsing (as built); optional host `gmake regenerate_code` step (as built, off by default); always build; isolated container build | Ratify | MDG.17–21; QA-05 | CDR-10 | A | Proposed |
 | [ADR-0013](adr/0013-model-data-file-format.md) | Model Data file format and versioning | What is the Model Data file's format, schema version and storage location? | JSON on the filesystem keyed by project/platform/version/run (as built); stored in the relational store; graph-native import format | Ratify | MDG.1, 14–15, 23; SMM.2–3, 26 | CDR-29 (part), CDR-30 (part) | A | Proposed |
 | [ADR-0014](adr/0014-system-model-graph-schema.md) | System Model graph schema | How are the node and relationship types, identity keys, attributes and the derived dependency view modelled, and how do they align with the Software-as-a-Graph framework model? | Framework-aligned typed property graph (Application/Library/Topic/Broker/Node/NetworkDevice) with SRS extension labels and a derived `DEPENDS_ON` view; SRS-named typed graph with a mapping; generic node + type attribute | Decide | SMM.1, 4–25; DVE.19, 28–49, 53–58; QA-03, QA-07 | CDR-30 (part) | A | Proposed |
-| [ADR-0015](adr/0015-graph-storage-technology.md) | Graph storage technology | Which engine stores and queries the System Model? | FalkorDB (SDP); Neo4j; in-process NetworkX with serialization; PostgreSQL + Apache AGE | Decide | SMM.1, 4, 27–29; DVE.28–49; QA-02, QA-07 | CDR-29 (part) | A | Proposed |
+| [ADR-0015](adr/0015-graph-storage-technology.md) | Graph storage technology | Which engine stores and serves System Model instances, and how does it relate to the Software-as-a-Graph framework's repository port and engines? | FalkorDB behind the framework's `IGraphRepository` port, with the framework's in-memory engine for derivation and tests (SDP); Neo4j via the framework's `Neo4jRepository`; framework in-memory engine per operation; PostgreSQL + Apache AGE | Decide | SMM.1, 4, 27–31; DVE.17, 28–58; QA-02, QA-07, QA-11 | CDR-29 (part) | A | Proposed |
 | [ADR-0016](adr/0016-model-instances.md) | Model instances: baseline, working and candidate-evaluation models | How are working models (what-if edits) and candidate-evaluation models isolated from the baseline System Model? | Full copy per instance; copy-on-write delta overlay; separate named graph per instance | Decide | SMM.29–31; DVE.17, 29, 51; MDG.15; QA-02, QA-03 | CDR-29 (part) | A | Proposed |
 | ADR-0017 | Analytical data binding and layer separation | How is Analytical Evaluation Data attached to nodes and relationships while staying separable, with its provenance kept? | Overlay properties in the graph; separate overlay store joined by entity key; time-series store referenced by entity key | Decide | SMM.32–37; DVE.16; QA-03, QA-04 | CDR-29 (part), CDR-30 (part) | C | Planned |
 | ADR-0018 | Simulation semantics and synthetic data generation | What does "simulation" mean in SaaG, and how is synthetic data generated reproducibly? | Analytical propagation over the graph; discrete-event simulation; statistical trace synthesis; seeded generators | Decide | SCG.1–4; DVE.53–58 | CDR-11 | B | Planned |
@@ -249,21 +249,21 @@ Every SRS requirement block is governed by at least one ADR.
 | SMM.6–24 | 0014 |
 | SMM.25–26 | 0034, 0035 |
 | SMM.27–28 | 0007, 0015 |
-| SMM.29–31 | 0016, 0033 |
+| SMM.29–31 | 0015, 0016, 0033 |
 | SMM.32–37 | 0017 |
 | DVE.1–2 | 0005, 0009 |
 | DVE.3–4 | 0030, 0031 |
 | DVE.5–9 | 0006, 0009, 0037 |
 | DVE.10–16 | 0006, 0009, 0017 |
-| DVE.17 | 0016, 0025 |
+| DVE.17 | 0015, 0016, 0025 |
 | DVE.18 | 0022, 0023 |
 | DVE.19–20 | 0025 |
 | DVE.21–25 | 0024, 0035 |
 | DVE.26 | 0029 |
 | DVE.27 | 0006, 0028, 0033 |
-| DVE.28–30 | 0016, 0022 |
+| DVE.28–30 | 0015, 0016, 0022 |
 | DVE.31–49 | 0022, 0023 |
-| DVE.50–58 | 0014, 0018, 0026 |
+| DVE.50–58 | 0014, 0015, 0018, 0026 |
 | DVE.59–65, 69–70 | 0021, 0026 |
 | DVE.66–68 | 0026 |
 | DVE.71–77 | 0027 |
@@ -285,7 +285,7 @@ Every SRS requirement block is governed by at least one ADR.
 | QA-08 Reliability | 0006, 0037 |
 | QA-09 Observability | 0038 |
 | QA-10 Deployability and configuration | 0004, 0039, 0040 |
-| QA-11 Maintainability and testability | 0003, 0022, 0041 |
+| QA-11 Maintainability and testability | 0003, 0015, 0022, 0041 |
 | QA-12 Usability and accessibility | 0009, 0025, 0042 |
 
 ---

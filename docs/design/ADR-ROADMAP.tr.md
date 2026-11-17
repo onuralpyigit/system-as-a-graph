@@ -105,7 +105,7 @@ Sütun açıklaması: **Dalga** karar son tarihidir (bkz. §5). **Kapatır** sü
 | [ADR-0012](adr/0012-source-repository-acquisition.tr.md) | Kaynak kod deposundan veri alımı ve zorunlu dosya seti | Yazılım birimi başına hangi dosyalar zorunludur; model verisi ayrıştırmayla mı yoksa derleme çalıştırılarak mı çıkarılır? | Statik ayrıştırma (mevcut); ana makinede isteğe bağlı `gmake regenerate_code` adımı (mevcut, varsayılan kapalı); her zaman derleme; yalıtılmış konteynerde derleme | Onaylama | MDG.17–21; QA-05 | CDR-10 | A | Proposed |
 | [ADR-0013](adr/0013-model-data-file-format.tr.md) | Model Verisi dosya biçimi ve sürümleme | Model Verisi dosyasının biçimi, şema sürümü ve saklama yeri nedir? | Proje/platform/sürüm/çalıştırma anahtarlı dosya sisteminde JSON (mevcut); ilişkisel depoda saklama; çizge veri tabanına özgü içe aktarma biçimi | Onaylama | MDG.1, 14–15, 23; SMM.2–3, 26 | CDR-29 (kısmi), CDR-30 (kısmi) | A | Proposed |
 | [ADR-0014](adr/0014-system-model-graph-schema.tr.md) | Sistem Modeli çizge şeması | Düğüm ve ilişki tipleri, kimlik anahtarları, öznitelikler ve türetilmiş bağımlılık görünümü nasıl modellenir ve Software-as-a-Graph çerçeve modeliyle nasıl hizalanır? | SRS uzantı etiketli ve türetilmiş `DEPENDS_ON` görünümlü, çerçeveyle hizalı tipli özellik çizgesi (Application/Library/Topic/Broker/Node/NetworkDevice); eşlemeli SRS adlı tipli çizge; tip özniteliği taşıyan genel düğüm | Karar | SMM.1, 4–25; DVE.19, 28–49, 53–58; QA-03, QA-07 | CDR-30 (kısmi) | A | Proposed |
-| [ADR-0015](adr/0015-graph-storage-technology.tr.md) | Çizge depolama teknolojisi | Sistem Modeli hangi motorda saklanır ve sorgulanır? | FalkorDB (SDP); Neo4j; serileştirmeli süreç içi NetworkX; PostgreSQL + Apache AGE | Karar | SMM.1, 4, 27–29; DVE.28–49; QA-02, QA-07 | CDR-29 (kısmi) | A | Proposed |
+| [ADR-0015](adr/0015-graph-storage-technology.tr.md) | Çizge depolama teknolojisi | Sistem Modeli örneklerini hangi motor saklar ve sunar, ve bu motor Software-as-a-Graph çerçevesinin depo portu ve motorlarıyla nasıl ilişkilidir? | Çerçevenin `IGraphRepository` portunun arkasında FalkorDB; türetme ve testler için çerçevenin bellek içi motoru (SDP); çerçevenin `Neo4jRepository` adaptörüyle Neo4j; işlem başına çerçeve bellek içi motoru; PostgreSQL + Apache AGE | Karar | SMM.1, 4, 27–31; DVE.17, 28–58; QA-02, QA-07, QA-11 | CDR-29 (kısmi) | A | Proposed |
 | [ADR-0016](adr/0016-model-instances.tr.md) | Model örnekleri: temel, çalışma ve aday değerlendirme modelleri | Çalışma modelleri (kurgusal düzenlemeler) ve aday değerlendirme modelleri temel Sistem Modelinden nasıl yalıtılır? | Her örnek için tam kopya; yazarken kopyalanan fark katmanı; örnek başına ayrı adlandırılmış çizge | Karar | SMM.29–31; DVE.17, 29, 51; MDG.15; QA-02, QA-03 | CDR-29 (kısmi) | A | Proposed |
 | ADR-0017 | Analitik veri bağlama ve katman ayrımı | Analitik Değerlendirme Verisi, ayrılabilir kalarak ve köken bilgisi korunarak düğüm ve ilişkilere nasıl bağlanır? | Çizgede katman özellikleri; varlık anahtarıyla birleştirilen ayrı katman deposu; varlık anahtarıyla başvurulan zaman serisi deposu | Karar | SMM.32–37; DVE.16; QA-03, QA-04 | CDR-29 (kısmi), CDR-30 (kısmi) | C | Planned |
 | ADR-0018 | Simülasyon anlamı ve sentetik veri üretimi | SaaG'de "simülasyon" ne anlama gelir; sentetik veri tekrarlanabilir biçimde nasıl üretilir? | Çizge üzerinde analitik yayılım; ayrık olay simülasyonu; istatistiksel iz sentezi; tohumlanmış üreteçler | Karar | SCG.1–4; DVE.53–58 | CDR-11 | B | Planned |
@@ -253,21 +253,21 @@ Her SRS ister bloğu en az bir ADR tarafından yönetilir.
 | SMM.6–24 | 0014 |
 | SMM.25–26 | 0034, 0035 |
 | SMM.27–28 | 0007, 0015 |
-| SMM.29–31 | 0016, 0033 |
+| SMM.29–31 | 0015, 0016, 0033 |
 | SMM.32–37 | 0017 |
 | DVE.1–2 | 0005, 0009 |
 | DVE.3–4 | 0030, 0031 |
 | DVE.5–9 | 0006, 0009, 0037 |
 | DVE.10–16 | 0006, 0009, 0017 |
-| DVE.17 | 0016, 0025 |
+| DVE.17 | 0015, 0016, 0025 |
 | DVE.18 | 0022, 0023 |
 | DVE.19–20 | 0025 |
 | DVE.21–25 | 0024, 0035 |
 | DVE.26 | 0029 |
 | DVE.27 | 0006, 0028, 0033 |
-| DVE.28–30 | 0016, 0022 |
+| DVE.28–30 | 0015, 0016, 0022 |
 | DVE.31–49 | 0022, 0023 |
-| DVE.50–58 | 0014, 0018, 0026 |
+| DVE.50–58 | 0014, 0015, 0018, 0026 |
 | DVE.59–65, 69–70 | 0021, 0026 |
 | DVE.66–68 | 0026 |
 | DVE.71–77 | 0027 |
@@ -289,7 +289,7 @@ Her SRS ister bloğu en az bir ADR tarafından yönetilir.
 | QA-08 Güvenilirlik | 0006, 0037 |
 | QA-09 Gözlemlenebilirlik | 0038 |
 | QA-10 Kurulabilirlik ve yapılandırma | 0004, 0039, 0040 |
-| QA-11 Sürdürülebilirlik ve test edilebilirlik | 0003, 0022, 0041 |
+| QA-11 Sürdürülebilirlik ve test edilebilirlik | 0003, 0015, 0022, 0041 |
 | QA-12 Kullanılabilirlik ve erişilebilirlik | 0009, 0025, 0042 |
 
 ---
