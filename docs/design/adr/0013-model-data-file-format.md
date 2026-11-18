@@ -45,7 +45,7 @@ Chosen option: "JSON file per run on the filesystem, made versioned and schema-v
 
 * **Location:** unchanged. The workspace root comes from configuration (ADR-0039) and is a persistent volume in deployment.
 * **Naming:** the `run_id` becomes the operation ID of the producing operation (ADR-0024). The file name is unchanged.
-* **Schema:** add `"schema_version": "1.0"` at the top level, and a JSON Schema at `mdg/schemas/model-data-1.0.schema.json`. MDG validates the file before saving it, and SMM validates it again on input (SMM.3). Section names are renamed to the canonical vocabulary in schema 1.0 (ADR-0002).
+* **Schema:** add `"schema_version": "1.0"` at the top level, and a JSON Schema at `mdg/schemas/model-data-1.0.schema.json`. MDG validates the file before saving it, and SMM validates it again on input (SMM.3). The `graph` section keeps the Software-as-a-Graph framework names MDG emits today (`nodes`, `applications`, `libraries`, `topics`, `relationships.{runs_on, publishes_to, subscribes_to, uses}`), because they are the System Model schema vocabulary (ADR-0014). Sections added later (hierarchy, roles, messages, brokers, communication services, topology) take their names from ADR-0014 too. The ADR-0002 artifact terms apply to code identifiers and documents, not to these section names.
 * **Evolution:** minor versions only add optional fields. A major version change ships a reader for the previous major version, so listing (DVE.5) and model construction keep working for existing files.
 * **Immutability and integrity:**
   * the file is written once, to a temporary name, and then atomically renamed;
