@@ -1,4 +1,4 @@
-# ADR-0023: Verification rule-set catalog and governance
+# ADR-0018: Verification rule-set catalog and governance
 
 | Field | Value |
 |---|---|
@@ -16,7 +16,7 @@
 
 CDR-01…08 leave the *content* of the verification rules open: QoS rules, communication services in scope, load balancing, core allocation, OS settings, memory allocation, architectural rules, and classification metrics. These are domain rules that engineers will refine for years. They are not architecture decisions. Writing each rule set as an ADR would turn every threshold change into an ADR.
 
-What *is* an architecture decision is where rule content lives, how it is versioned, who approves it, and how it is tested. ADR-0022 fixes the rule record format. DVE.77 also mentions an "evaluation profile", which implies selectable rule sets.
+What *is* an architecture decision is where rule content lives, how it is versioned, who approves it, and how it is tested. ADR-0017 fixes the rule record format. DVE.77 also mentions an "evaluation profile", which implies selectable rule sets.
 
 ## Decision Drivers
 
@@ -53,9 +53,9 @@ Chosen option: "A versioned rules catalog in the repository, approved by pull re
 * **Versioning:**
   * Each rule has its own `version`.
   * The catalog as a whole is versioned by the repository tag of the release that ships it.
-  * Every operation records the catalog version and profile used (ADR-0024).
+  * Every operation records the catalog version and profile used (ADR-0019).
 * **Approval:**
-  * A rule enters as `provisional`. It can be merged with development-team review, and it is reported but does not affect classification (ADR-0022).
+  * A rule enters as `provisional`. It can be merged with development-team review, and it is reported but does not affect classification (ADR-0017).
   * Setting `status: approved` needs approval from the CDR Board's designated domain owner for that family, recorded in the pull request.
 * **Testing:** every rule ships with fixture models that must and must not trigger it (`dve/rules/fixtures/`). CI runs them.
 * **Runtime changes:** none. Users choose profiles at runtime, but they cannot edit rules. A new threshold needs a catalog change and a release.
@@ -70,7 +70,7 @@ Chosen option: "A versioned rules catalog in the repository, approved by pull re
 
 ### Confirmation
 
-* A CI schema check validates every rule file against the rule record (ADR-0022) and every profile against the catalog.
+* A CI schema check validates every rule file against the rule record (ADR-0017) and every profile against the catalog.
 * The fixture tests pass for every rule.
 * A CI check fails if an `approved` rule changes without a `version` bump.
 
@@ -94,4 +94,4 @@ Chosen option: "A versioned rules catalog in the repository, approved by pull re
 ## More Information
 
 * [CDR §1.1](../CDR.md)
-* Related: ADR-0022, ADR-0024, ADR-0027, ADR-0041
+* Related: ADR-0017, ADR-0019, ADR-0022, ADR-0036

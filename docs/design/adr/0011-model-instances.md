@@ -1,4 +1,4 @@
-# ADR-0016: Model instances: baseline, working and candidate-evaluation models
+# ADR-0011: Model instances: baseline, working and candidate-evaluation models
 
 | Field | Value |
 |---|---|
@@ -37,38 +37,38 @@ These must coexist under concurrent users and pipeline operations without interf
 
 ## Decision Outcome
 
-Chosen option: "A separate named graph per instance, with working models copied from their baseline". Each instance is an ordinary graph that rules query without special logic. Copying is cheap in the chosen store (ADR-0015, `GRAPH.COPY`). The edit history is still kept as a change log for traceability.
+Chosen option: "A separate named graph per instance, with working models copied from their baseline". Each instance is an ordinary graph that rules query without special logic. Copying is cheap in the chosen store (ADR-0010, `GRAPH.COPY`). The edit history is still kept as a change log for traceability.
 
 | Kind | Created from | Mutability | Owner | Lifetime |
 |---|---|---|---|---|
-| `baseline` | A Model Data file (SMM.4) | Immutable after construction | System | Retained per ADR-0040 |
-| `working` | Copy of a baseline (or of another working model) | Edited through SMM's working-model API only | One user | Until deleted by the owner, or expired (ADR-0040) |
+| `baseline` | A Model Data file (SMM.4) | Immutable after construction | System | Retained per ADR-0035 |
+| `working` | Copy of a baseline (or of another working model) | Edited through SMM's working-model API only | One user | Until deleted by the owner, or expired (ADR-0035) |
 | `candidate` | Its own Model Data file produced with a candidate (MDG.15) | Immutable after construction | One operation | Deleted when its evaluation operation ends, after findings are persisted |
 
-* **Registry:** each instance is a row in the relational store (ADR-0008), in a table with:
+* **Registry:** each instance is a row in a durable store, whose engine [ADR-0004](0004-operations-panel-runtime-stack.md) leaves undecided, in a table with:
   * `instance_id`, `kind`, `parent_instance_id`;
   * `model_data_ref` and its hash;
   * project, platform and system version;
   * `created_by`, `created_at`, `status`, `revision`.
 
   The graph name is `model:<instance_id>`.
-* **Immutability:** SMM's façade exposes write operations only for `working` instances. Verification and analysis receive a read-only handle (ADR-0007).
+* **Immutability:** SMM's façade exposes write operations only for `working` instances. Verification and analysis receive a read-only handle (ADR-0003).
 * **Edits (DVE.17):** each edit is a command (add/remove node, add/remove relationship, set attribute) that:
-  1. is validated against the schema and structural integrity rules (ADR-0014);
+  1. is validated against the schema and structural integrity rules (ADR-0009);
   2. is applied to the working graph;
   3. is appended to the instance's change log with user and time;
   4. increments `revision`.
 
-  Concurrency follows ADR-0033.
-* **Operations reference instances:** every verification or analysis operation records `instance_id` and `revision` (ADR-0024), so results are reproducible.
-* **Analytical data:** bound as a separable layer per ADR-0017. It is never written into a baseline's graph.
+  Concurrency follows ADR-0028.
+* **Operations reference instances:** every verification or analysis operation records `instance_id` and `revision` (ADR-0019), so results are reproducible.
+* **Analytical data:** bound as a separable layer per ADR-0012. It is never written into a baseline's graph.
 
 ### Consequences
 
 * Good, because rules need no awareness of overlays. Every instance is a plain graph.
 * Good, because pipeline evaluations are fully isolated, one graph per operation.
 * Good, because the change log gives an exact, reportable diff of each working model.
-* Bad, because storage grows with the number of working models. It is bounded by expiry (ADR-0040) and the instance limits of ADR-0033.
+* Bad, because storage grows with the number of working models. It is bounded by expiry (ADR-0035) and the instance limits of ADR-0028.
 * Bad, because a working model does not follow later baseline updates. Rebasing would replay the change log onto a new baseline, and it is not in scope now.
 
 ### Confirmation
@@ -96,4 +96,4 @@ Chosen option: "A separate named graph per instance, with working models copied 
 
 ## More Information
 
-* Related: ADR-0007, ADR-0014, ADR-0015, ADR-0017, ADR-0024, ADR-0033, ADR-0040
+* Related: ADR-0003, ADR-0009, ADR-0010, ADR-0012, ADR-0019, ADR-0028, ADR-0035

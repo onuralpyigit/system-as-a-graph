@@ -1,4 +1,4 @@
-# ADR-0013: Model Data file format and versioning
+# ADR-0008: Model Data file format and versioning
 
 | Field | Value |
 |---|---|
@@ -22,7 +22,7 @@ As built, `FilesystemModelSetupDataStore` writes one JSON file per run:
 <workspace>/<project>/<platform>/<version>/<run_id>/<project>_<platform>_<version>.json
 ```
 
-It has top-level sections `context`, `inventory`, `acquired_files`, `errors`, `generated_at`, `produced_by` and `graph`. The `graph` section has `metadata.scale`, `nodes`, `topics`, `applications`, `libraries`, and `relationships.{runs_on, publishes_to, subscribes_to, uses}`. The `run_id` is the Celery task ID.
+It has top-level sections `context`, `inventory`, `acquired_files`, `errors`, `generated_at`, `produced_by` and `graph`. The `graph` section has `metadata.scale`, `nodes`, `topics`, `applications`, `libraries`, and `relationships.{runs_on, publishes_to, subscribes_to, uses}`. The `run_id` is the task id the runner returns (`MultiprocessingTaskRunner.submit`).
 
 The file has no schema version and no published schema. Timestamps are naive local time. Some application attributes (`priority`, `hotstandby`) are filled from a seeded random generator as placeholders.
 
@@ -43,17 +43,17 @@ The file has no schema version and no published schema. Timestamps are naive loc
 
 Chosen option: "JSON file per run on the filesystem, made versioned and schema-validated", because the format works, is human-inspectable and downloadable (the existing `/download` endpoint), and SRS explicitly calls it a *file*.
 
-* **Location:** unchanged. The workspace root comes from configuration (ADR-0039) and is a persistent volume in deployment.
-* **Naming:** the `run_id` becomes the operation ID of the producing operation (ADR-0024). The file name is unchanged.
+* **Location:** unchanged. The workspace root comes from configuration (ADR-0034) and is a persistent volume in deployment.
+* **Naming:** the `run_id` becomes the operation ID of the producing operation (ADR-0019). The file name is unchanged.
 * **Schema:** add `"schema_version": "1.0"` at the top level, and a JSON Schema at `mdg/schemas/model-data-1.0.schema.json`. MDG validates the file before saving it, and SMM validates it again on input (SMM.3). Section names are renamed to the canonical vocabulary in schema 1.0 (ADR-0002).
 * **Evolution:** minor versions only add optional fields. A major version change ships a reader for the previous major version, so listing (DVE.5) and model construction keep working for existing files.
 * **Immutability and integrity:**
   * the file is written once, to a temporary name, and then atomically renamed;
-  * its SHA-256 is recorded in the artifact registry (ADR-0035);
+  * its SHA-256 is recorded in the artifact registry (ADR-0030);
   * SMM verifies the hash before construction.
 * **Timestamps:** ISO 8601 in UTC with offset.
-* **Placeholders:** values that were not acquired are written as `null` and listed in a `placeholders` array with their JSON path and reason. Examples are today's random `priority`/`hotstandby` and mocked QoS. The `"NOT_FOUND"` sentinel string is retired. Graph construction (ADR-0014) does not turn placeholders into facts.
-* **Provenance block:** `produced_by`, the producing operation ID, the tool version, and the clone commit hash per unit (ADR-0035).
+* **Placeholders:** values that were not acquired are written as `null` and listed in a `placeholders` array with their JSON path and reason. Examples are today's random `priority`/`hotstandby` and mocked QoS. The `"NOT_FOUND"` sentinel string is retired. Graph construction (ADR-0009) does not turn placeholders into facts.
+* **Provenance block:** `produced_by`, the producing operation ID, the tool version, and the clone commit hash per unit (ADR-0030).
 
 ### Consequences
 
@@ -82,9 +82,9 @@ Chosen option: "JSON file per run on the filesystem, made versioned and schema-v
 ### Graph-DB import format
 
 * Good, because it loads quickly.
-* Bad, because it binds MDG to the storage choice of ADR-0015, and it is not human-readable.
+* Bad, because it binds MDG to the storage choice of ADR-0010, and it is not human-readable.
 
 ## More Information
 
 * Code: `mdg/src/mdg/domain/model_setup_data.py`, `model_setup_data_graph.py`, `workspace.py`, `adapters/model_setup_data/`
-* Related: ADR-0002, ADR-0014, ADR-0024, ADR-0035
+* Related: ADR-0002, ADR-0009, ADR-0019, ADR-0030

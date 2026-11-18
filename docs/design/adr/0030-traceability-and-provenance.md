@@ -1,4 +1,4 @@
-# ADR-0035: Traceability, provenance and audit trail
+# ADR-0030: Traceability, provenance and audit trail
 
 | Field | Value |
 |---|---|
@@ -25,7 +25,7 @@
 As built:
 
 * Model Data records `produced_by`, `generated_at` and per-file metadata.
-* Run IDs are Celery task IDs.
+* Run IDs are the task ids the multiprocessing runner returns ([ADR-0004](0004-operations-panel-runtime-stack.md)).
 * Timestamps are naive local time.
 * Nothing links derived results back to their inputs beyond file paths.
 * There is no audit trail of who did what.
@@ -45,7 +45,7 @@ As built:
 
 ## Decision Outcome
 
-Chosen option: "An artifact registry with content hashes and a lineage graph, plus an audit log", in PostgreSQL (ADR-0008). It gives end-to-end lineage with one table design, and it does not restructure every CSC around events.
+Chosen option: "An artifact registry with content hashes and a lineage graph, plus an audit log", in a durable store whose engine [ADR-0004](0004-operations-panel-runtime-stack.md) leaves undecided. It gives end-to-end lineage with one table design, and it does not restructure every CSC around events.
 
 * **Artifacts:** every persisted output is registered when it is created, in a table `artifact` with:
   * `artifact_id` (UUID) and `kind`, one of `model_data_file`, `model_instance`, `synthetic_data_set`, `field_record`, `analytical_evaluation_data`, `report`;
@@ -60,18 +60,18 @@ Chosen option: "An artifact registry with content hashes and a lineage graph, pl
   * AED ← field records or synthetic data set;
   * report ← operation.
 
-  Operations (ADR-0024) record their input artifact IDs, rule catalog version and profile.
-* **External inputs:** inputs that are not SaaG artifacts are recorded as attributes of the consuming artifact: the CMDB query time and selection, and the Git repository URL with tag and commit hash per unit (ADR-0010, ADR-0012). The SaaG artifacts are immutable (ADR-0013, ADR-0016).
+  Operations (ADR-0019) record their input artifact IDs, rule catalog version and profile.
+* **External inputs:** inputs that are not SaaG artifacts are recorded as attributes of the consuming artifact: the CMDB query time and selection, and the Git repository URL with tag and commit hash per unit (ADR-0005, ADR-0007). The SaaG artifacts are immutable (ADR-0008, ADR-0011).
 * **Timestamps:** all timestamps are UTC, ISO 8601 with offset, from timezone-aware `datetime`.
 * **Audit log:** `audit_event(at, actor, actor_kind, action, target, outcome, details)`. It is append-only, and the application role has `INSERT` and `SELECT` only, no `UPDATE` or `DELETE`. Events recorded:
   * login success and failure, logout;
-  * API token create and revoke (ADR-0030);
-  * data-source configuration create, change, delete and connect (ADR-0032);
+  * API token create and revoke (ADR-0025);
+  * data-source configuration create, change, delete and connect (ADR-0027);
   * operation start and cancel;
-  * working-model edits (summary; detail is in the change log, ADR-0016);
+  * working-model edits (summary; detail is in the change log, ADR-0011);
   * rule profile selection for installation evaluation;
   * report export.
-* **Retention:** per ADR-0040. Lineage rows outlive the artifacts they describe, so deleted artifacts remain explainable.
+* **Retention:** per ADR-0035. Lineage rows outlive the artifacts they describe, so deleted artifacts remain explainable.
 
 ### Consequences
 
@@ -79,7 +79,7 @@ Chosen option: "An artifact registry with content hashes and a lineage graph, pl
   finding → operation → model instance + revision → Model Data file (hash) → commits and CMDB snapshot. It can then be re-run.
 * Good, because one mechanism serves SMM.26, SMM.35, SCG.6, FDM.3 and DVE.26's "System Model used / AED used and its data source" report fields.
 * Bad, because every producing code path must register its artifact. This is enforced by giving stores a single `save` path that registers.
-* Bad, because the audit log grows without bound until retention (ADR-0040) applies.
+* Bad, because the audit log grows without bound until retention (ADR-0035) applies.
 
 ### Confirmation
 
@@ -107,4 +107,4 @@ Chosen option: "An artifact registry with content hashes and a lineage graph, pl
 ## More Information
 
 * Code: `mdg/src/mdg/domain/model_setup_data.py`, `acquired_file.py`, `workspace.py`
-* Related: ADR-0008, ADR-0010, ADR-0012, ADR-0013, ADR-0016, ADR-0024, ADR-0030, ADR-0032, ADR-0040
+* Related: ADR-0004, ADR-0005, ADR-0007, ADR-0008, ADR-0011, ADR-0019, ADR-0025, ADR-0027, ADR-0035

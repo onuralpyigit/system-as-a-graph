@@ -1,4 +1,4 @@
-# ADR-0025: Graph visualization and large-model rendering
+# ADR-0020: Graph visualization and large-model rendering
 
 | Field | Value |
 |---|---|
@@ -16,14 +16,14 @@
 
 DVE.19–20 require search, filter, zoom, pan, selection and attribute display on the node-relationship structure. DVE.17 requires editing a working model on it. UXD §6 sets 60 fps pan and zoom, with full detail below 1,000 nodes and simplified rendering above. UXD and SDP §5 name React Flow.
 
-Nothing is implemented: the current UI has no graph view. ADR-0009 selects a React SPA.
+A graph view already ships: `dve/src/dve/static/graph.js` (2,766 lines) draws both model pictures on a vendored AntV G6 build, and [ADR-0004](0004-operations-panel-runtime-stack.md) keeps that stack, so there is no React SPA and no build step.
 
 ## Decision Drivers
 
 * Editing interactions (DVE.17) are as important as viewing.
 * Models may exceed 1,000 elements; the view must stay responsive (QA-07).
 * Custom node rendering is needed: severity badges, status colours (UXD §2.2), and keyboard access (UXD §7).
-* The library must fit React (ADR-0009).
+* The library must work from `static/` as a plain ES5 module, with no build step and no React ([ADR-0004](0004-operations-panel-runtime-stack.md)).
 
 ## Considered Options
 
@@ -42,9 +42,9 @@ Chosen option: "React Flow, with server-side scoping and an automatic layout lib
 
   The server caps a view at the UXD §6 detail threshold of 1,000 elements. Larger results are returned aggregated, with counts.
 * **Layout:** ELK (`elkjs`) runs in a Web Worker, so the main thread stays free. Node positions of working models are saved with the instance, so edits don't reshuffle the layout.
-* **Editing:** canvas edits call SMM's working-model commands (ADR-0016). They are applied optimistically and reconciled with the server response (UXD §6).
+* **Editing:** canvas edits call SMM's working-model commands (ADR-0011). They are applied optimistically and reconciled with the server response (UXD §6).
 * **Overlays:** findings (DVE.22 cause/effect chains) and propagation paths (DVE.57) are drawn as highlighted edge and node styles on the current view.
-* **Fallback:** if the ADR-0036 performance budget measurement shows aggregated overviews are insufficient, a read-only Sigma.js overview may be added. That needs a new ADR.
+* **Fallback:** if the ADR-0031 performance budget measurement shows aggregated overviews are insufficient, a read-only Sigma.js overview may be added. That needs a new ADR.
 
 ### Consequences
 
@@ -78,4 +78,4 @@ Chosen option: "React Flow, with server-side scoping and an automatic layout lib
 ## More Information
 
 * [UXD §4–7](../UXD.md)
-* Related: ADR-0009, ADR-0014, ADR-0016, ADR-0036, ADR-0042
+* Related: ADR-0004, ADR-0009, ADR-0011, ADR-0031, ADR-0037

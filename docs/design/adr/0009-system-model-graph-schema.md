@@ -1,4 +1,4 @@
-# ADR-0014: System Model graph schema
+# ADR-0009: System Model graph schema
 
 | Field | Value |
 |---|---|
@@ -16,14 +16,14 @@
 
 SMM.6–17 name the node types, SMM.18–23 name the relationship types, and SMM.24 requires CPU allocation, OS settings and runtime configuration as queryable attributes. SMM.5 requires each model to be associated with project, platform and system version.
 
-The Model Data graph section (ADR-0013) has only part of this vocabulary: `nodes` (processor units), `applications`, `libraries`, `topics`, and the relationships `runs_on`, `publishes_to`, `subscribes_to` and `uses`. Every verification rule in R3 (DVE.31–49) is written against the schema, so the schema must be fixed first.
+The Model Data graph section (ADR-0008) has only part of this vocabulary: `nodes` (processor units), `applications`, `libraries`, `topics`, and the relationships `runs_on`, `publishes_to`, `subscribes_to` and `uses`. Every verification rule in R3 (DVE.31–49) is written against the schema, so the schema must be fixed first.
 
 ## Decision Drivers
 
 * Every SRS node and relationship type must be representable and queryable by type (SMM.6–24, DVE.19).
-* Rules must be able to address entities by stable keys across model instances (working and candidate models, ADR-0016) and across versions (drift, DVE.66–68).
+* Rules must be able to address entities by stable keys across model instances (working and candidate models, ADR-0011) and across versions (drift, DVE.66–68).
 * Attribute provenance (acquired, derived or placeholder) must be visible to rules (QA-03).
-* The schema should map directly onto a labeled property graph (ADR-0015) without coupling to one engine's features.
+* The schema should map directly onto a labeled property graph (ADR-0010) without coupling to one engine's features.
 
 ## Considered Options
 
@@ -33,7 +33,7 @@ The Model Data graph section (ADR-0013) has only part of this vocabulary: `nodes
 
 ## Decision Outcome
 
-Chosen option: "A labeled property graph with one label per SRS node type and one relationship type per SRS relationship". Typed labels make rules readable and indexable, and they map 1:1 to the SRS. Version scoping is handled per model instance (ADR-0016), not per element.
+Chosen option: "A labeled property graph with one label per SRS node type and one relationship type per SRS relationship". Typed labels make rules readable and indexable, and they map 1:1 to the SRS. Version scoping is handled per model instance (ADR-0011), not per element.
 
 **Node labels (SMM.6–17):**
 
@@ -66,16 +66,16 @@ Libraries in the Model Data (`libraries`) are `CSU` nodes with `kind = "library"
 | `ASSIGNED_TO` | CSU → Role | SMM.23 |
 | `CONTAINS` | System → SoftwareSegment → CSCI → CSC → CSU | hierarchy implied by SMM.6–10 |
 | `CARRIES` | Topic → Message | SMM.12–13 |
-| `CONNECTED_TO` | ProcessingUnit → NetworkComponent | topology (ADR-0011) |
+| `CONNECTED_TO` | ProcessingUnit → NetworkComponent | topology (ADR-0006) |
 
 **Attribute conventions:**
 
 * Scalar attributes are flat properties. Structured settings (`cpu_allocation`, `os_settings`, `runtime_config`) are JSON-encoded properties with a schema per attribute, so rules can parse them.
-* Every node and relationship carries `origin`: `acquired` (from Model Data), `derived` (computed by SMM), or `edited` (working model, ADR-0016). A value listed in the Model Data `placeholders` (ADR-0013) is stored as absent, with `placeholder_reasons`. Rules treat it as unknown, never as a value.
+* Every node and relationship carries `origin`: `acquired` (from Model Data), `derived` (computed by SMM), or `edited` (working model, ADR-0011). A value listed in the Model Data `placeholders` (ADR-0008) is stored as absent, with `placeholder_reasons`. Rules treat it as unknown, never as a value.
 * Identity: `(label, key)` is unique within a model instance and stable across instances and versions. Drift detection and working-model diffs match on it.
-* Model-level metadata (project, platform, system version, Model Data file reference and hash, creation time, status; SMM.5, 26) lives on one `Model` node per instance and in the instance registry (ADR-0016). It is not repeated on every element.
+* Model-level metadata (project, platform, system version, Model Data file reference and hash, creation time, status; SMM.5, 26) lives on one `Model` node per instance and in the instance registry (ADR-0011). It is not repeated on every element.
 
-**Construction errors:** a relationship whose endpoint is missing is not created. It is reported as an invalid-relationship error (SMM.25, ADR-0034).
+**Construction errors:** a relationship whose endpoint is missing is not created. It is reported as an invalid-relationship error (SMM.25, ADR-0029).
 
 ### Consequences
 
@@ -110,4 +110,4 @@ Libraries in the Model Data (`libraries`) are `CSU` nodes with `kind = "library"
 
 * [SRS §5.1.1](../../requirements/SRS.md)
 * Code: `mdg/src/mdg/domain/model_setup_data_graph.py`
-* Related: ADR-0011, ADR-0013, ADR-0015, ADR-0016, ADR-0022
+* Related: ADR-0006, ADR-0008, ADR-0010, ADR-0011, ADR-0017

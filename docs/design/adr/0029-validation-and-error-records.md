@@ -1,4 +1,4 @@
-# ADR-0034: Common validation and error-record pattern
+# ADR-0029: Common validation and error-record pattern
 
 | Field | Value |
 |---|---|
@@ -29,7 +29,7 @@ The other five CSCs will need the same pattern, and DVE must display and filter 
 
 * The SRS distinguishes the error kinds: missing data, access, authorization, format, integrity and missing field (MDG.16, 20; DVE.8). They must be filterable, not buried in text.
 * One record type across all CSCs, so DVE displays all of them the same way.
-* Records must survive the worker boundary (ADR-0006).
+* Records must survive the task process boundary ([ADR-0004](0004-operations-panel-runtime-stack.md)).
 * Timestamps must be comparable across hosts (QA-04).
 
 ## Considered Options
@@ -42,7 +42,7 @@ The other five CSCs will need the same pattern, and DVE must display and filter 
 
 Chosen option: "A shared error-record type in `common/`, extended with a category and structured scope". This ratifies the as-built pattern (record + raising error + per-item status) and fixes its gaps.
 
-* **Type** (`common/errors.py`, ADR-0004):
+* **Type** (`common/errors.py`, decided here):
 
   | Field | Notes |
   |---|---|
@@ -53,10 +53,10 @@ Chosen option: "A shared error-record type in `common/`, extended with a categor
   | `stage` | The processing stage (e.g. `acquire_context`, `clone`, `parse`, `validate`, `construct`, `bind`) (DVE.24) |
   | `project`, `platform`, `system_version` | Separate fields, replacing the combined `project_platform` |
   | `subject` | Optional: unit name, file path, record ID or entity key the error concerns |
-  | `operation_id` | The operation it belongs to (ADR-0024) |
+  | `operation_id` | The operation it belongs to (ADR-0019) |
   | `occurred_at` | UTC, ISO 8601 with offset |
 
-* **Raising:** each port exception maps to one `category`. Adapters raise port exceptions, and services convert them into records. A service that must stop raises `DataAcquisitionError(record)`. The record is serialized as JSON in the task's failure and stored on the operation (ADR-0024), so it survives the process boundary.
+* **Raising:** each port exception maps to one `category`. Adapters raise port exceptions, and services convert them into records. A service that must stop raises `DataAcquisitionError(record)`. The record is serialized as JSON in the task's failure and stored on the operation (ADR-0019), so it survives the process boundary.
 * **Validation order** for every ingestion (MDG Model Data, SMM input, FDM upload, ADM inputs):
   1. readability and format;
   2. schema;
@@ -65,18 +65,18 @@ Chosen option: "A shared error-record type in `common/`, extended with a categor
 
   All failures of one item are collected before the item is rejected, so a user sees every problem at once.
 * **Per-item status:** a per-item outcome enum like `UnitStatus` (`ok`, `missing_data`, `error`, `not_acquired`) is kept for batch inputs (units, records). The operation result summarizes it.
-* **Storage:** records are persisted with their operation in PostgreSQL. They are also embedded in the artifact they concern when the SRS asks for it, e.g. the Model Data `errors` section (ADR-0013).
+* **Storage:** records are persisted with their operation in a durable store, whose engine [ADR-0004](0004-operations-panel-runtime-stack.md) leaves undecided. They are also embedded in the artifact they concern when the SRS asks for it, e.g. the Model Data `errors` section (ADR-0008).
 
 ### Consequences
 
 * Good, because DVE can filter every CSC's errors by category, stage and scope (DVE.8, 23–24).
 * Good, because records no longer lose structure crossing into the worker.
-* Bad, because `mdg`'s `ErrorRecord` changes shape. The Model Data schema 1.0 (ADR-0013) adopts the new fields, and old files are read with a converter.
+* Bad, because `mdg`'s `ErrorRecord` changes shape. The Model Data schema 1.0 (ADR-0008) adopts the new fields, and old files are read with a converter.
 
 ### Confirmation
 
 * A test of every adapter in `mdg` asserts the `category` produced for each port exception.
-* A round-trip test: a record raised in a Celery task is retrieved intact from the operation's `failure`.
+* A round-trip test: a record raised in a task child process is retrieved intact from the operation's `failure`.
 * Lint: no CSC defines its own error-record type (an `import-linter` rule checks that records are imported from `common`).
 
 ## Pros and Cons of the Options
@@ -99,4 +99,4 @@ Chosen option: "A shared error-record type in `common/`, extended with a categor
 ## More Information
 
 * Code: `mdg/src/mdg/domain/error_record.py`, `mdg/src/mdg/domain/model_setup_data.py` (`UnitStatus`), `mdg/src/mdg/ports/*.py`
-* Related: ADR-0004, ADR-0006, ADR-0013, ADR-0024, ADR-0035
+* Related: ADR-0003, ADR-0004, ADR-0008, ADR-0019, ADR-0030

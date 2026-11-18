@@ -1,4 +1,4 @@
-# ADR-0015: Graph storage technology
+# ADR-0010: Graph storage technology
 
 | Field | Value |
 |---|---|
@@ -14,15 +14,15 @@
 
 ## Context and Problem Statement
 
-The System Model (ADR-0014) must be stored, queried by the verification rules (DVE.28–49), traversed by the behavioral analyses (DVE.53–58), and instantiated many times: one baseline per Model Data file, plus working models and per-operation candidate models (ADR-0016; SMM.29–31). SDP §5 names FalkorDB. Nothing is implemented yet.
+The System Model (ADR-0009) must be stored, queried by the verification rules (DVE.28–49), traversed by the behavioral analyses (DVE.53–58), and instantiated many times: one baseline per Model Data file, plus working models and per-operation candidate models (ADR-0011; SMM.29–31). SDP §5 names FalkorDB. Nothing is implemented yet.
 
 Expected scale: UXD §6 sets the visualization level-of-detail threshold at 1,000 nodes. The dev seed has a handful of units. A real system is expected to have hundreds to a few thousand CSUs, topics and messages, which is well within any candidate's capacity. The deciding factors are therefore instance isolation, query language and operations cost, not raw scale.
 
 ## Decision Drivers
 
 * Cheap creation and deletion of many isolated graph instances (QA-02).
-* A declarative query language for the rules (ADR-0022), plus access to graph algorithms (cycles, reachability).
-* Fit with the existing stack: Redis is already operated (ADR-0006).
+* A declarative query language for the rules (ADR-0017), plus access to graph algorithms (cycles, reachability).
+* Fit with the existing stack: nothing in the runtime uses Redis today ([ADR-0004](0004-operations-panel-runtime-stack.md)), so this would be the first Redis service.
 * Licensing that permits on-premises internal use.
 
 ## Considered Options
@@ -34,12 +34,12 @@ Expected scale: UXD §6 sets the visualization level-of-detail threshold at 1,00
 
 ## Decision Outcome
 
-Chosen option: "FalkorDB", subject to the spike in *Confirmation*. Each model instance is one named graph (a Redis key). Instances are created with `GRAPH.COPY` and dropped with `GRAPH.DELETE`, which fits ADR-0016's instance model directly. Cypher (openCypher subset) suits declarative rules, and FalkorDB is served over the Redis protocol, which the team already operates.
+Chosen option: "FalkorDB", subject to the spike in *Confirmation*. Each model instance is one named graph (a Redis key). Instances are created with `GRAPH.COPY` and dropped with `GRAPH.DELETE`, which fits ADR-0011's instance model directly. Cypher (openCypher subset) suits declarative rules, and FalkorDB is served over the Redis protocol, which the team does not operate today ([ADR-0004](0004-operations-panel-runtime-stack.md)).
 
-* **Deployment:** a dedicated FalkorDB container with AOF persistence. It is separate from the Celery broker Redis, because the two have different persistence and eviction settings.
-* **Access:** SMM owns the only adapter (`smm/adapters/falkordb_*`) behind an `IGraphStore` port. Other CSCs use SMM's façade (ADR-0007). Queries use parameters, never string-built Cypher.
-* **Algorithms:** rules that need algorithms not expressible in Cypher may load the instance's subgraph into NetworkX inside the worker (ADR-0022). This is read-only, and the in-memory copy is discarded after the operation.
-* **Fallback:** if the spike fails, the next candidate is PostgreSQL + AGE (named graphs, the same database as ADR-0008), then NetworkX with files.
+* **Deployment:** a dedicated FalkorDB container with AOF persistence. It would be the only Redis service: there is no broker Redis beside it, because task execution uses neither ([ADR-0004](0004-operations-panel-runtime-stack.md)).
+* **Access:** SMM owns the only adapter (`smm/adapters/falkordb_*`) behind an `IGraphStore` port. Other CSCs use SMM's façade (ADR-0003). Queries use parameters, never string-built Cypher.
+* **Algorithms:** rules that need algorithms not expressible in Cypher may load the instance's subgraph into NetworkX inside the worker (ADR-0017). This is read-only, and the in-memory copy is discarded after the operation.
+* **Fallback:** if the spike fails, the next candidate is PostgreSQL + AGE (named graphs, in the relational store that [ADR-0004](0004-operations-panel-runtime-stack.md) leaves undecided), then NetworkX with files.
 
 ### Consequences
 
@@ -47,7 +47,7 @@ Chosen option: "FalkorDB", subject to the spike in *Confirmation*. Each model in
 * Good, because Cypher rules are portable to other openCypher engines if this decision is superseded.
 * Bad, because FalkorDB is licensed under SSPL v1. It is permitted for internal on-premises use, but it must be cleared with the project's licensing authority before acceptance.
 * Bad, because it is a younger product than Neo4j, with a smaller Cypher feature set (e.g. limited procedures).
-* Bad, because there is one more stateful service to back up (ADR-0040).
+* Bad, because there is one more stateful service to back up (ADR-0035).
 
 ### Confirmation
 
@@ -79,10 +79,10 @@ The results are recorded in this ADR's *More Information*.
 
 ### PostgreSQL + Apache AGE
 
-* Good, because it reuses PostgreSQL (ADR-0008) and has named graphs and Cypher.
+* Good, because it would reuse the relational store, if one is decided ([ADR-0004](0004-operations-panel-runtime-stack.md)), and it has named graphs and Cypher.
 * Bad, because the extension is less mature, there is no copy-graph primitive, and query performance on traversals is weaker.
 
 ## More Information
 
 * [SDP §5](../../planning/SDP.md), [UXD §6](../UXD.md)
-* Related: ADR-0006, ADR-0014, ADR-0016, ADR-0022, ADR-0033, ADR-0040
+* Related: ADR-0004, ADR-0009, ADR-0011, ADR-0017, ADR-0028, ADR-0035

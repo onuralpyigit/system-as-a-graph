@@ -42,7 +42,7 @@ Chosen option: "SRS.md IDs and terms everywhere", because the SRS is the contrac
 2. **Requirement citations:** `<ID>.<n>` as numbered in SRS.md, e.g. `MDG.19`, `DVE.27`. Ranges are written `DVE.32–35`.
 3. **Artifact terms:** "Model Data" (file: "Model Data file"), "System Model", "Analytical Evaluation Data", "System Field Records", "Software Unit Version Inventory", exactly as in the SRS. "Model Setup Data" and "Core System Model" are retired.
 4. **Code:**
-   * Package directories are `mdg/ scg/ fdm/ adm/ smm/ dve/` (ADR-0004).
+   * Package directories are `mdg/ scg/ fdm/ adm/ smm/ dve/` (ADR-0003).
    * Public identifiers move from `model_setup_data` / `ModelSetupData` to `model_data` / `ModelData` in one refactor during R3.
    * Docstrings cite requirements as `MDG.n`.
 
@@ -51,7 +51,7 @@ Chosen option: "SRS.md IDs and terms everywhere", because the SRS is the contrac
 * Good, because every trace becomes resolvable, and the CDR-to-requirement links can be checked mechanically.
 * Good, because new R3 code starts with the right vocabulary.
 * Bad, because the SDD, STD and CDR need a rename pass (BACKLOG story S0.2-01). The code refactor touches the `mdg` public API and the `dve` imports of it.
-* Bad, because the existing Model Data JSON files carry the old naming in field names. ADR-0013 handles their versioning.
+* Bad, because the existing Model Data JSON files carry the old naming in field names. ADR-0008 handles their versioning.
 * Follow-up: BACKLOG S0.2-01 (document renames); a code refactor story in R3; update CDR "Source" cells.
 
 ### Confirmation

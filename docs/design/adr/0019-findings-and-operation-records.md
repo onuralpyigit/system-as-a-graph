@@ -1,4 +1,4 @@
-# ADR-0024: Findings and operation record model
+# ADR-0019: Findings and operation record model
 
 | Field | Value |
 |---|---|
@@ -24,14 +24,14 @@ The SRS asks for detailed records:
 * DVE.26 lists what reports contain.
 * DVE.78 asks for independent operation identifiers and per-unit results.
 
-Today the only operation record is a Celery task (ID, state, progress meta, result) plus a Redis log list (ADR-0006). R3 produces the first findings, so their model must be fixed now.
+Today the only operation record is an in-memory `TaskStatus` (state, progress, result or error) plus an `InMemoryTaskLog`, and both are discarded when the API process exits ([ADR-0004](0004-operations-panel-runtime-stack.md)). R3 produces the first findings, so their model must be fixed now.
 
 ## Decision Drivers
 
 * One operation model for every long-running activity, from Model Data production to installation evaluation.
 * Findings must carry everything DVE.21 lists and be filterable by every DVE.23 field.
 * Results must be reproducible from recorded inputs (QA-04).
-* Reports (DVE.26) and the automation result (DVE.78, ADR-0028) are generated from these records, not stored separately.
+* Reports (DVE.26) and the automation result (DVE.78, ADR-0023) are generated from these records, not stored separately.
 
 ## Considered Options
 
@@ -41,7 +41,7 @@ Today the only operation record is a Celery task (ID, state, progress meta, resu
 
 ## Decision Outcome
 
-Chosen option: "Relational records with JSONB for variable parts", in PostgreSQL (ADR-0008), because DVE.23's multi-field filtering and sorting maps directly onto indexed columns. The variable evidence fits JSONB.
+Chosen option: "Relational records with JSONB for variable parts", in a relational store, because DVE.23's multi-field filtering and sorting maps directly onto indexed columns. The variable evidence fits JSONB. The store's engine is open: [ADR-0004](0004-operations-panel-runtime-stack.md) defers it and lists what it must satisfy.
 
 **`operation`**
 
@@ -55,10 +55,10 @@ Chosen option: "Relational records with JSONB for variable parts", in PostgreSQL
 | `inputs` | JSONB: model instance ID and revision, AED reference, rule catalog version and profile, scenario inputs (DVE.25), parameters |
 | `state` | `queued`, `running`, `succeeded`, `failed`, `cancelled` |
 | `progress` | JSONB `{percent, phase}` |
-| `result` | `conforming` / `non-conforming` / null (DVE.18); for installation evaluation also score, class and decision (ADR-0027) |
-| `failure` | JSONB error record (ADR-0034) plus `stage` (DVE.24) |
+| `result` | `conforming` / `non-conforming` / null (DVE.18); for installation evaluation also score, class and decision (ADR-0022) |
+| `failure` | JSONB error record (ADR-0029) plus `stage` (DVE.24) |
 | `queued_at`, `started_at`, `ended_at` | UTC |
-| `executor_ref` | Celery task ID (internal) |
+| `executor_ref` | the runner's task id (internal) |
 
 **`finding`** (DVE.21)
 
@@ -66,20 +66,20 @@ Chosen option: "Relational records with JSONB for variable parts", in PostgreSQL
 |---|---|
 | `finding_id` | UUID; displayed as `<operation short id>-<sequence>` |
 | `operation_id` | Owning operation |
-| `rule_id`, `rule_version` | Related verification rule (ADR-0022/0023) |
+| `rule_id`, `rule_version` | Related verification rule (ADR-0017/0021) |
 | `finding_type` | E.g. `qos_mismatch`, `unpublished_topic`, `cycle`, `capacity_exceeded`, `drift_missing` |
 | `severity` | `informational`, `low`, `medium`, `high`, `critical` |
 | `description` | Text |
-| `affected` | JSONB array of entity references `{label, key}` and relationship references `{type, from, to}` (ADR-0014) |
+| `affected` | JSONB array of entity references `{label, key}` and relationship references `{type, from, to}` (ADR-0009) |
 | `acceptance_criterion` | Copied from the rule at execution time |
 | `evidence` | JSONB with supporting data |
 | `blocking` | Copied from the rule |
 
 **`finding_link`** (DVE.22): `(cause_finding_id, effect_finding_id, kind)`. Both findings belong to the same operation.
 
-**Log:** `operation_log(operation_id, seq, at, level, message)`. This replaces the Redis list (ADR-0006).
+**Log:** `operation_log(operation_id, seq, at, level, message)`. This replaces the in-memory task log ([ADR-0004](0004-operations-panel-runtime-stack.md)).
 
-**Reports (DVE.26):** generated on demand from these tables by ADR-0029. Report metadata (ID, format, operation, generated at, by) is stored. The file itself goes to the artifact store (ADR-0035).
+**Reports (DVE.26):** generated on demand from these tables by ADR-0024. Report metadata (ID, format, operation, generated at, by) is stored. The file itself goes to the artifact store (ADR-0030).
 
 Indexes: `finding(operation_id, severity)`, `finding(rule_id)`, `finding(finding_type)`, a GIN index on `affected`, and `operation(project, platform, system_version, type, queued_at)`.
 
@@ -88,12 +88,12 @@ Indexes: `finding(operation_id, severity)`, `finding(rule_id)`, `finding(finding
 * Good, because the DVE.21–26 content is satisfied by construction, and filtering is plain SQL.
 * Good, because the same records feed the UI, the reports and the CI result.
 * Bad, because there are three tables plus a log to migrate as the model evolves.
-* Bad, because the affected-entity keys reference graph elements that may later be deleted (the instance expires, ADR-0040). Findings keep the keys and the instance ID as historical references.
+* Bad, because the affected-entity keys reference graph elements that may later be deleted (the instance expires, ADR-0035). Findings keep the keys and the instance ID as historical references.
 
 ### Confirmation
 
-* Migration and repository tests on PostgreSQL (ADR-0008).
-* A test asserts that every finding produced by the engine (ADR-0022) has every non-null DVE.21 field.
+* Migration and repository tests run against the store once its engine is decided ([ADR-0004](0004-operations-panel-runtime-stack.md)); until then the schema is reviewed as SQL.
+* A test asserts that every finding produced by the engine (ADR-0017) has every non-null DVE.21 field.
 
 ## Pros and Cons of the Options
 
@@ -115,4 +115,4 @@ Indexes: `finding(operation_id, severity)`, `finding(rule_id)`, `finding(finding
 ## More Information
 
 * [SRS §6.1.1](../../requirements/SRS.md)
-* Related: ADR-0006, ADR-0008, ADR-0022, ADR-0027, ADR-0028, ADR-0029, ADR-0034, ADR-0035
+* Related: ADR-0004, ADR-0017, ADR-0022, ADR-0023, ADR-0024, ADR-0029, ADR-0030

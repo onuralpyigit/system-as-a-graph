@@ -1,4 +1,4 @@
-# ADR-0030: Authentication and session management
+# ADR-0025: Authentication and session management
 
 | Field | Value |
 |---|---|
@@ -27,7 +27,7 @@ As built:
 * Logout and role changes must take effect immediately (QA-01).
 * Browser sessions must resist XSS token theft and CSRF.
 * Automation clients cannot do an interactive login and need long-lived, revocable, scoped credentials.
-* There is one backend (ADR-0004), so stateless tokens do not need to be verified elsewhere.
+* There is one backend (ADR-0003), so stateless tokens do not need to be verified elsewhere.
 
 ## Considered Options
 
@@ -36,14 +36,14 @@ As built:
 
 ## Decision Outcome
 
-Chosen options: **LDAP search-and-bind**, **opaque server-side sessions** for browsers, and **SaaG-issued API tokens** for automation clients. Server-side sessions can be revoked at once, and the session store already exists (PostgreSQL, ADR-0008). JWT's main advantage, verification without shared state, brings no benefit with a single backend, and it makes revocation harder.
+Chosen options: **LDAP search-and-bind**, **opaque server-side sessions** for browsers, and **SaaG-issued API tokens** for automation clients. Server-side sessions can be revoked at once; the store that would hold them is not decided yet ([ADR-0004](0004-operations-panel-runtime-stack.md)), and today the session is a Flask signed cookie (`dve/src/dve/api.py:124-127`). JWT's main advantage, verification without shared state, brings no benefit with a single backend, and it makes revocation harder.
 
 * **LDAP protocol (closes CDR-22):**
   * LDAPv3 over LDAPS (port 636), or StartTLS on 389. Certificates are verified against the configured CA bundle. The `ldap3` library is used.
   * Flow:
     1. A configured service account binds and searches the user by `uid`/`sAMAccountName` under a base DN.
     2. SaaG binds as the found DN with the given password.
-    3. SaaG reads group memberships for authorization (ADR-0031).
+    3. SaaG reads group memberships for authorization (ADR-0026).
   * The password is never stored or logged.
 * **Browser sessions:**
   * The session ID is a random 256-bit value in an `HttpOnly`, `Secure`, `SameSite=Strict` cookie. The session row (user, roles, created, last seen, expiry) lives in PostgreSQL.
@@ -51,9 +51,9 @@ Chosen options: **LDAP search-and-bind**, **opaque server-side sessions** for br
   * Logout deletes the row.
   * State-changing requests also require a CSRF header token.
 * **Automation clients:**
-  * A user with the right role (ADR-0031) creates API tokens with a name, scopes (e.g. `evaluation:run`) and expiry.
+  * A user with the right role (ADR-0026) creates API tokens with a name, scopes (e.g. `evaluation:run`) and expiry.
   * Only a hash of the token is stored. The client sends `Authorization: Bearer <token>`.
-  * Tokens can be revoked in the UI. Their use is recorded in the audit trail (ADR-0035).
+  * Tokens can be revoked in the UI. Their use is recorded in the audit trail (ADR-0030).
 * **Mock:** the fixed-user mock stays only as a test fake under `tests/fakes/` (ADR-0003). The development stack gets an OpenLDAP container in `dev/compose.yaml`.
 
 ### Consequences
@@ -61,7 +61,7 @@ Chosen options: **LDAP search-and-bind**, **opaque server-side sessions** for br
 * Good, because revocation is immediate for both sessions and tokens, and the browser never holds a bearer token.
 * Good, because CI pipelines get scoped, revocable credentials without sharing a person's password.
 * Bad, because each request needs a session lookup, a cheap indexed read.
-* Bad, because the LDAP service account needs provisioning by directory administrators, and its secret must be managed (ADR-0032).
+* Bad, because the LDAP service account needs provisioning by directory administrators, and its secret must be managed (ADR-0027).
 
 ### Confirmation
 
@@ -84,9 +84,9 @@ Chosen options: **LDAP search-and-bind**, **opaque server-side sessions** for br
 ### Opaque server-side sessions + API tokens
 
 * Good, because it is revocable, follows standard browser practice, and gives automation clients separate credentials.
-* Bad, because it needs a session store, which already exists.
+* Bad, because it needs a session store, and no store exists yet: [ADR-0004](0004-operations-panel-runtime-stack.md) leaves the engine undecided.
 
 ## More Information
 
 * Code: `dve/src/dve/adapters/ldap_directory_service.py` (mock), `dve/src/dve/api.py`
-* Related: ADR-0005, ADR-0008, ADR-0028, ADR-0031, ADR-0032, ADR-0035
+* Related: ADR-0004, ADR-0023, ADR-0026, ADR-0027, ADR-0030

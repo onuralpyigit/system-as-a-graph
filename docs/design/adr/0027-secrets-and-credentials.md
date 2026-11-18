@@ -1,4 +1,4 @@
-# ADR-0032: Secrets and data-source credential protection
+# ADR-0027: Secrets and data-source credential protection
 
 | Field | Value |
 |---|---|
@@ -16,14 +16,14 @@
 
 SaaG holds two kinds of secret:
 
-1. **Application secrets:** the session or cookie key, database passwords, the LDAP service account (ADR-0030), and the encryption key below.
+1. **Application secrets:** the session or cookie key, database passwords, the LDAP service account (ADR-0025), and the encryption key below.
 2. **Data-source credentials:** the CMDB, source repository and package repository user information, which MDG.8 requires to be user-definable and *savable*.
 
 As built:
 
 * The Flask secret key is in `dve.ini` with a development default.
 * Data-source credentials are kept per session in the API process's memory (`DataSourceConnections`). They are lost on restart and cannot be saved, which contradicts MDG.8. A second API process would not see them.
-* Data-source credentials are sent to the worker inside the Celery task payload (`DataSourceConfig.user_info = "user:password"`). They pass through Redis in plain text.
+* Data-source credentials are pickled into the task child's arguments (`DataSourceConfig.user_info = "user:password"`, `task_service.py:68-69`), so they sit in plain text in the API process, in the child and in any core dump of either.
 * The Git adapter embeds the password in the clone URL, which is visible in the process list, and disables TLS verification (`http.sslVerify=false`).
 * SDP §5 specifies environment variables (`.env`).
 
@@ -45,28 +45,28 @@ Chosen options: **Docker secrets files for application secrets**, with environme
 
 * **Application secrets:**
   * Read from files under `/run/secrets/` (Compose `secrets:`), or from environment variables named `SAAG_*` in development.
-  * They are never committed. The `.ini` files keep only non-secret settings (ADR-0039).
+  * They are never committed. The `.ini` files keep only non-secret settings (ADR-0034).
   * At start-up, the API refuses to run in production mode with a missing secret or a known development default.
 * **Data-source credentials:**
-  * A saved data-source configuration (ADR-0010) is a row in PostgreSQL. The password or token is encrypted with AES-256-GCM (`cryptography`'s `AESGCM`), using a data-encryption key loaded from a secret file.
+  * A saved data-source configuration (ADR-0005) is a row in the durable store, whose engine [ADR-0004](0004-operations-panel-runtime-stack.md) leaves undecided. The password or token is encrypted with AES-256-GCM (`cryptography`'s `AESGCM`), using a data-encryption key loaded from a secret file.
   * The ciphertext row stores a key ID, so the key can be rotated by re-encrypting.
-  * Configurations belong to their creating user. Shared configurations are an authorization decision (ADR-0031).
+  * Configurations belong to their creating user. Shared configurations are an authorization decision (ADR-0026).
 * **Use:**
   * API responses never contain the secret field; it is write-only.
-  * Task payloads carry `data_source_id` only (ADR-0006). The worker decrypts at the moment of use and keeps the plain value in memory for the duration of the call.
-* **Git:** credentials are supplied via `GIT_ASKPASS` (a helper that reads them from the worker's memory or environment for that one subprocess), not in the URL. TLS verification is on, with an optional CA bundle path (ADR-0010).
+  * Task payloads must carry identifiers only. As built they do not: `DataSourceConfig.user_info` is `"user:password"` and is pickled into the task child (`data_source_service.py:41`, `task_service.py:68-69`), which [ADR-0004](0004-operations-panel-runtime-stack.md) records as a gap this ADR must close. The worker decrypts at the moment of use and keeps the plain value in memory for the duration of the call.
+* **Git:** credentials are supplied via `GIT_ASKPASS` (a helper that reads them from the worker's memory or environment for that one subprocess), not in the URL. TLS verification is on, with an optional CA bundle path (ADR-0005).
 * **Logging:** a log filter redacts the values of known secret fields and URL user-info. The tests check that it does.
 
 ### Consequences
 
 * Good, because MDG.8 "savable" is satisfied, and connections survive restarts and multiple API processes.
-* Good, because Redis, logs and process arguments no longer carry credentials.
-* Bad, because there is key management: losing the data-encryption key makes saved credentials unrecoverable (users must re-enter them). The key's backup belongs to ADR-0040.
+* Good, because session state, logs and task arguments no longer carry credentials.
+* Bad, because there is key management: losing the data-encryption key makes saved credentials unrecoverable (users must re-enter them). The key's backup belongs to ADR-0035.
 * Bad, because a compromised worker host can still read secrets in use. That is inherent; mitigated by host hardening.
 
 ### Confirmation
 
-* A test asserts that the Celery message for a production task contains no `user_info` or password.
+* A test asserts that the arguments of a submitted production task contain no `user_info` or password.
 * A test runs a clone and asserts that the password is absent from the `git` process arguments.
 * A test asserts that `GET` on a data-source configuration never returns the secret.
 * Production start-up fails with the development secret key (test).
@@ -83,10 +83,10 @@ Chosen options: **Docker secrets files for application secrets**, with environme
 
 * Memory: Good, because nothing is persisted. Bad, because it violates MDG.8, breaks on restart, and leaks via the task payload.
 * Plain: Bad, because it is unacceptable.
-* Encrypted in PostgreSQL: Good, because it is savable and has no new service. Bad, because of key management.
+* Encrypted in the relational store: Good, because it is savable and adds no service of its own. Bad, because of key management, and the store is not decided yet.
 * Vault: Good, because it is the strongest option. Bad, because there is no existing vault in the environment, and it would be a new critical service.
 
 ## More Information
 
 * Code: `dve/src/dve/services/data_source_connections.py`, `dve/src/dve/worker.py`, `mdg/src/mdg/adapters/source_code/git_source_code_repository.py`, `dve/src/dve/dve.ini`
-* Related: ADR-0006, ADR-0008, ADR-0010, ADR-0030, ADR-0031, ADR-0039, ADR-0040
+* Related: ADR-0004, ADR-0005, ADR-0025, ADR-0026, ADR-0034, ADR-0035

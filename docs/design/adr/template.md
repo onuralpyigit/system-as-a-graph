@@ -12,7 +12,7 @@
 | Decide by | {Wave and date from [ADR Roadmap §5](../ADR-ROADMAP.md#5-decision-schedule)} |
 | Supersedes | {[ADR-NNNN](NNNN-title.md) or —} |
 
-<!-- English is normative. Update NNNN-title.tr.md in the same pull request. Use canonical SRS.md IDs (MDG, SCG, FDM, ADM, SMM, DVE) in both languages. -->
+<!-- ADRs are written in English only and are not translated. Use canonical SRS.md IDs (MDG, SCG, FDM, ADM, SMM, DVE). -->
 
 ## Context and Problem Statement
 

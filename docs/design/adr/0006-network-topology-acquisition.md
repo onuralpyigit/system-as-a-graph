@@ -1,4 +1,4 @@
-# ADR-0011: Network topology acquisition
+# ADR-0006: Network topology acquisition
 
 | Field | Value |
 |---|---|
@@ -34,7 +34,7 @@ Today no topology source is implemented. The application-to-processor-unit relat
 
 ## Decision Outcome
 
-Chosen option: "A topology file in the system repository, in a SaaG-defined schema". The system repository is already cloned per system version by tag (ADR-0010, ADR-0012), so topology is versioned exactly like the software it hosts. No new external interface or credential is needed.
+Chosen option: "A topology file in the system repository, in a SaaG-defined schema". The system repository is already cloned per system version by tag (ADR-0005, ADR-0007), so topology is versioned exactly like the software it hosts. No new external interface or credential is needed.
 
 * **Format:** `topology.yaml` at a configured path in the system repository, validated against a JSON Schema owned by MDG (`mdg/schemas/topology.schema.json`). Its sections:
   * `processing_units`: name, kind (`operator_console` | `processor`), cores, RAM, OS profile reference;
@@ -42,8 +42,8 @@ Chosen option: "A topology file in the system repository, in a SaaG-defined sche
   * `links`: unit ↔ network component, bandwidth;
   * `schema_version`.
 * **EXT-IF-04 protocol (closes CDR-20):** Git over HTTPS, through the same adapter and credentials as EXT-IF-02. It is read from the system repository clone already made by MDG.
-* **Automatic acquisition (closes CDR-09):** MDG reads the file during Model Data production. If the file is absent, the run is marked `missing_data` for topology (MDG.19). If it fails schema validation, a format error is recorded (ADR-0034).
-* **Manual entry (MDG.7):** the UI edits the same schema and saves it as a topology override attached to the run. The override is recorded as manual in the run's provenance (ADR-0035). It is never written back to the system repository.
+* **Automatic acquisition (closes CDR-09):** MDG reads the file during Model Data production. If the file is absent, the run is marked `missing_data` for topology (MDG.19). If it fails schema validation, a format error is recorded (ADR-0029).
+* **Manual entry (MDG.7):** the UI edits the same schema and saves it as a topology override attached to the run. The override is recorded as manual in the run's provenance (ADR-0030). It is never written back to the system repository.
 * **Other sources later:** an adapter for a CMDB table or network-management export may be added behind an `ITopologySource` port. It must produce the same schema.
 
 ### Consequences
@@ -51,12 +51,12 @@ Chosen option: "A topology file in the system repository, in a SaaG-defined sche
 * Good, because topology is reproducible per system version and needs no new integration.
 * Good, because a single schema serves the automatic path, the manual path and validation.
 * Bad, because system engineering must maintain `topology.yaml` in the system repository, which is a process change.
-* Bad, because the mocked `SystemRepoParser` must be replaced with a real parser that also reads `runs_on` from the system repository (ADR-0012).
+* Bad, because the mocked `SystemRepoParser` must be replaced with a real parser that also reads `runs_on` from the system repository (ADR-0007).
 
 ### Confirmation
 
 * The `dev/gitea` seed's `system_repo_1.0.0` gains a sample `topology.yaml`. The MDG tests cover the valid, missing and invalid cases.
-* The schema file is versioned, and Model Data records the `schema_version` used (ADR-0013).
+* The schema file is versioned, and Model Data records the `schema_version` used (ADR-0008).
 
 ## Pros and Cons of the Options
 
@@ -83,4 +83,4 @@ Chosen option: "A topology file in the system repository, in a SaaG-defined sche
 ## More Information
 
 * Code: `mdg/src/mdg/adapters/source_data/system_repo_parser.py` (mock)
-* Related: ADR-0010, ADR-0012, ADR-0013, ADR-0014, ADR-0034
+* Related: ADR-0005, ADR-0007, ADR-0008, ADR-0009, ADR-0029

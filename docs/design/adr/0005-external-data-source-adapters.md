@@ -1,4 +1,4 @@
-# ADR-0010: External data-source adapters and connection configuration
+# ADR-0005: External data-source adapters and connection configuration
 
 | Field | Value |
 |---|---|
@@ -47,10 +47,10 @@ Chosen options:
 * **EXT-IF-01, CMDB (closes CDR-17):** SQL over the vendor's native protocol through **SQLAlchemy Core**, read-only. The DBMS dialect and driver come from the connection URL (`mysql+pymysql://…` for the dev mock). All queries stay in one adapter. The table and column names used are mapped in one place, so a different production schema changes only the mapping. This keeps the existing port and fixes the engine-lock-in risk at small cost.
 * **EXT-IF-02, source repository (closes CDR-18):** **Git over HTTPS**, using the `git` CLI, with a shallow clone (`--depth 1`) of the tag that equals the unit version (as built). Changes from the as-built adapter:
   * TLS verification is on by default, with an optional CA bundle setting. `http.sslVerify=false` is removed.
-  * Credentials are passed through `GIT_ASKPASS` or a credential helper, not in the URL (ADR-0032).
-  * The commit hash of each clone is recorded for provenance (ADR-0035).
+  * Credentials are passed through `GIT_ASKPASS` or a credential helper, not in the URL (ADR-0027).
+  * The commit hash of each clone is recorded for provenance (ADR-0030).
 * **EXT-IF-03, package repository (closes CDR-19):** **HTTPS REST** with token authentication, behind an `IPackageRepository` port. The first adapter targets the repository manager actually in use; it is confirmed with its owners before R5, and a fake is used until then. The port returns package metadata (name, version, checksum) and downloads artifacts by version.
-* **Connection configuration (MDG.8):** `DataSourceConfig` stays the domain type. Configurations are saved per user in the relational store (ADR-0008), with credentials encrypted (ADR-0032). The `dve.ini` sections provide only defaults. Each source is verified with one cheap call when it is connected, as built (DVE.7).
+* **Connection configuration (MDG.8):** `DataSourceConfig` stays the domain type. Configurations are saved per user in a durable store once one exists ([ADR-0004](0004-operations-panel-runtime-stack.md) leaves its engine undecided), with credentials encrypted (ADR-0027). The `dve.ini` sections provide only defaults. Each source is verified with one cheap call when it is connected, as built (DVE.7).
 
 ### Consequences
 
@@ -61,7 +61,7 @@ Chosen options:
 
 ### Confirmation
 
-* Adapter contract tests (ADR-0041) run against the `dev/` MySQL and Gitea stack.
+* Adapter contract tests (ADR-0036) run against the `dev/` MySQL and Gitea stack.
 * A test asserts that no credential appears in any spawned process command line or in log output.
 
 ## Pros and Cons of the Options
@@ -85,4 +85,4 @@ Chosen options:
 ## More Information
 
 * Code: `mdg/src/mdg/adapters/config_management/`, `mdg/src/mdg/adapters/source_code/git_source_code_repository.py`, `dve/src/dve/services/data_source_connections.py`
-* Related: ADR-0003, ADR-0008, ADR-0032, ADR-0035
+* Related: ADR-0003, ADR-0004, ADR-0027, ADR-0030

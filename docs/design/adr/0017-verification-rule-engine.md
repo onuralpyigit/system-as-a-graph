@@ -1,4 +1,4 @@
-# ADR-0022: Verification rule engine and rule model
+# ADR-0017: Verification rule engine and rule model
 
 | Field | Value |
 |---|---|
@@ -24,13 +24,13 @@ R3 builds structural verification (DVE.28–49):
 - resource contention, cycles and structural integrity;
 - architectural rules.
 
-DVE.76 requires each control rule to have an identifier, evaluation heading, severity, weight, acceptance criterion and blocking status. DVE.18 requires each result to be classified as conforming or non-conforming. The rule *contents* are still open (CDR-01…08, governed by ADR-0023). The *engine* must be fixed now, so that rules can be added as the CDR closes them, without rework.
+DVE.76 requires each control rule to have an identifier, evaluation heading, severity, weight, acceptance criterion and blocking status. DVE.18 requires each result to be classified as conforming or non-conforming. The rule *contents* are still open (CDR-01…08, governed by ADR-0018). The *engine* must be fixed now, so that rules can be added as the CDR closes them, without rework.
 
 ## Decision Drivers
 
 * The same rule model must serve structural verification (R3) and installation evaluation (R7; DVE.72–77).
 * Some checks are pattern queries (unmatched topics); others need algorithms (cycles, capacity sums, contention).
-* Rule parameters (thresholds, allowed QoS combinations) change more often than rule logic, and they are owned by domain engineers (ADR-0023).
+* Rule parameters (thresholds, allowed QoS combinations) change more often than rule logic, and they are owned by domain engineers (ADR-0018).
 * Rules must be deterministic and read-only on the model (DVE.29, QA-03).
 * Each rule must be testable in isolation with small fixture models (QA-11).
 
@@ -42,7 +42,7 @@ DVE.76 requires each control rule to have an identifier, evaluation heading, sev
 
 ## Decision Outcome
 
-Chosen option: "Hybrid". Metadata and parameters belong to the catalog that domain engineers approve (ADR-0023). Check logic needs the full power of Python and graph algorithms, but it must stay small, reviewed and tested.
+Chosen option: "Hybrid". Metadata and parameters belong to the catalog that domain engineers approve (ADR-0018). Check logic needs the full power of Python and graph algorithms, but it must stay small, reviewed and tested.
 
 **Rule record (data, from the catalog):**
 
@@ -54,10 +54,10 @@ Chosen option: "Hybrid". Metadata and parameters belong to the catalog that doma
 | `check` | Name of the registered check function |
 | `params` | Parameters passed to the check (thresholds, allowed values) |
 | `severity` | `informational` / `low` / `medium` / `high` / `critical` (DVE.21) |
-| `weight` | Weight used by installation scoring (DVE.76, ADR-0027) |
+| `weight` | Weight used by installation scoring (DVE.76, ADR-0022) |
 | `acceptance_criterion` | Human-readable statement of what conforms |
 | `blocking` | Whether a violation blocks installation (DVE.77) |
-| `status` | `provisional` / `approved` (ADR-0023) |
+| `status` | `provisional` / `approved` (ADR-0018) |
 
 **Check function (code):**
 
@@ -66,20 +66,20 @@ Chosen option: "Hybrid". Metadata and parameters belong to the catalog that doma
 def topic_has_publisher(model: ModelReader, params: Mapping) -> Iterable[Violation]: ...
 ```
 
-* `ModelReader` is SMM's read-only handle (ADR-0007, ADR-0016). It offers parameterized Cypher queries and `to_networkx(subgraph)` for algorithms.
-* A check yields `Violation`s: the affected entity keys, evidence and an optional message. The engine turns them into findings (ADR-0024) by adding the rule metadata.
+* `ModelReader` is SMM's read-only handle (ADR-0003, ADR-0011). It offers parameterized Cypher queries and `to_networkx(subgraph)` for algorithms.
+* A check yields `Violation`s: the affected entity keys, evidence and an optional message. The engine turns them into findings (ADR-0019) by adding the rule metadata.
 * A check must not write, call external systems, or read the clock or randomness.
 
 **Engine:**
 
-1. Load a *rule profile* (a set of rule IDs with parameter overrides, ADR-0023).
+1. Load a *rule profile* (a set of rule IDs with parameter overrides, ADR-0018).
 2. Run each rule's check against the instance.
 3. Record one finding per violation.
 4. Classify the operation result.
 
 A rule whose check raises an exception yields an `error` finding for that rule; the other rules still run (DVE.24).
 
-**Classification (DVE.18):** an operation is `non-conforming` if any finding comes from an approved rule with severity ≥ the profile's threshold (default `high`), or from an approved blocking rule. Otherwise it is `conforming`. Findings from `provisional` rules are reported but do not affect classification. Installation scoring adds weights per ADR-0027.
+**Classification (DVE.18):** an operation is `non-conforming` if any finding comes from an approved rule with severity ≥ the profile's threshold (default `high`), or from an approved blocking rule. Otherwise it is `conforming`. Findings from `provisional` rules are reported but do not affect classification. Installation scoring adds weights per ADR-0022.
 
 ### Consequences
 
@@ -87,11 +87,11 @@ A rule whose check raises an exception yields an `error` finding for that rule; 
 * Good, because R3 and R7 share one engine and one finding model.
 * Good, because each check is a pure function, testable with fixture graphs.
 * Bad, because a new *kind* of check still needs code and a release.
-* Bad, because checks that convert to NetworkX must keep subgraphs small to meet the time budgets of ADR-0036.
+* Bad, because checks that convert to NetworkX must keep subgraphs small to meet the time budgets of ADR-0031.
 
 ### Confirmation
 
-* Every registered check has unit tests with a fixture model that must produce violations and one that must not (ADR-0041).
+* Every registered check has unit tests with a fixture model that must produce violations and one that must not (ADR-0036).
 * A test runs the whole approved profile against the dev seed model and compares the result to a stored snapshot.
 
 ## Pros and Cons of the Options
@@ -99,7 +99,7 @@ A rule whose check raises an exception yields an `error` finding for that rule; 
 ### Rules as data only (Cypher)
 
 * Good, because rules are fully editable without code.
-* Bad, because cycle detection, capacity aggregation and contention analysis are awkward or impossible in the supported Cypher subset (ADR-0015), and the query text is untyped and hard to test.
+* Bad, because cycle detection, capacity aggregation and contention analysis are awkward or impossible in the supported Cypher subset (ADR-0010), and the query text is untyped and hard to test.
 
 ### Rules as code only
 
@@ -114,4 +114,4 @@ A rule whose check raises an exception yields an `error` finding for that rule; 
 ## More Information
 
 * [SRS §6.1.2, §6.1.4](../../requirements/SRS.md)
-* Related: ADR-0014, ADR-0016, ADR-0023, ADR-0024, ADR-0027, ADR-0036
+* Related: ADR-0009, ADR-0011, ADR-0018, ADR-0019, ADR-0022, ADR-0031

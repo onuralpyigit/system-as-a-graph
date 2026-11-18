@@ -1,4 +1,4 @@
-# ADR-0012: Source-repository acquisition and mandatory file set
+# ADR-0007: Source-repository acquisition and mandatory file set
 
 | Field | Value |
 |---|---|
@@ -18,7 +18,7 @@ MDG.19 requires a "missing data" status when any mandatory file is missing, "who
 
 As built (`mdg/src/mdg/adapters/source_code/`, `adapters/source_data/`):
 
-* Each software unit in the Software Unit Version Inventory is cloned by tag (ADR-0010).
+* Each software unit in the Software Unit Version Inventory is cloned by tag (ADR-0005).
 * `MandatoryFiles` defines two mandatory files per unit:
   * a `Makefile` anywhere under the unit directory whose non-comment content contains one of the configured include patterns (`mdg.ini`: `include/Makefile_java.mk`);
   * a topic manifest `<unit_name>.xml`.
@@ -43,22 +43,22 @@ As built (`mdg/src/mdg/adapters/source_code/`, `adapters/source_data/`):
 
 Chosen option: "Static parsing, with the regeneration build only in an isolated container when enabled". This ratifies the as-built static extraction and mandatory set, and it closes the security gap of running `gmake` directly on the host.
 
-* **Mandatory file set (closes CDR-10):** per software unit, the following two files must be obtained. A missing one marks the unit `missing_data` and is recorded with an error record (ADR-0034).
+* **Mandatory file set (closes CDR-10):** per software unit, the following two files must be obtained. A missing one marks the unit `missing_data` and is recorded with an error record (ADR-0029).
 
   | File | Rule |
   |---|---|
   | `Makefile` | Any `Makefile` under the unit directory whose non-comment content includes one of `[mandatory_files] makefile_include_patterns` |
   | `<unit_name>.xml` | The topic manifest declaring the unit's published and consumed topics |
 
-  The system repository additionally requires the topology file of ADR-0011. Installation scripts and configuration files are acquired when present, recorded per MDG.18, and not mandatory. Adding a file to the mandatory set is a change to this ADR.
-* **Extraction:** static parsing only, with the parser settings in `mdg.ini` `[source_parser]`. Parsers are ports with fakes (ADR-0003). The mocked `TypeSupportParser` must be replaced by a real parser of the units' topic type definitions before R3's QoS rules (DVE.32–35) run on real data. Until then, its placeholder QoS values are marked as such in the Model Data (ADR-0014).
+  The system repository additionally requires the topology file of ADR-0006. Installation scripts and configuration files are acquired when present, recorded per MDG.18, and not mandatory. Adding a file to the mandatory set is a change to this ADR.
+* **Extraction:** static parsing only, with the parser settings in `mdg.ini` `[source_parser]`. Parsers are ports with fakes (ADR-0003). The mocked `TypeSupportParser` must be replaced by a real parser of the units' topic type definitions before R3's QoS rules (DVE.32–35) run on real data. Until then, its placeholder QoS values are marked as such in the Model Data (ADR-0009).
 * **Regeneration build:** stays off by default. When enabled, it runs in a container started per unit from a configured build image with:
   * no network;
   * a read-write bind mount of only the unit's clone;
   * CPU, memory and time limits.
 
   The host `gmake` subprocess path is removed.
-* **Record per file (MDG.18):** file name, path, package/version, update time (as built), plus the clone commit hash (ADR-0035).
+* **Record per file (MDG.18):** file name, path, package/version, update time (as built), plus the clone commit hash (ADR-0030).
 
 ### Consequences
 
@@ -92,4 +92,4 @@ Chosen option: "Static parsing, with the regeneration build only in an isolated 
 ## More Information
 
 * Code: `mdg/src/mdg/adapters/source_code/mandatory_files.py`, `gmake_build_runner.py`, `mdg/src/mdg/adapters/source_data/`
-* Related: ADR-0010, ADR-0011, ADR-0034, ADR-0035
+* Related: ADR-0005, ADR-0006, ADR-0029, ADR-0030

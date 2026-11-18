@@ -14,14 +14,14 @@
 
 ## Context and Problem Statement
 
-SaaG has no decision log. The SRS and SDD defer 30 design points "to the critical design phase", and the [CDR register](../CDR.md) lists them, but all are `Open`, and the register records neither the options weighed nor the reasons for a choice. Meanwhile, [SDP §5](../../planning/SDP.md) fixes a technology stack that the CDR still lists as open ([BACKLOG](../../planning/BACKLOG.md) finding L2). The code in `mdg/` and `dve/` was built on a partly different stack (Flask, Celery + Redis instead of FastAPI, Procrastinate). The project needs one place where each significant decision is reasoned, approved and linked to the requirements and CDR items it settles.
+SaaG has no decision log. The SRS and SDD defer 30 design points "to the critical design phase", and the [CDR register](../CDR.md) lists them, but all are `Open`, and the register records neither the options weighed nor the reasons for a choice. Meanwhile, [SDP §5](../../planning/SDP.md) fixes a technology stack that the CDR still lists as open ([BACKLOG](../../planning/BACKLOG.md) finding L2). The code in `mdg/` and `dve/` was built on a partly different stack (Flask instead of FastAPI, spawned task children instead of Procrastinate, and no relational store at all), as [ADR-0004](0004-operations-panel-runtime-stack.md) records. The project needs one place where each significant decision is reasoned, approved and linked to the requirements and CDR items it settles.
 
 ## Decision Drivers
 
 * A decision must be traceable to SRS requirement IDs and to the CDR items it closes.
 * The reasons and rejected options must survive staff changes and later reviews.
 * Decisions must be reviewed with the same pull-request flow as code and documents.
-* The project documents are kept in English and Turkish (SRS, SDP).
+* The CDR Board and the development team review decisions in English; only the contractual documents (SRS, SDP) are bilingual.
 * The process must be light enough to close the overdue BACKLOG decision lane items quickly (L5).
 
 ## Considered Options
@@ -37,8 +37,8 @@ Chosen option: "MADR records in the repository", because MADR's *Decision Driver
 
 The process is:
 
-1. **Location and naming.** `docs/design/adr/NNNN-kebab-case-title.md`, using [template.md](template.md). The [ADR Roadmap](../ADR-ROADMAP.md) reserves numbers. A number is never reused.
-2. **Languages.** English is normative. A Turkish translation `NNNN-kebab-case-title.tr.md` (from [template.tr.md](template.tr.md)) is added or updated in the same pull request. Both languages use the canonical SRS.md IDs `MDG / SCG / FDM / ADM / SMM / DVE` (BACKLOG Appendix A).
+1. **Location and naming.** `docs/design/adr/NNNN-kebab-case-title.md`, using [template.md](template.md). The [ADR Roadmap](../ADR-ROADMAP.md) reserves numbers. A number is never reused once its ADR is `Accepted`; while a draft is unaccepted the roadmap may compact the list and reissue its number.
+2. **Language.** ADRs are written in English only and are not translated. They use the canonical SRS.md IDs `MDG / SCG / FDM / ADM / SMM / DVE` (BACKLOG Appendix A). The bilingual contractual documents (SRS, SDP) keep their Turkish versions.
 3. **SaaG fields.** In addition to the MADR sections, every ADR states `Kind`, `Traces`, `Closes` and `Decide by` in its header table.
 4. **Lifecycle.** `Planned` (roadmap only) → `Proposed` (file in an open pull request) → `Accepted` or `Rejected`. Later it may become `Deprecated` or `Superseded by ADR-NNNN`. A roadmap entry dropped before it is proposed becomes `Withdrawn`. An accepted ADR is not edited in substance; a change of decision is a new ADR that supersedes it.
 5. **Approval.** The CDR Board accepts or rejects a proposed ADR by approving its pull request.
@@ -50,13 +50,12 @@ The process is:
 * Good, because every CDR item gets an owner, a deadline (roadmap wave) and a recorded rationale.
 * Good, because the SDP §5 / CDR contradiction (L2) gets a defined resolution path.
 * Good, because decisions are reviewed and versioned with the documents and code they affect.
-* Bad, because each decision needs an English and a Turkish file, which doubles the writing and review effort.
 * Bad, because accepting an ADR requires touching several documents (ADR, roadmap, CDR, SRS or SDD) in one pull request.
 
 ### Confirmation
 
 * Each release DoD includes a roadmap check: every ADR scheduled for the wave due at that release is `Accepted`, `Rejected` or `Withdrawn`, or it is re-planned with a reason ([ADR Roadmap §7](../ADR-ROADMAP.md#7-maintaining-this-roadmap)).
-* Pull-request review checks that an accepted ADR's `Closes` items are `Resolved` in CDR.md, and that the `.tr.md` file exists.
+* Pull-request review checks that an accepted ADR's `Closes` items are `Resolved` in CDR.md.
 
 ## Pros and Cons of the Options
 
@@ -86,3 +85,6 @@ The process is:
 * [ADR Roadmap](../ADR-ROADMAP.md): the catalog of planned ADRs, the decision waves and the coverage matrices.
 * [CDR register](../CDR.md): the open items closed by ADRs.
 * MADR: <https://adr.github.io/madr/>
+* 2026-11-13: amended in place to drop the Turkish ADR translation; ADRs are English-only. The SRS and SDP keep their Turkish versions.
+* 2026-11-13: amended in place so an unaccepted draft's number may be reissued when the roadmap compacts its list. The ADRs written before that date were renumbered on the same day, which is why no number below 0038 is missing.
+* 2026-11-13: amended in place where its Context described the implemented stack, which a retired draft had reported as Celery + Redis.
