@@ -9,9 +9,7 @@ setup(
     packages=find_packages(where="src"),
     install_requires=[
         "Flask==2.3.2",
-        "celery==5.2.3",
-        "redis==4.1.1",
-        "docker==7.1.0",
+        "Flask-WTF==1.2.2",
         "mdg",
     ],
     entry_points={"console_scripts": ["dsm=dve.__main__:main"]},
@@ -22,6 +20,7 @@ setup(
             "static/*",
             "static/fonts/*",
             "static/img/*",
+            "static/vendor/*",
         ]
     },
     include_package_data=True,

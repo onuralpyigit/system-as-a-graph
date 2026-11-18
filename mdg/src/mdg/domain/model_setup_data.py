@@ -52,6 +52,45 @@ class ModelSetupData:
         }
 
 
+class InvalidModelSetupData(ValueError):
+    """A payload offered as a Model Setup Data file is not one, or belongs to
+    another selection."""
+
+
+_CONTEXT_IDS = (("project", "project_id"), ("platform", "platform_id"), ("version", "version_id"))
+
+
+def check_payload(payload: Any, project_id: str, platform_id: str, version_id: str) -> None:
+    """Raises InvalidModelSetupData unless the payload has the shape of a Model
+    Setup Data file (req 19) and its context is the selection."""
+    if not isinstance(payload, dict):
+        raise InvalidModelSetupData("not a Model Setup Data file: a JSON object is expected")
+    if not isinstance(payload.get("generated_at"), str) or not payload["generated_at"]:
+        raise InvalidModelSetupData("not a Model Setup Data file: 'generated_at' is missing")
+    context = payload.get("context")
+    if not isinstance(context, dict):
+        raise InvalidModelSetupData("not a Model Setup Data file: 'context' is missing")
+    ids = []
+    for part, key in _CONTEXT_IDS:
+        record = context.get(part)
+        value = record.get(key) if isinstance(record, dict) else None
+        if not isinstance(value, str) or not value:
+            raise InvalidModelSetupData(f"not a Model Setup Data file: 'context.{part}.{key}' is missing")
+        ids.append(value)
+    inventory = payload.get("inventory")
+    if not isinstance(inventory, dict) or not isinstance(inventory.get("units"), list):
+        raise InvalidModelSetupData("not a Model Setup Data file: 'inventory.units' is missing")
+    if not isinstance(payload.get("graph"), dict):
+        raise InvalidModelSetupData("not a Model Setup Data file: 'graph' is missing")
+    for key in ("acquired_files", "errors"):
+        if key in payload and not isinstance(payload[key], list):
+            raise InvalidModelSetupData(f"not a Model Setup Data file: '{key}' must be a list")
+    if ids != [project_id, platform_id, version_id]:
+        raise InvalidModelSetupData(
+            f"file is for {'/'.join(ids)}, not the selected {project_id}/{platform_id}/{version_id}"
+        )
+
+
 @dataclass(frozen=True)
 class ModelSetupDataRecord:
     """The listing entry of one saved Model Setup Data file, read from the
@@ -64,7 +103,7 @@ class ModelSetupDataRecord:
     generated_at: Optional[str] = None
     produced_by: Optional[str] = None
     scale: Dict[str, int] = field(default_factory=dict)
-    candidate: Optional[Dict[str, str]] = None
+    candidates: List[Dict[str, str]] = field(default_factory=list)
 
     @classmethod
     def from_payload(
@@ -75,11 +114,11 @@ class ModelSetupDataRecord:
         if not isinstance(payload, dict) or "generated_at" not in payload:
             return None
         units = (payload.get("inventory") or {}).get("units")
-        candidate = next(
-            ({"unit_name": u.get("unit_name"), "version": u.get("version")}
-             for u in (units if isinstance(units, list) else []) if isinstance(u, dict) and u.get("is_candidate")),
-            None,
-        )
+        candidates = [
+            {"unit_name": u.get("unit_name"), "version": u.get("version")}
+            for u in (units if isinstance(units, list) else [])
+            if isinstance(u, dict) and u.get("is_candidate")
+        ]
         return cls(
             run_id=run_id,
             project_id=project_id,
@@ -89,7 +128,7 @@ class ModelSetupDataRecord:
             generated_at=payload.get("generated_at"),
             produced_by=payload.get("produced_by"),
             scale=(payload.get("graph") or {}).get("metadata", {}).get("scale", {}),
-            candidate=candidate,
+            candidates=candidates,
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -101,5 +140,5 @@ class ModelSetupDataRecord:
             "generated_at": self.generated_at,
             "produced_by": self.produced_by,
             "scale": self.scale,
-            "candidate": self.candidate,
+            "candidates": self.candidates,
         }

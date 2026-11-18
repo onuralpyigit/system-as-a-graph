@@ -19,7 +19,31 @@
     />
   </head>
   <body>
+    <div class="brandbar" id="brandbar" hidden>
+      <img
+        class="brandbar__img brandbar__img--left"
+        src="{{ url_for('static', filename='img/logo-left.png') }}"
+        alt=""
+        width="204"
+        height="228"
+      />
+      <img
+        class="brandbar__img brandbar__img--right"
+        src="{{ url_for('static', filename='img/logo-right.png') }}"
+        alt=""
+        width="314"
+        height="150"
+      />
+    </div>
+
     <div class="sessionbar" id="sessionbar" hidden>
+      <!-- Shown on every stage while a production run is going; opens its console. -->
+      <button type="button" class="runpill" id="run-indicator" hidden title="Open the production run">
+        <span class="spinner" id="run-indicator-spinner"></span
+        ><i class="lucide lucide-circle-check" id="run-indicator-icon" hidden></i
+        ><span id="run-indicator-text">Production running</span>
+      </button>
+      <span class="sessionbar__divider" id="run-indicator-divider" hidden></span>
       <i class="lucide lucide-circle-user"></i>
       <span class="sessionbar__user" id="sessionbar-user"></span>
       <span class="sessionbar__divider"></span>
@@ -63,13 +87,13 @@
             <span class="stepper__name">Files</span>
           </button>
         </li>
-        <li class="stepper__item" id="stepper-inventory" data-state="todo">
-          <button type="button" class="stepper__button" data-stage="inventory">
+        <li class="stepper__item" id="stepper-units" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="units">
             <span class="stepper__mark">
               <i class="lucide lucide-check"></i>
               <span class="stepper__num">4</span>
             </span>
-            <span class="stepper__name">Inventory</span>
+            <span class="stepper__name">Units</span>
           </button>
         </li>
         <li class="stepper__item" id="stepper-run" data-state="todo">
@@ -90,6 +114,15 @@
             <span class="stepper__name">Model</span>
           </button>
         </li>
+        <li class="stepper__item" id="stepper-graph" data-state="todo">
+          <button type="button" class="stepper__button" data-stage="graph">
+            <span class="stepper__mark">
+              <i class="lucide lucide-check"></i>
+              <span class="stepper__num">7</span>
+            </span>
+            <span class="stepper__name">View</span>
+          </button>
+        </li>
       </ol>
 
       <main class="card" id="card" data-view="boot">
@@ -98,24 +131,28 @@
 
         <div class="card__body">
           <h1 class="title" id="title">Digital System Model</h1>
-          <img
-            class="logo"
-            id="logo"
-            src="{{ url_for('static', filename='img/logo.png') }}"
-            alt=""
-            width="227"
-            height="248"
-            hidden
-          />
+          <div class="logo" id="logo" hidden>
+            <img
+              class="logo__img logo__img--left"
+              src="{{ url_for('static', filename='img/logo-left.png') }}"
+              alt=""
+              width="204"
+              height="228"
+            />
+            <img
+              class="logo__img logo__img--right"
+              src="{{ url_for('static', filename='img/logo-right.png') }}"
+              alt=""
+              width="314"
+              height="150"
+            />
+          </div>
           <i class="lucide lucide-database brand-icon" id="brand-icon" hidden></i>
           <p class="subtitle" id="subtitle">Secure Access</p>
 
           <!-- Boot: shown until GET /api/session says where to resume. -->
           <section class="view" id="view-boot">
-            <div class="empty empty--busy">
-              <span class="empty__seal"><span class="spinner"></span></span>
-              <p class="empty__title">Restoring session</p>
-            </div>
+            <p class="boot" role="status" aria-label="Restoring session"><span></span><span></span><span></span></p>
           </section>
 
           <!-- Sign-in (req 3). -->
@@ -224,48 +261,40 @@
           <section class="view" id="view-files" hidden>
             <div class="files" id="run-files-panel" hidden>
               <span class="files__label"
-                ><i class="lucide lucide-hard-drive"></i>Previously produced</span
+                ><i class="lucide lucide-rotate-ccw-clock"></i>Previously produced</span
               >
               <ul class="files__list" id="run-files"></ul>
               <div class="empty" id="run-files-empty" hidden>
-                <span class="empty__seal"><i class="lucide lucide-hard-drive"></i></span>
+                <span class="empty__seal"><i class="lucide lucide-rotate-ccw-clock"></i></span>
                 <p class="empty__title">Nothing produced yet</p>
                 <p class="empty__note">
-                  Start a production to create the first Model Setup Data file for this context.
+                  Start a production or upload a Model Setup Data file for this context.
                 </p>
               </div>
             </div>
 
             <p class="message" id="files-message" role="alert"></p>
 
-            <div class="actions">
+            <div class="actions actions--row">
+              <button type="button" class="submit submit--ghost submit--compact" id="files-upload">
+                <i class="lucide lucide-upload"></i
+                ><span class="submit__label">Upload</span>
+              </button>
               <button type="button" class="submit" id="files-primary">
                 <span class="submit__label">Produce new</span
                 ><i class="lucide lucide-arrow-right submit__arrow"></i>
               </button>
+              <input
+                type="file"
+                id="files-upload-input"
+                accept=".json,application/json"
+                hidden
+              />
             </div>
           </section>
 
-          <!-- Software Unit Version Inventory (SRS DSM-MDG req 10) and the candidate version (req 11). -->
-          <section class="view" id="view-inventory" hidden>
-            <div class="context">
-              <div class="context__cell" title="Project">
-                <span class="context__key">Project</span>
-                <span class="context__value" id="context-project"></span>
-              </div>
-              <div class="context__cell" title="Platform">
-                <span class="context__key">Platform</span>
-                <span class="context__value" id="context-platform"></span>
-              </div>
-              <div class="context__cell" title="System version">
-                <span class="context__key">Version</span>
-                <span class="context__value" id="context-version"></span
-                ><span class="context__flag" id="context-current" hidden>
-                  &middot; Current</span
-                >
-              </div>
-            </div>
-
+          <!-- Software Unit Version Inventory (SRS DSM-MDG req 10); each row's dropdown picks a candidate version (req 11). -->
+          <section class="view" id="view-units" hidden>
             <div class="units">
               <label class="units__search">
                 <i class="lucide lucide-search"></i>
@@ -283,51 +312,63 @@
               </label>
 
               <div class="units__list" id="unit-list"></div>
-
-              <div class="units__candidate">
-                <span class="units__candidate-key">Evaluate</span>
-                <div class="picker picker--inline">
-                  <div class="picker__control">
-                    <select
-                      id="candidate-unit"
-                      aria-label="Software unit to evaluate"
-                      disabled
-                    ></select>
-                    <i class="lucide lucide-chevron-down"></i>
-                  </div>
-                </div>
-                <span class="units__candidate-key">at</span>
-                <div
-                  class="picker picker--inline picker--disabled"
-                  id="picker-candidate-version"
-                >
-                  <div class="picker__control">
-                    <select
-                      id="candidate-version"
-                      aria-label="Candidate version"
-                      disabled
-                    ></select>
-                    <i class="lucide lucide-chevron-down"></i>
-                    <span class="spinner picker__spinner" aria-label="Reading published versions"></span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <p class="candidate__note" id="candidate-note" role="status"></p>
-            <p class="message" id="inventory-message" role="alert"></p>
+            <p class="message" id="units-message" role="alert"></p>
 
             <div class="actions">
-              <button type="button" class="submit" id="inventory-next">
+              <button type="button" class="submit" id="units-next">
                 <span class="submit__label">Produce data</span
                 ><i class="lucide lucide-arrow-right submit__arrow"></i>
               </button>
             </div>
           </section>
 
-          <!-- Production run: the task's state and the worker's log (req 6, 8). -->
+          <!-- Production run: the task's state and its log (req 6, 8). -->
           <section class="view" id="view-run" hidden>
-            <div class="runpanel" id="run-status" data-tone="idle">
+            <div class="context" id="run-context">
+              <div class="context__cell" title="Project">
+                <span class="context__key">Project</span>
+                <span class="context__value" id="run-project"></span>
+              </div>
+              <div class="context__cell" title="Platform">
+                <span class="context__key">Platform</span>
+                <span class="context__value" id="run-platform"></span>
+              </div>
+              <div class="context__cell" title="System version">
+                <span class="context__key">Version</span>
+                <span class="context__value" id="run-version"></span
+                ><span class="context__flag" id="run-current" hidden>
+                  &middot; Current</span
+                >
+              </div>
+            </div>
+
+            <!-- The run's actions in the header's right margin, as the model
+                 card's: start a production, or go on to the file it wrote. -->
+            <div class="model__actions run__actions">
+              <button type="button" class="submit submit--compact" id="run-start">
+                <span class="submit__label">Start production</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+              <button type="button" class="submit submit--compact" id="run-model" hidden>
+                <span class="submit__label">View model</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+            </div>
+
+            <!-- The wireframe ship holds the deck's right half beside the console. -->
+            <img
+              class="run__ship"
+              src="{{ url_for('static', filename='img/ship.png') }}"
+              alt=""
+              aria-hidden="true"
+            />
+
+            <div class="runpanel mpanel" id="run-status" data-tone="idle">
+              <div class="mpanel__blur"></div>
+              <div class="mpanel__corners"></div>
               <div class="runpanel__bar">
                 <div
                   class="runpanel__bar-progress"
@@ -342,6 +383,7 @@
                   >Not started</span
                 >
                 <span class="runpanel__percent" id="run-percent" hidden></span>
+                <span class="runpanel__elapsed" id="run-elapsed" hidden></span>
                 <button
                   type="button"
                   class="submit submit--ghost submit--compact runpanel__stop"
@@ -367,24 +409,8 @@
               </div>
             </div>
 
+            <!-- Under the panel, as the model card's: the run's error, if any. -->
             <p class="message" id="run-message" role="alert"></p>
-
-            <div class="actions">
-              <button type="button" class="submit" id="run-start">
-                <span class="submit__label">Start production</span
-                ><i class="lucide lucide-arrow-right submit__arrow"></i>
-              </button>
-
-              <button
-                type="button"
-                class="submit submit--ok"
-                id="run-model"
-                hidden
-              >
-                <span class="submit__label">View Model</span
-                ><i class="lucide lucide-arrow-right submit__arrow"></i>
-              </button>
-            </div>
           </section>
 
           <!-- Core System Model: the produced file, one panel per part (req 8). -->
@@ -411,15 +437,23 @@
               </div>
             </div>
 
-            <a
-              class="submit submit--compact model__download"
-              id="model-download"
-              href="#"
-              download
-            >
-              <i class="lucide lucide-download"></i
-              ><span class="submit__label">Download</span>
-            </a>
+            <!-- The file's actions in the header's right margin: on to the
+                 view step, or the file itself. -->
+            <div class="model__actions">
+              <a
+                class="submit submit--compact submit--ghost model__download"
+                id="model-download"
+                href="#"
+                download
+              >
+                <i class="lucide lucide-download"></i
+                ><span class="submit__label">Download</span>
+              </a>
+              <button type="button" class="submit submit--compact" id="model-view">
+                <span class="submit__label">View model</span
+                ><i class="lucide lucide-arrow-right submit__arrow"></i>
+              </button>
+            </div>
 
             <div class="empty empty--busy" id="model-loading" hidden>
               <span class="empty__seal"><span class="spinner"></span></span>
@@ -472,6 +506,95 @@
             </div>
 
             <p class="message" id="model-message" role="alert"></p>
+          </section>
+
+          <!-- System hierarchy: the model card's file as the CSMS > CSS > CSCI > CSC > CSU
+               tree, each CSU with its relation cards, filling the stage (SRS DSM-DVE req 43). -->
+          <section class="view" id="view-graph" hidden>
+            <!-- The model the tree is drawn from, as the model card's context
+                 line, under the title on the stage's left (req 4, 16). -->
+            <div class="context" id="graph-context" hidden>
+              <div class="context__cell" title="Project">
+                <span class="context__key">Project</span>
+                <span class="context__value" id="graph-project"></span>
+              </div>
+              <div class="context__cell" title="Platform">
+                <span class="context__key">Platform</span>
+                <span class="context__value" id="graph-platform"></span>
+              </div>
+              <div class="context__cell" title="System version">
+                <span class="context__key">Version</span>
+                <span class="context__value" id="graph-version"></span
+                ><span class="context__flag" id="graph-current" hidden>
+                  &middot; Current</span
+                >
+              </div>
+              <div class="context__cell" title="Generated">
+                <span class="context__key">Generated</span>
+                <span class="context__value" id="graph-generated"></span>
+              </div>
+            </div>
+
+            <!-- Search of the tree: boxes, rows and relation cards by name,
+                 narrowed by type; a pick opens, centres and lights it (req 43). -->
+            <div class="gsearch mpanel" id="graph-search" hidden>
+              <div class="mpanel__blur"></div>
+              <div class="mpanel__corners"></div>
+              <div class="mpanel__body gsearch__body">
+                <label class="field gsearch__field">
+                  <i class="lucide lucide-search"></i>
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    aria-label="Search the system hierarchy"
+                    aria-controls="graph-search-results"
+                    autocomplete="off"
+                    autocapitalize="none"
+                    spellcheck="false"
+                  />
+                  <button type="button" class="gsearch__clear" aria-label="Clear" title="Clear" hidden>
+                    <i class="lucide lucide-x"></i>
+                  </button>
+                </label>
+                <!-- The type chips, in a titled row like the hardware view's filters. -->
+                <div class="gfilter__row">
+                  <span class="gfilter__title">Types</span>
+                  <div class="gsearch__chips gfilter__chips" aria-label="Filter by type">
+                    <button type="button" class="gsearch__chip" data-type="hierarchy" data-mode="sw" aria-pressed="false">Hierarchy</button>
+                    <button type="button" class="gsearch__chip" data-type="csu" data-mode="sw" aria-pressed="false">CSU</button>
+                    <button type="button" class="gsearch__chip" data-type="node" aria-pressed="false">Node</button>
+                    <button type="button" class="gsearch__chip" data-type="network" data-mode="hw" aria-pressed="false">Network</button>
+                    <button type="button" class="gsearch__chip" data-type="topic" data-mode="sw" aria-pressed="false">Topic</button>
+                    <button type="button" class="gsearch__chip" data-type="message" data-mode="sw" aria-pressed="false">Message</button>
+                    <button type="button" class="gsearch__chip" data-type="lib" data-mode="sw" aria-pressed="false">Library</button>
+                    <button type="button" class="gsearch__chip" data-type="relation" data-mode="sw" aria-pressed="false">Relation</button>
+                  </div>
+                </div>
+                <!-- The hardware view's filters: a chip per network and per
+                     node group, filled by graph.js for each model. -->
+                <div class="gfilter" data-mode="hw" hidden>
+                  <div class="gfilter__row" hidden>
+                    <span class="gfilter__title">Networks</span>
+                    <div class="gfilter__chips" data-filter="networks" aria-label="Filter by network"></div>
+                  </div>
+                  <div class="gfilter__row" hidden>
+                    <span class="gfilter__title">Groups</span>
+                    <div class="gfilter__chips" data-filter="groups" aria-label="Filter by node group"></div>
+                  </div>
+                </div>
+                <p class="gsearch__count" role="status" hidden></p>
+                <div class="gsearch__results" id="graph-search-results" role="listbox" hidden></div>
+              </div>
+            </div>
+
+            <div class="graph__stage" id="graph-stage">
+              <div class="graph__canvas" id="graph-canvas"></div>
+              <div class="empty" id="graph-loading" hidden>
+                <p class="boot" role="status" aria-label="Drawing the core system model"><span></span><span></span><span></span></p>
+              </div>
+            </div>
+
+            <p class="message" id="graph-message" role="alert"></p>
           </section>
         </div>
       </main>
@@ -562,6 +685,8 @@
       </div>
     </div>
 
+    <script src="{{ url_for('static', filename='vendor/g6.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='graph.js') }}"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
 </html>
