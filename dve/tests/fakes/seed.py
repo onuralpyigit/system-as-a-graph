@@ -14,7 +14,7 @@ CANDIDATE_VERSION = "1.0.3"
 ADMIN = "admin"
 OPERATOR = "operator"
 USER = "dsm"
-PASSWORD = "dsm"
+PASSWORD = "dsm"  # NOSONAR dev-stack stand-in from dev/compose.yaml, not a real credential
 CONFIG_DB_ADDRESS = "localhost:3306/cmdb"
 SOURCE_REPO_URL = "http://localhost:3000/dsm-src"
 RUN_1 = "run-1"
@@ -23,6 +23,7 @@ FILE_NAME = f"{PROJECT}_{PLATFORM}_{VERSION}.json"
 
 SELECTION = {"project_id": PROJECT, "platform_id": PLATFORM, "version_id": VERSION}
 CANDIDATE = {"unit_name": SENSOR_APP, "version": CANDIDATE_VERSION}
+CANDIDATES = [CANDIDATE]
 UNIT_VERSIONS = {SENSOR_APP: [CANDIDATE_VERSION, "1.0.1", VERSION]}
 
 DEFAULTS = {
@@ -31,10 +32,25 @@ DEFAULTS = {
 }
 
 
-def file_payload(generated_at: str = "2026-09-02T14:15:30", produced_by: str = OPERATOR, scale: dict = None) -> dict:
+def context(selection: dict = SELECTION) -> dict:
+    """The context a Model Setup Data file of a selection carries."""
+    project, platform, version = selection["project_id"], selection["platform_id"], selection["version_id"]
+    return {
+        "project": {"project_id": project, "name": project},
+        "platform": {"platform_id": platform, "project_id": project, "name": platform},
+        "version": {
+            "version_id": version, "project_id": project, "platform_id": platform,
+            "label": version, "is_effective": True,
+        },
+    }
+
+
+def file_payload(
+    generated_at: str = "2026-09-02T14:15:30", produced_by: str = OPERATOR, scale: dict = None, context: dict = None
+) -> dict:
     """A produced Model Setup Data file's header, as the store lists it."""
     return {
-        "context": {}, "inventory": {"units": []}, "acquired_files": [], "errors": [],
+        "context": context or {}, "inventory": {"units": []}, "acquired_files": [], "errors": [],
         "generated_at": generated_at, "produced_by": produced_by,
         "graph": {"metadata": {"scale": scale or {"apps": 2}}},
     }

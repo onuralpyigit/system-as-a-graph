@@ -1,6 +1,7 @@
 """Source code repository that writes a unit directory on clone: a valid
 Makefile and the unit's topic manifest, plus nav_app's Java import of
-common_lib; the system repo gets only a README (SRS DSM-MDG req 13-16)."""
+common_lib; the system repo and the ansible repo get only a README
+(SRS DSM-MDG req 13-16)."""
 
 from __future__ import annotations
 
@@ -48,6 +49,9 @@ class FakeSourceCodeRepository(ISourceCodeRepository):
         (unit_dir / "src").mkdir(parents=True, exist_ok=True)
         if unit.unit_name == seed.SYSTEM_REPO:
             (unit_dir / "README.md").write_text("# system_repo\n", encoding="utf-8")
+            return unit_dir
+        if unit.unit_name == seed.ANSIBLE_REPO:
+            (unit_dir / "README.md").write_text("# ansible_repo\n", encoding="utf-8")
             return unit_dir
         (unit_dir / "Makefile").write_text(seed.VALID_MAKEFILE, encoding="utf-8")
         if unit.unit_name not in self._without_manifest:

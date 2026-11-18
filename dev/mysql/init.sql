@@ -26,6 +26,7 @@ INSERT INTO platform_pkg_version (project_name, platform_name, atm_version, pkg_
   ('skywatch', 'nftw', '1.0.0', 'sensor_app', '1.0.0'),
   ('skywatch', 'nftw', '1.0.0', 'common_lib', '1.0.0'),
   ('skywatch', 'nftw', '1.0.0', 'system_repo', '1.0.0'),
+  ('skywatch', 'nftw', '1.0.0', 'ansible_repo', '1.0.0'),
   ('skywatch', 'nftw', '0.9.0', 'nav_app',    '0.9.0'),
   ('skywatch', 'nftw', '0.9.0', 'sensor_app', '0.9.0'),
   ('skywatch', 'nftw', '0.9.0', 'common_lib', '0.9.0'),

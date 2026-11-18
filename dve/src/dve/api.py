@@ -7,6 +7,7 @@ Endpoints:
   POST   /api/login                                    {"username", "password"}
   POST   /api/logout
   GET    /api/session
+  GET    /api/csrf-token
   POST   /api/data-sources/connect/config-mgmt-db      {"connection_address", "username", "password"}   [login]
   POST   /api/data-sources/connect/source-code-repo    {"connection_address", "username", "password"}   [login]
   GET    /api/projects                                                                                  [login + config_mgmt_db]
@@ -14,28 +15,42 @@ Endpoints:
   GET    /api/projects/<project_id>/platforms/<platform_id>/versions                                     [login + config_mgmt_db]
   GET    /api/projects/<project_id>/platforms/<platform_id>/versions/<version_id>/units                  [login + config_mgmt_db]
   GET    /api/projects/.../versions/<version_id>/mdg-files                                               [login + config_mgmt_db]
-  GET    /api/projects/.../versions/<version_id>/mdg-files/<run_id>/model                                [login + config_mgmt_db]
+  POST   /api/projects/.../versions/<version_id>/mdg-files                     the file as the body      [login + config_mgmt_db]
+  GET    /api/projects/.../versions/<version_id>/mdg-files/<run_id>/model                               [login + config_mgmt_db]
   GET    /api/projects/.../versions/<version_id>/mdg-files/<run_id>/download                             [login + config_mgmt_db]
   GET    /api/units/<unit_name>/versions                                                                 [login + source_code_repo]
-  POST   /api/mdg/run                                  selection fields + "candidate"?                   [login + both]
+  POST   /api/mdg/run                                  selection fields + "candidates"?                  [login + both]
   GET    /api/mdg/tasks/<task_id>?after=<line>                                                           [login]
   POST   /api/mdg/tasks/<task_id>/cancel                                                                 [login]
 
-Run with: python -m dve.api (the dsm command starts it together with the worker).
+A state-changing request is answered only when it carries the session's CSRF token in
+X-CSRFToken (req 3).
+
+Run with: python -m dve.api, or dsm.
 """
 
 from __future__ import annotations
 
 import functools
 import logging
+import time
+import uuid
 from datetime import timedelta
 
 from flask import Flask, jsonify, render_template, request, send_file, session
+from flask_wtf import CSRFProtect
+from flask_wtf.csrf import CSRFError, generate_csrf
 
-from mdg import ConfigManagementAccessError, SourceRepoAccessError, SourceRepoAuthError, SourceType
+from mdg import (
+    ConfigManagementAccessError,
+    InvalidModelSetupData,
+    SourceRepoAccessError,
+    SourceRepoAuthError,
+    SourceType,
+)
 
 from dve import Runtime, runtime as load_runtime
-from dve.config import config
+from dve.config import config, configure_logging
 from dve.domain.selection import Selection
 
 logger = logging.getLogger(__name__)
@@ -53,6 +68,12 @@ def _error(message: str, code: int):
     return jsonify({"error": message}), code
 
 
+def _csrf_rejected(reason: str):
+    """The 403 answer to a state-changing request without a usable CSRF token; the `csrf`
+    flag is what tells the UI to read a new token and send the request again."""
+    return jsonify({"error": reason, "csrf": True}), 403
+
+
 def _json_body(*required: str):
     """The request's JSON object, or a 400 response when a required field is missing."""
     body = request.get_json(silent=True, force=True)
@@ -64,17 +85,27 @@ def _json_body(*required: str):
     return body, None
 
 
-def _candidate(body: dict):
-    """The candidate unit version in the body (SRS DSM-MDG req 11): None when absent, a 400 response when malformed."""
-    candidate = body.get("candidate")
-    if candidate is None:
-        return None, None
-    if not isinstance(candidate, dict):
-        return None, _error("candidate must be a JSON object", 400)
-    missing = [field for field in _CANDIDATE_FIELDS if not candidate.get(field)]
-    if missing:
-        return None, _error(f"candidate missing field(s): {', '.join(missing)}", 400)
-    return {field: candidate[field] for field in _CANDIDATE_FIELDS}, None
+def _candidates(body: dict):
+    """The candidate unit versions in the body (SRS DSM-MDG req 11): an empty list
+    when absent, a 400 response when malformed or naming a unit twice."""
+    candidates = body.get("candidates")
+    if candidates is None:
+        return [], None
+    if not isinstance(candidates, list):
+        return None, _error("candidates must be a JSON array", 400)
+    chosen = []
+    for index, candidate in enumerate(candidates):
+        if not isinstance(candidate, dict):
+            return None, _error(f"candidates[{index}] must be a JSON object", 400)
+        missing = [field for field in _CANDIDATE_FIELDS if not candidate.get(field)]
+        if missing:
+            return None, _error(f"candidates[{index}] missing field(s): {', '.join(missing)}", 400)
+        chosen.append({field: candidate[field] for field in _CANDIDATE_FIELDS})
+    names = [candidate["unit_name"] for candidate in chosen]
+    repeated = sorted({name for name in names if names.count(name) > 1})
+    if repeated:
+        return None, _error(f"candidates name a unit twice: {', '.join(repeated)}", 400)
+    return chosen, None
 
 
 def login_required(view):
@@ -91,11 +122,23 @@ def create_app(runtime: Runtime | None = None) -> Flask:
     """The Flask application over a runtime; the dve.ini runtime when none is given."""
     runtime = runtime or load_runtime()
     app = Flask(__name__)
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"  # the cookie layer of the CSRF defense (req 3)
     app.secret_key = config().api.secret_key
     app.permanent_session_lifetime = timedelta(seconds=config().api.session_lifetime)
+    app.config["MAX_CONTENT_LENGTH"] = config().api.max_upload_mb * 1024 * 1024
+    CSRFProtect(app)  # every state-changing request carries the token of GET /api/csrf-token
+
+    @app.errorhandler(413)
+    def too_large(_error_):
+        return _error(f"file is larger than {config().api.max_upload_mb} MB", 413)
+
+    @app.errorhandler(CSRFError)
+    def refused_csrf_token(error):
+        """A state-changing request whose token is missing, stale or forged (req 3)."""
+        return _csrf_rejected(error.description)
 
     def sources():
-        return runtime.connections.connected(session.get("conn_token"))
+        return runtime.data_sources.connected(session.get("conn_token"))
 
     def connected(source_type: SourceType, message: str):
         """Answers 401 until the session has connected the data source (req 7)."""
@@ -150,7 +193,7 @@ def create_app(runtime: Runtime | None = None) -> Flask:
     @app.route("/api/logout", methods=["POST"])
     def api_logout():
         """Ends the session and drops its data source connections."""
-        runtime.connections.close(session.get("conn_token"))
+        runtime.data_sources.close(session.get("conn_token"))
         session.clear()
         return "", 204
 
@@ -169,6 +212,12 @@ def create_app(runtime: Runtime | None = None) -> Flask:
             "source_code_repo_connected": SourceType.SOURCE_CODE_REPO in connected_sources,
         })
 
+    @app.route("/api/csrf-token")
+    def api_csrf_token():
+        """The token this session's state-changing requests must carry in X-CSRFToken (req 3).
+        Open before sign-in, because the sign-in itself is one of those requests."""
+        return jsonify({"csrf_token": generate_csrf()})
+
     @app.route("/api/data-sources/connect/<source>", methods=["POST"])
     @login_required
     def api_connect(source):
@@ -179,10 +228,10 @@ def create_app(runtime: Runtime | None = None) -> Flask:
         body, error = _json_body(*_CONNECT_FIELDS)
         if error:
             return error
-        token = runtime.connections.open(session.get("conn_token"))
+        token = runtime.data_sources.open(session.get("conn_token"))
         session["conn_token"] = token
         try:
-            runtime.connections.connect(token, source_type, body["connection_address"], body["username"], body["password"])
+            runtime.data_sources.connect(token, source_type, body["connection_address"], body["username"], body["password"])
         except (ConfigManagementAccessError, SourceRepoAccessError, SourceRepoAuthError) as exc:
             return _error(str(exc), 502)
         return jsonify({"connected": True})
@@ -235,6 +284,27 @@ def create_app(runtime: Runtime | None = None) -> Flask:
         records = runtime.model_setup_data_store.list(project_id, platform_id, version_id)
         return jsonify({"files": [record.to_dict() for record in records]})
 
+    @app.route(
+        "/api/projects/<project_id>/platforms/<platform_id>/versions/<version_id>/mdg-files", methods=["POST"]
+    )
+    @login_required
+    @config_db_required
+    def api_mdg_file_upload(project_id, platform_id, version_id):
+        """Adds the Model Setup Data file in the body to the selection's files (req 5)."""
+        content = request.get_data()
+        if not content:
+            return _error("file is empty", 400)
+        try:
+            record = runtime.model_setup_data_store.add(
+                content, project_id, platform_id, version_id, uuid.uuid4().hex
+            )
+        except InvalidModelSetupData as exc:
+            return _error(str(exc), 400)
+        except OSError as exc:
+            logger.warning("mdg-files: upload failed: %s", exc)
+            return _error(str(exc), 502)
+        return jsonify(record.to_dict()), 201
+
     @app.route("/api/projects/<project_id>/platforms/<platform_id>/versions/<version_id>/mdg-files/<run_id>/model")
     @login_required
     @config_db_required
@@ -253,7 +323,7 @@ def create_app(runtime: Runtime | None = None) -> Flask:
         path, error = produced_file(project_id, platform_id, version_id, run_id)
         if error is not None:
             return error
-        return send_file(path, mimetype="application/json", as_attachment=True, download_name=path.name)
+        return send_file(path, mimetype="application/json", as_attachment=True)
 
     @app.route("/api/mdg/run", methods=["POST"])
     @login_required
@@ -264,13 +334,13 @@ def create_app(runtime: Runtime | None = None) -> Flask:
         body, error = _json_body(*Selection.FIELDS)
         if error:
             return error
-        candidate, error = _candidate(body)
+        candidates, error = _candidates(body)
         if error is not None:
             return error
         selection = Selection.from_dict(body)
         try:
-            task_id = runtime.production_runner.start(
-                selection, sources(), produced_by=session["username"], candidate=candidate
+            task_id = runtime.tasks.start_production(
+                selection, sources(), produced_by=session["username"], candidates=candidates
             )
         except Exception as exc:
             logger.warning("mdg/run: submission failed: %s", exc)
@@ -282,7 +352,7 @@ def create_app(runtime: Runtime | None = None) -> Flask:
     def api_mdg_task_cancel(task_id):
         """Cancels a queued or running production (req 6)."""
         try:
-            status = runtime.production_runner.cancel(task_id)
+            status = runtime.tasks.cancel(task_id)
         except Exception as exc:
             logger.warning("mdg/tasks/%s: cancellation failed: %s", task_id, exc)
             return _error(str(exc), 502)
@@ -297,21 +367,28 @@ def create_app(runtime: Runtime | None = None) -> Flask:
         except (TypeError, ValueError):
             after = -1
         try:
-            status = runtime.production_runner.status(task_id)
-            lines = runtime.production_log.lines_since(task_id, after + 1)
+            status = runtime.tasks.status(task_id)
+            lines = runtime.tasks.log_since(task_id, after + 1)
         except Exception as exc:
             logger.warning("mdg/tasks/%s: state read failed: %s", task_id, exc)
             return _error(str(exc), 502)
-        return jsonify({**status.to_dict(), "lines": lines})
+        # `now` lets the client measure elapsed time against the server's clock.
+        return jsonify({**status.to_dict(), "lines": lines, "now": time.time()})
 
     return app
 
 
-def main() -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+def serve(runtime: Runtime) -> None:
+    """Serves the runtime on the [api] address until interrupted; the runs in
+    flight end with the process, since they are its daemon children."""
+    configure_logging()
     api = config().api
-    print(f"DVE API on http://{api.host}:{api.port}", flush=True)
-    create_app().run(host=api.host, port=api.port)
+    logger.info("DVE API on http://%s:%s", api.host, api.port)
+    create_app(runtime).run(host=api.host, port=api.port)
+
+
+def main() -> None:
+    serve(load_runtime())
 
 
 if __name__ == "__main__":

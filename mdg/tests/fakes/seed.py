@@ -8,13 +8,19 @@ PLATFORM = "nftw"
 VERSION = "1.0.0"
 OLD_VERSION = "0.9.0"
 SYSTEM_REPO = "system_repo"
+ANSIBLE_REPO = "ansible_repo"
 NAV_APP = "nav_app"
 SENSOR_APP = "sensor_app"
 COMMON_LIB = "common_lib"
 NAV_POSITION = "nav_position"
 SENSOR_DATA = "sensor_data"
+MSG_NAV_POSITION = "nav_position_msg"
+MSG_SENSOR_DATA = "sensor_data_msg"
 NODE_0 = "Node-0"
 NODE_1 = "Node-1"
+SWITCH_0 = "Switch-0"
+SWITCH_1 = "Switch-1"
+GHOST_SWITCH = "ghost_switch"
 IMPORT_PREFIX = "a.b.c"
 DEPENDENCY_SUFFIX = "_lib"
 MAKEFILE_INCLUDE = "include/Makefile_java.mk"
@@ -45,4 +51,5 @@ def inventory_rows(version: str = VERSION):
         SoftwareUnitVersion(NAV_APP, version),
         SoftwareUnitVersion(SENSOR_APP, version),
         SoftwareUnitVersion(SYSTEM_REPO, version),
+        SoftwareUnitVersion(ANSIBLE_REPO, version),
     ]

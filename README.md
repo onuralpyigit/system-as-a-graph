@@ -2,8 +2,8 @@
 
 - `mdg`: DSM-MDG, Model Data Generator. A library producing the Model
   Setup Data file of a selected project, platform and system version.
-- `dve`: DSM-DVE, Design Verification Engine. A Flask API,
-  a Celery worker and a browser UI over mdg.
+- `dve`: DSM-DVE, Design Verification Engine. A Flask API running
+  mdg productions in child processes, and a browser UI over mdg.
 
 Requirements: `docs/SRS.md`.
 
@@ -24,10 +24,13 @@ python3 -m venv venv && source venv/bin/activate
 pip install -e ./mdg -e ./dve
 ```
 
-**3. Redis, worker and API** (one command, Ctrl+C stops all three):
+Without PyPI access, install from the vendored wheels instead:
+`mdg/wheelhouse/README.md`, `dve/wheelhouse/README.md`.
+
+**3. API** (Ctrl+C stops it and its runs):
 
 ```bash
-dsm            # dsm -c 4 sets the worker process count
+dsm
 ```
 
 **4. UI:** <http://127.0.0.1:8080>, sign in as `admin` / `admin`, connect both data sources as `dsm` / `dsm`.

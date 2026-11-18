@@ -9,7 +9,7 @@ from typing import Callable, Dict, Optional
 from mdg import DataSourceConfig, IConfigManagementRepository, ISourceCodeRepository, SourceType
 
 
-class DataSourceConnections:
+class DataSourceService:
     """Keeps, per session token, the connected data sources; each source is
     verified with one call when connected (req 7)."""
 

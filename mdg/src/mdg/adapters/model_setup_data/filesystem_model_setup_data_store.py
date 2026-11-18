@@ -8,7 +8,12 @@ import logging
 from pathlib import Path
 from typing import List, Optional
 
-from mdg.domain.model_setup_data import ModelSetupData, ModelSetupDataRecord
+from mdg.domain.model_setup_data import (
+    InvalidModelSetupData,
+    ModelSetupData,
+    ModelSetupDataRecord,
+    check_payload,
+)
 from mdg.domain.workspace import Workspace
 from mdg.ports.model_setup_data_store import IModelSetupDataStore
 
@@ -30,6 +35,20 @@ class FilesystemModelSetupDataStore(IModelSetupDataStore):
         path.write_text(json.dumps(data.to_dict(), indent=2), encoding="utf-8")
         logger.info("model setup data: saved %s", path.name)
         return path
+
+    def add(self, content: bytes, project_id: str, platform_id: str, version_id: str, run_id: str) -> ModelSetupDataRecord:
+        try:
+            payload = json.loads(content.decode("utf-8"))
+        except ValueError as exc:
+            raise InvalidModelSetupData("not a JSON file") from exc
+        check_payload(payload, project_id, platform_id, version_id)
+        path = self._workspace.model_setup_data_file(project_id, platform_id, version_id, run_id)
+        if not self._workspace.contains(path):
+            raise InvalidModelSetupData("selection resolves outside the workspace")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+        logger.info("model setup data: added %s as run %s", path.name, run_id)
+        return ModelSetupDataRecord.from_payload(payload, run_id, project_id, platform_id, version_id, path)
 
     def list(self, project_id: str, platform_id: str, version_id: str) -> List[ModelSetupDataRecord]:
         selection_dir = self._workspace.selection_dir(project_id, platform_id, version_id)
