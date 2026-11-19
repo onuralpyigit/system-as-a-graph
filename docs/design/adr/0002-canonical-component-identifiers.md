@@ -3,12 +3,12 @@
 | Field | Value |
 |---|---|
 | Status | Proposed |
-| Date | 2026-11-03 |
+| Date | 2026-11-19 |
 | Deciders | CDR Board |
 | Consulted | Development team |
 | Kind | Ratify |
 | Traces | All SRS requirements (citation form); BACKLOG findings T1, T2, T3, L3 |
-| Closes | — |
+| Resolves | — |
 | Decide by | Wave A (2026-11-27) |
 | Supersedes | — |
 
@@ -18,9 +18,9 @@ The same components and artifacts have different names across the document set a
 
 - SRS.md uses `MDG / SCG / FDM / ADM / SMM / DVE`.
 - SRS.tr and SDP.tr use `MVU / SUR / SVY / AVY / SMY / TDM`.
-- SDD, STD and CDR use `MSG / SCG / TDM / ADM / CSM / DVE`.
+- SDD, STD and the former CDR register use `MSG / SCG / TDM / ADM / CSM / DVE`.
 
-`TDM` therefore means the Design Verification Engine in Turkish documents but the Telemetry Data Manager (= FDM) in the SDD. CDR items cite requirement IDs that do not exist (`MSG.6`, `CSM.30`). The artifacts are renamed too: "Model Data" becomes "Model Setup Data", and "System Model" becomes "Core System Model". The code follows the SDD vocabulary (`ModelSetupData`, `model_setup_data_store`, `test_msd.py`). Its docstrings also cite an older requirement numbering ("SRS DSM-MDG req 19"). Without one canonical scheme, no trace in the SRS → SDD → STD → code chain can be resolved reliably.
+`TDM` therefore means the Design Verification Engine in Turkish documents but the Telemetry Data Manager (= FDM) in the SDD. The former CDR register cited requirement IDs that do not exist (`MSG.6`, `CSM.30`). The artifacts are renamed too: "Model Data" becomes "Model Setup Data", and "System Model" becomes "Core System Model". The code follows the SDD vocabulary (`ModelSetupData`, `model_setup_data_store`, `test_msd.py`). Docstrings in both packages cite an older numbering in three forms: "SRS DSM-MDG req N", "SRS DSM-DVE req N" and "SRS DSM-SMM req N", plus a short "(req N)" in `dve/src/dve/static/*.js`. None of these numbers match SRS.md. Without one canonical scheme, no trace in the SRS → SDD → STD → code chain can be resolved reliably.
 
 ## Decision Drivers
 
@@ -44,15 +44,15 @@ Chosen option: "SRS.md IDs and terms everywhere", because the SRS is the contrac
 4. **Code:**
    * Package directories are `mdg/ scg/ fdm/ adm/ smm/ dve/` (ADR-0004).
    * Public identifiers move from `model_setup_data` / `ModelSetupData` to `model_data` / `ModelData` in one refactor during R3.
-   * Docstrings cite requirements as `MDG.n`.
+   * Docstrings and comments cite requirements as `MDG.n`, `DVE.n` or `SMM.n`. The "DSM-…" forms are converted in the same refactor, using a reviewed mapping table from the old numbers to SRS.md numbers (the old numbers are not a fixed offset).
 
 ### Consequences
 
-* Good, because every trace becomes resolvable, and the CDR-to-requirement links can be checked mechanically.
+* Good, because every trace becomes resolvable, and the links from ADR `Resolves` fields to requirements can be checked mechanically.
 * Good, because new R3 code starts with the right vocabulary.
-* Bad, because the SDD, STD and CDR need a rename pass (BACKLOG story S0.2-01). The code refactor touches the `mdg` public API and the `dve` imports of it.
+* Bad, because the SDD and STD need a rename pass (BACKLOG story S0.2-01). The code refactor touches the `mdg` public API and the `dve` imports of it.
 * Bad, because the existing Model Data JSON files carry the old naming in field names. ADR-0013 handles their versioning.
-* Follow-up: BACKLOG S0.2-01 (document renames); a code refactor story in R3; update CDR "Source" cells.
+* Follow-up: BACKLOG S0.2-01 (document renames); a code refactor story in R3. (The CDR register's "Source" cells no longer need fixing: the register was retired and its items are cited by canonical SRS IDs in [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr).)
 
 ### Confirmation
 

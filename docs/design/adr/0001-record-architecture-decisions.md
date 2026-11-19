@@ -8,17 +8,17 @@
 | Consulted | Development team |
 | Kind | Ratify |
 | Traces | BACKLOG S0.2-02 (decision-log workflow); BACKLOG findings L2, L5 |
-| Closes | — |
+| Resolves | — |
 | Decide by | — |
 | Supersedes | — |
 
 ## Context and Problem Statement
 
-SaaG has no decision log. The SRS and SDD defer 30 design points "to the critical design phase", and the [CDR register](../CDR.md) lists them, but all are `Open`, and the register records neither the options weighed nor the reasons for a choice. Meanwhile, [SDP §5](../../planning/SDP.md) fixes a technology stack that the CDR still lists as open ([BACKLOG](../../planning/BACKLOG.md) finding L2). The code in `mdg/` and `dve/` was built on a partly different stack (Flask, Celery + Redis instead of FastAPI, Procrastinate). The project needs one place where each significant decision is reasoned, approved and linked to the requirements and CDR items it settles.
+SaaG has no decision log. The SRS and SDD defer 30 design points "to the critical design phase". A separate CDR register used to list them, but all were `Open`, and a register row records neither the options weighed nor the reasons for a choice. Meanwhile, [SDP §5](../../planning/SDP.md) fixes a technology stack that those deferred points still leave open ([BACKLOG](../../planning/BACKLOG.md) finding L2). The code in `mdg/` and `dve/` was built on a partly different stack (Flask instead of FastAPI, spawned child processes instead of Procrastinate, offline wheelhouses for CPython 3.9 instead of Docker Compose; see commit `1157784`). The project needs one place where each significant decision is reasoned, approved and linked to the requirements and deferred design points it settles.
 
 ## Decision Drivers
 
-* A decision must be traceable to SRS requirement IDs and to the CDR items it closes.
+* A decision must be traceable to SRS requirement IDs and to the deferred design points it resolves.
 * The reasons and rejected options must survive staff changes and later reviews.
 * Decisions must be reviewed with the same pull-request flow as code and documents.
 * The project documents are kept in English and Turkish (SRS, SDP).
@@ -33,36 +33,35 @@ SaaG has no decision log. The SRS and SDD defer 30 design points "to the critica
 
 ## Decision Outcome
 
-Chosen option: "MADR records in the repository", because MADR's *Decision Drivers*, *Considered Options* and *Pros and Cons* sections match how CDR items have to be closed: by comparing alternatives against requirements. Keeping the records in the repository keeps them versioned and reviewed alongside the SRS, SDD and code.
+Chosen option: "MADR records in the repository", because MADR's *Decision Drivers*, *Considered Options* and *Pros and Cons* sections match how deferred design points have to be resolved: by comparing alternatives against requirements. Keeping the records in the repository keeps them versioned and reviewed alongside the SRS, SDD and code.
 
 The process is:
 
 1. **Location and naming.** `docs/design/adr/NNNN-kebab-case-title.md`, using [template.md](template.md). The [ADR Roadmap](../ADR-ROADMAP.md) reserves numbers. A number is never reused.
-2. **Languages.** English is normative. A Turkish translation `NNNN-kebab-case-title.tr.md` (from [template.tr.md](template.tr.md)) is added or updated in the same pull request. Both languages use the canonical SRS.md IDs `MDG / SCG / FDM / ADM / SMM / DVE` (BACKLOG Appendix A).
-3. **SaaG fields.** In addition to the MADR sections, every ADR states `Kind`, `Traces`, `Closes` and `Decide by` in its header table.
+2. **Language.** ADRs and the ADR Roadmap are written in English only; there are no Turkish translations. They use the canonical SRS.md IDs `MDG / SCG / FDM / ADM / SMM / DVE` (BACKLOG Appendix A).
+3. **SaaG fields.** In addition to the MADR sections, every ADR states `Kind`, `Traces`, `Resolves` and `Decide by` in its header table. `Resolves` names the deferred design points the ADR settles, by their SRS or SDD source (for example "SRS MDG.19 mandatory file list").
 4. **Lifecycle.** `Planned` (roadmap only) → `Proposed` (file in an open pull request) → `Accepted` or `Rejected`. Later it may become `Deprecated` or `Superseded by ADR-NNNN`. A roadmap entry dropped before it is proposed becomes `Withdrawn`. An accepted ADR is not edited in substance; a change of decision is a new ADR that supersedes it.
 5. **Approval.** The CDR Board accepts or rejects a proposed ADR by approving its pull request.
-6. **Closing CDR items.** The pull request that accepts an ADR also sets each CDR item in its `Closes` field to `Resolved` with a link to the ADR. It replaces the "to be determined during the critical design phase" wording in the SRS or SDD, and updates the ADR's status in the roadmap.
+6. **ADRs are the only register of deferred design points.** Every point the SRS or SDD defers "to the critical design phase" is listed in [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr) against the ADR that resolves it. There is no separate CDR register. A point is resolved when its ADR is `Accepted`; it is deferred when its ADR is re-planned to a later wave with a recorded reason. The pull request that accepts an ADR replaces the "to be determined during the critical design phase" wording in the SRS or SDD with a link to the ADR, and updates the ADR's status in the roadmap.
 7. **SDP §5 as options.** Technology choices in SDP §5 are candidate options. Where the code differs from them, a *Reconcile* ADR weighs both, and SDP §5 or the code is aligned afterwards.
 
 ### Consequences
 
-* Good, because every CDR item gets an owner, a deadline (roadmap wave) and a recorded rationale.
-* Good, because the SDP §5 / CDR contradiction (L2) gets a defined resolution path.
+* Good, because every deferred design point gets an owner, a deadline (roadmap wave) and a recorded rationale, in one place.
+* Good, because the contradiction between SDP §5 and the still-open design points (L2) gets a defined resolution path.
 * Good, because decisions are reviewed and versioned with the documents and code they affect.
-* Bad, because each decision needs an English and a Turkish file, which doubles the writing and review effort.
-* Bad, because accepting an ADR requires touching several documents (ADR, roadmap, CDR, SRS or SDD) in one pull request.
+* Bad, because accepting an ADR requires touching several documents (ADR, roadmap, SRS or SDD) in one pull request.
 
 ### Confirmation
 
 * Each release DoD includes a roadmap check: every ADR scheduled for the wave due at that release is `Accepted`, `Rejected` or `Withdrawn`, or it is re-planned with a reason ([ADR Roadmap §7](../ADR-ROADMAP.md#7-maintaining-this-roadmap)).
-* Pull-request review checks that an accepted ADR's `Closes` items are `Resolved` in CDR.md, and that the `.tr.md` file exists.
+* Pull-request review checks that an accepted ADR's `Resolves` points no longer carry "to be determined during the critical design phase" wording in the SRS or SDD.
 
 ## Pros and Cons of the Options
 
 ### MADR records in the repository
 
-* Good, because the structure makes alternatives and drivers explicit, which fits CDR closure.
+* Good, because the structure makes alternatives and drivers explicit, which fits the resolution of deferred design points.
 * Good, because it is plain Markdown, reviewed in pull requests, and readable without tools.
 * Bad, because it is longer to write than the Nygard format.
 
@@ -75,6 +74,7 @@ The process is:
 
 * Good, because there is no new document type.
 * Bad, because a table row cannot hold context, options and consequences. The register would still contradict SDP §5 without explaining why.
+* Bad, because the register and the ADRs would have to be kept in step, so the same decision is maintained in two places. The register was retired on 2026-11-19 for this reason.
 
 ### A wiki outside the repository
 
@@ -84,5 +84,8 @@ The process is:
 ## More Information
 
 * [ADR Roadmap](../ADR-ROADMAP.md): the catalog of planned ADRs, the decision waves and the coverage matrices.
-* [CDR register](../CDR.md): the open items closed by ADRs.
+* [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr): the deferred design points and the ADR that resolves each one.
+* Amended 2026-11-19: the separate CDR register (`docs/design/CDR.md`) was retired. Its 30 items are now tracked only through ADRs (step 6), and the `Closes` header field is renamed `Resolves`.
+* Amended 2026-11-19: ADRs are kept in English only (step 2). The Turkish `.tr.md` ADR files, `template.tr.md` and the Turkish roadmap (`ADR-ROADMAP.tr.md`) were removed.
+* Amended 2026-11-19: the catalog was consolidated by theme from 42 numbers to 21. When ADRs are merged, the lowest number survives and the others become `Withdrawn — merged into ADR-NNNN`, with no file ([ADR Roadmap §4.1](../ADR-ROADMAP.md#41-withdrawn-numbers)).
 * MADR: <https://adr.github.io/madr/>
