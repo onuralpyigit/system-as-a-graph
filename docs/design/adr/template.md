@@ -8,15 +8,15 @@
 | Consulted | {people or teams whose opinion was sought} |
 | Kind | {Ratify \| Reconcile \| Decide} (see [ADR Roadmap §2](../ADR-ROADMAP.md#2-conventions)) |
 | Traces | {SRS requirement IDs, e.g. SMM.29–31; quality attributes, e.g. QA-02} |
-| Closes | {CDR items, e.g. CDR-16, or —} |
+| Resolves | {deferred design points this ADR settles, by SRS/SDD source, e.g. "SMM.30 concurrent user/operation count" (see [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr)), or —} |
 | Decide by | {Wave and date from [ADR Roadmap §5](../ADR-ROADMAP.md#5-decision-schedule)} |
 | Supersedes | {[ADR-NNNN](NNNN-title.md) or —} |
 
-<!-- English is normative. Update NNNN-title.tr.md in the same pull request. Use canonical SRS.md IDs (MDG, SCG, FDM, ADM, SMM, DVE) in both languages. -->
+<!-- ADRs are written in English only. Use canonical SRS.md IDs (MDG, SCG, FDM, ADM, SMM, DVE). -->
 
 ## Context and Problem Statement
 
-{Describe the context and the problem in two or three sentences, or as a question. Cite the SRS requirements, SDD sections and CDR items that create the need for this decision.}
+{Describe the context and the problem in two or three sentences, or as a question. Cite the SRS requirements, SDD sections and deferred design points ("to be determined during the critical design phase") that create the need for this decision.}
 
 ## Decision Drivers
 
@@ -38,7 +38,7 @@ Chosen option: "{Option N}", because {justification: which drivers it satisfies,
 
 * Good, because {positive consequence, e.g. a requirement now satisfiable, simpler deployment}
 * Bad, because {negative consequence, e.g. migration work, a new dependency to operate}
-* {Follow-up work: SDD sections to update, CDR items to set to `Resolved`, backlog stories affected}
+* {Follow-up work: SDD sections to update, SRS/SDD "to be determined" wording to replace with a link to this ADR, backlog stories affected}
 
 ### Confirmation
 
@@ -60,4 +60,4 @@ Chosen option: "{Option N}", because {justification: which drivers it satisfies,
 
 ## More Information
 
-{Links to related ADRs, CDR items, SDD sections, code paths, prototypes or measurements. State any condition under which this decision should be revisited.}
+{Links to related ADRs, SRS requirements, SDD sections, code paths, prototypes or measurements. State any condition under which this decision should be revisited.}

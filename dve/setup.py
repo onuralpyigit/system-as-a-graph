@@ -10,6 +10,8 @@ setup(
     install_requires=[
         "Flask==2.3.2",
         "Flask-WTF==1.2.2",
+        # Flask 2.3.2's test client reads werkzeug.__version__, removed in 3.1.
+        "Werkzeug>=2.3.7,<3.1",
         "mdg",
     ],
     entry_points={"console_scripts": ["dsm=dve.__main__:main"]},

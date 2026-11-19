@@ -8,6 +8,8 @@
 
 ## 0. Evaluation of the SDP (CSCI / CSC / CSU traceability and consistency)
 
+> **CDR register retired (2026-11-19):** `docs/design/CDR.md` was removed. Its items CDR-01…30 are now tracked only through ADRs, as design points DP-01…DP-30 (same numbers) in [ADR Roadmap §6.1](../design/ADR-ROADMAP.md#61-deferred-design-points--adr). The findings in §0 are kept as written at review time, so they still cite CDR item numbers; read CDR-NN as DP-NN.
+
 ### 0.1 What holds up
 
 - **Arithmetic completeness.** The union of all WBS leaf requirement ranges covers every functional requirement exactly once: MDG 1–23, SCG 1–7, FDM 1–5, ADM {1,3,4,6}∪{2,5}, SMM 1–31 ∪ 32–37, DVE: {1–8, 9+19–20, 17–18+21–24, 11+13–15, 10+12+16, 25, 26–27, 28–49, 50–70, 71–78} = 1–78 with **no gaps and no overlaps**. 23+7+5+6+37+78 = 156 matches SRS Table 1.
@@ -43,8 +45,8 @@
 1. Declare SRS.md IDs canonical; rename SDD/STD/CDR (`MSG→MDG`, `TDM→FDM`, `CSM→SMM`, restore "Model Data"/"System Model" terms) — backlog work item R0-E0.2.
 2. Introduce a formal fourth WBS tier **"Deliverable" (D-01…D-17)** below CSU; stop calling slices CSUs in Table 2. Deliverable IDs are used as Epic IDs below.
 3. Add `FDM-INF.1` to the D-03 (FDM) scope.
-4. Reconcile SDP §5 vs CDR-13/-22/-23/-29/-30 (mark resolved with the §5 decision as the rationale, or delete from §5).
-5. Move CDR closure gates one release ahead (see §2 table "Decision lane").
+4. Reconcile SDP §5 vs the deferred design points DP-13/-22/-23/-29/-30 through *Reconcile* or *Decide* ADRs (ADR-0018, ADR-0019, ADR-0005, ADR-0007/0009/0011/0012/0014, ADR-0007/0009/0010/0012/0014).
+5. Move decision gates (ADR acceptance) one release ahead (see §2 table "Decision lane").
 6. Align repo dirs to canonical CSC IDs (`mdg/ scg/ fdm/ adm/ smm/ dve/ web/ cli/`) and fix `test_msd.py`.
 
 ---
@@ -57,8 +59,8 @@
 | **Epic** | WBS deliverable (fixed by 0.4/2) or a decision-lane group | 19 deliverable epics (D-01…D-17, D-16 split a/b/c) + 1 foundation + 7 decision/closure + 1 reconciliation | `E<release>.<n>`, cites `D-01…D-17` |
 | **User Story** | INVEST-sized cluster of 1–5 requirements, same interface/domain | 106 stories (95 traced in R0–R7 + 11 closeout in R8–R10) | `S<epic>-<nn>` |
 
-- **Roles:** `Operator` (web panel user), `Automation Client` (Jenkins/CI via CLI), `Platform Team`, `CDR Board / Security`, `QA`.
-- **Release DoD** = SDP §2 DoD: every story's requirements pass; cited CDRs Resolved/Deferred; packaging + demo green.
+- **Roles:** `Operator` (web panel user), `Automation Client` (Jenkins/CI via CLI), `Platform Team`, `CDR Board / Security` (the board that accepts ADRs), `QA`.
+- **Release DoD** = SDP §2 DoD: every story's requirements pass; cited ADRs Accepted or re-planned with reason; packaging + demo green.
 - **Coverage claim:** the 100 stories trace to all **156 functional + 1 infrastructure** requirements, each requirement owned by exactly one story (see §3 matrix).
 
 ### Deliverable register (D-01…D-17)
@@ -85,17 +87,17 @@
 
 ---
 
-## 2. Decision lane (CDR closure, pulled ≥1 release ahead)
+## 2. Decision lane (ADR acceptance, pulled ≥1 release ahead)
 
-| CDRs | Decision | Currently gated at | Close by |
-|---|---|---|---|
-| CDR-17–20, 22, 24 | EXT/INT protocols for R1 data sources, LDAP, MDG→SMM | R1 DoD | R0 |
-| CDR-09, 10 | Topology acquisition source/method; mandatory file list | R1 DoD | R0 |
-| CDR-29, 30, 16, 28 | Storage tech/schemas; concurrency limits; SMM→DVE read protocol | R2 DoD | R1 |
-| CDR-01–08 | All verification rule sets & classification metrics | R3 DoD | R2 |
-| CDR-11, 12, 25 | Simulation definition; **AED format (feeds R4+R5)**; SCG→ADM | R4 DoD | R3 |
-| CDR-15, 21, 26, 27 | Telemetry capacity; field source protocol; handoffs | R5 DoD | R4 |
-| CDR-13, 14, 23 | Report format; scoring; CLI/result format | R7 DoD | R6 |
+| Design points ([§6.1](../design/ADR-ROADMAP.md#61-deferred-design-points--adr)) | ADRs | Decision | Currently gated at | Close by |
+|---|---|---|---|---|
+| DP-17–20, 22, 24 | 0003, 0008, 0019 | EXT/INT protocols for R1 data sources, LDAP, MDG→SMM | R1 DoD | R0 |
+| DP-09, 10 | 0008 | Topology acquisition source/method; mandatory file list | R1 DoD | R0 |
+| DP-29, 30, 16, 28 | 0003, 0006, 0007, 0009, 0010, 0011 | Storage tech/schemas; concurrency limits; SMM→DVE read protocol | R2 DoD | R1 |
+| DP-01–08 | 0016 (rule catalog) | All verification rule sets & classification metrics | R3 DoD | R2 |
+| DP-11, 12, 25 | 0003, 0012, 0013 | Simulation definition; **AED format (feeds R4+R5)**; SCG→ADM | R4 DoD | R3 |
+| DP-15, 21, 26, 27 | 0003, 0014, 0020 | Telemetry capacity; field source protocol; handoffs | R5 DoD | R4 |
+| DP-13, 14, 23 | 0005, 0018 | Report format; scoring; CLI/result format | R7 DoD | R6 |
 
 ---
 
@@ -109,7 +111,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | Epic | Scope | Traces |
 |---|---|---|
 | E0.1 Foundation (no SRS trace) | SDP Inc 0 | — |
-| E0.2 Naming reconciliation (fix T1–T3, L3) | canonical IDs, CDR/SDD/STD renames, dir alignment | fixes 0.4/1,6 |
+| E0.2 Naming reconciliation (fix T1–T3, L3) | canonical IDs, SDD/STD renames, dir alignment | fixes 0.4/1,6 |
 
 | Story | Title | Size |
 |---|---|---|
@@ -117,7 +119,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | S0.1-02 | As a developer, I get `shared/` contracts/types/errors/security scaffolding so CSCs share one error and security model | M |
 | S0.1-03 | As a platform team, I get a Docker Compose base stack with placeholder services and an env/secrets template | M |
 | S0.1-04 | As a QA, I get CI (build, lint, unit-test gates) and the `docs/` skeleton | S |
-| S0.2-01 | As a maintainer, I get SRS.md IDs applied everywhere (SDD/STD/CDR renames, repo dirs `mdg/ scg/ fdm/ adm/ smm/ dve/`, `test_msd.py` fix) so all cross-document traces resolve | L |
+| S0.2-01 | As a maintainer, I get SRS.md IDs applied everywhere (SDD/STD renames, repo dirs `mdg/ scg/ fdm/ adm/ smm/ dve/`, `test_msd.py` fix) so all cross-document traces resolve | L |
 | S0.2-02 | As the CDR board, I get the decision-log workflow + pre-scheduled decision lane (§2) | S |
 
 ### R1 — Model Data Generation (2026-07-20 → 2026-09-04, 7 wk) — completes SaaG-MDG
@@ -127,7 +129,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 |---|---|---|
 | E1.1 Model Data Generator backend | D-01 | MDG.1–23 |
 | E1.2 Login & Model Data Setup (web) | D-08 | DVE.1–8 |
-| E1.3 Decision gate: CDR-09/10, 17–20, 22, 24 | — | — |
+| E1.3 Decision gate: ADR-0003, 0008, 0019 (DP-09/10, 17–20, 22, 24) | — | — |
 
 | Story | Title | Traces | Size |
 |---|---|---|---|
@@ -144,7 +146,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | S1.2-04 | As an operator, I start Model Data production and watch in-progress/success/failure status | DVE.6 | M |
 | S1.2-05 | As an operator, I see continuous accessibility status of all data sources | DVE.7 | M |
 | S1.2-06 | As an operator, I see missing-data/access/auth/format/integrity errors from production | DVE.8 | S |
-| S1.3-01 | Decision: EXT-IF-01…04/06 + INT-IF-01 protocols; topology method; mandatory file list (CDR pulled from R0) | — | M |
+| S1.3-01 | Decision: EXT-IF-01…04/06 + INT-IF-01 protocols; topology method; mandatory file list (decision pulled from R0) | — | M |
 
 *(DVE.2 "interact with MDG/SCG/ADM/SMM" is marked partially satisfied here; satisfied-in = R5 — finding T5.)*
 
@@ -155,7 +157,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 |---|---|---|
 | E2.1 Structural Model Construction | D-06 | SMM.1–31 |
 | E2.2 Model Build & View (web) | D-09 | DVE.9, 19–20 |
-| E2.3 Decision gate: CDR-29/30, 16, 28 (+ CDR-01–08 start) | — | — |
+| E2.3 Decision gate: ADR-0003, 0006, 0007, 0009, 0010, 0011 (DP-29/30, 16, 28) (+ ADR-0016 rule families start) | — | — |
 
 | Story | Title | Traces | Size |
 |---|---|---|---|
@@ -173,7 +175,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | S2.2-02 | As an operator, I search entities/relationships and filter by type/project/platform/version/unit | DVE.19 | M |
 | S2.2-03 | As an operator, I zoom/pan/select and view node & relationship attributes | DVE.20 | M |
 | S2.3-01 | Decision: storage tech + 7-store schemas, concurrency counts, SMM→DVE protocol (from R1) | — | L |
-| S2.3-02 | Decision: verification rule sets CDR-01–08 (for R3) | — | L |
+| S2.3-02 | Decision: verification rule sets DP-01–08 approved in the ADR-0016 catalog (for R3) | — | L |
 
 ### R3 — Structural Design Verification (2026-11-09 → 2027-01-22, 11 wk)
 **Demo (SDP Inc 3):** edit a sandbox working model, run the six check engines, inspect classified findings.
@@ -182,19 +184,19 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 |---|---|---|
 | E3.1 Verification engines | D-15 | DVE.28–49 |
 | E3.2 Working-model editor & findings (web) | D-10 | DVE.17–18, 21–24 |
-| E3.3 Decision gate: CDR-11/12/25 (for R4/R5) | — | — |
+| E3.3 Decision gate: ADR-0003, 0012, 0013 (DP-11/12/25) (for R4/R5) | — | — |
 
 | Story | Title | Traces | Size |
 |---|---|---|---|
 | S3.1-01 | As the system, I run verification operations on the model without altering it | DVE.28–29 | M |
 | S3.1-02 | As the system, I run model-only analyses with no Analytical Evaluation Data | DVE.30–31 | M |
-| S3.1-03 | As an architect, I detect topic QoS (Durability/Reliability/Lifespan/Transport-Priority) non-conformances per CDR-01 rules | DVE.32–35 | L |
+| S3.1-03 | As an architect, I detect topic QoS (Durability/Reliability/Lifespan/Transport-Priority) non-conformances per the ADR-0016 `qos.yaml` rules | DVE.32–35 | L |
 | S3.1-04 | As an architect, I detect publisher/consumer mismatches: no publisher, no consumer, same-name different-content topics | DVE.36–38 | M |
 | S3.1-05 | As an architect, I verify external↔middleware source/destination/message/direction consistency | DVE.39 | M |
 | S3.1-06 | As an architect, I detect load-balancing, core-allocation (over-commit/conflict/dedicated-core), OS-settings and runtime-memory non-conformances and contention/bottlenecks | DVE.40–46 | L |
 | S3.1-07 | As an architect, I detect circular dependencies, broken/missing/unmatched relationships, and architectural-rule pattern violations | DVE.47–49 | M |
 | S3.2-01 | As an operator, I edit a derived working model in a sandbox (add/remove nodes/relationships, update attributes) without breaking integrity or touching the real model | DVE.17 | L |
-| S3.2-02 | As the system, I classify results conforming/non-conforming per CDR-08 metrics | DVE.18 | M |
+| S3.2-02 | As the system, I classify results conforming/non-conforming per the ADR-0016 `classification.yaml` metrics | DVE.18 | M |
 | S3.2-03 | As an operator, I see each finding with id, type, description, affected entity, rule/criterion, evidence, severity | DVE.21 | M |
 | S3.2-04 | As an operator, I see cause-effect links between related findings of one operation | DVE.22 | M |
 | S3.2-05 | As an operator, I sort/filter findings by operation, result, type, severity, scope, affected node | DVE.23 | M |
@@ -208,17 +210,17 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | E4.1 Scenario Generator | D-02 | SCG.1–7 |
 | E4.2 ADM synthetic prep | D-04 | ADM.1, 3, 4, 6 |
 | E4.3 Synthetic data UI | D-11 | DVE.11, 13–15 |
-| E4.4 Decision gate: CDR-15/21/26/27 (for R5) | — | — |
+| E4.4 Decision gate: ADR-0003, 0014, 0020 (DP-15/21/26/27) (for R5) | — | — |
 
 | Story | Title | Traces | Size |
 |---|---|---|---|
 | S4.1-01 | As an operator, I define scope, type, time interval, density, data types | SCG.3 | M |
 | S4.1-02 | As the system, I produce schema-conformant synthetic data without field records | SCG.1, 4 | L |
 | S4.1-03 | As the system, I record synthetic data with scenario name/time/scope and traceable inputs | SCG.5–6 | M |
-| S4.1-04 | As the system, I feed the defined simulation processes (contract per CDR-11) | SCG.2 | S |
+| S4.1-04 | As the system, I feed the defined simulation processes (contract per ADR-0013) | SCG.2 | S |
 | S4.1-05 | As ADM, I receive synthetic data per the INT-IF-02 handoff | SCG.7 | M |
 | S4.2-01 | As ADM, I ingest synthetic data from SCG | ADM.3 | M |
-| S4.2-02 | As the system, I prepare controlled, traceable Analytical Evaluation Data per the CDR-12 format and transfer it toward the model | ADM.1, 4 | L |
+| S4.2-02 | As the system, I prepare controlled, traceable Analytical Evaluation Data per the ADR-0012 format and transfer it toward the model | ADM.1, 4 | L |
 | S4.2-03 | As an operator, I get format/unreadable/missing-field errors on synthetic inputs | ADM.6 | S |
 | S4.3-01 | As an operator, I choose synthetic data as the AED source | DVE.11 | S |
 | S4.3-02 | As an operator, I enter scenario inputs in the panel | DVE.13 | S |
@@ -233,7 +235,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | E5.2 ADM field prep | D-05 | ADM.2, 5 |
 | E5.3 Analytical Data Binding | D-07 | SMM.32–37 |
 | E5.4 Field data UI | D-12 | DVE.10, 12, 16 |
-| E5.5 Decision gate: CDR-13/14/23 (start for R6/R7) | — | — |
+| E5.5 Decision gate: ADR-0005, 0018 (DP-13/14/23) (start for R6/R7) | — | — |
 
 | Story | Title | Traces | Size |
 |---|---|---|---|
@@ -242,7 +244,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | S5.1-03 | As the system, I record provenance (source, upload time, scope) per record | FDM.3 | S |
 | S5.1-04 | As an operator, I list/search/select records by project, platform, version, source, upload time | FDM.4 | M |
 | S5.1-05 | As an operator, I get format/integrity/missing-field errors on upload | FDM.5 | S |
-| S5.1-06 | As the platform team, I provision disk sizing per the CDR-15 decision and the infra constraint | FDM-INF.1 | S |
+| S5.1-06 | As the platform team, I provision disk sizing per the ADR-0020 decision and the infra constraint | FDM-INF.1 | S |
 | S5.2-01 | As ADM, I obtain System Field Records from FDM | ADM.2 | M |
 | S5.2-02 | As an operator, I get format/unreadable errors on field records | ADM.5 | S |
 | S5.3-01 | As the system, I accept AED and match records/telemetry/synthetic data to nodes and relationships, bound to scope | SMM.32–34 | L |
@@ -262,7 +264,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | E6.2 Field analysis engines | D-16b | DVE.59–65, 69–70 |
 | E6.3 Drift detection | D-16c | DVE.66–68 |
 | E6.4 Scenario recording (web) | D-13 | DVE.25 |
-| E6.5 Decision gate: CDR-13/14/23 closure; verify CDR-28/29/30 carried | — | — |
+| E6.5 Decision gate: ADR-0005, 0018 accepted; verify ADRs for DP-28/29/30 carried | — | — |
 
 | Story | Title | Traces | Size |
 |---|---|---|---|
@@ -289,7 +291,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 
 | Story | Title | Traces | Size |
 |---|---|---|---|
-| S7.1-01 | As the system, I run installation-suitability evaluations on the model with a rule model (rule id, heading, severity, weight, acceptance criterion, blocking status) scored per CDR-14 | DVE.71, 76 | L |
+| S7.1-01 | As the system, I run installation-suitability evaluations on the model with a rule model (rule id, heading, severity, weight, acceptance criterion, blocking status) scored per ADR-0018 | DVE.71, 76 | L |
 | S7.1-02 | As the system, I score structural/architectural conformance of a candidate unit | DVE.72 | M |
 | S7.1-03 | As the system, I score interface/topic/communication conformance | DVE.73 | M |
 | S7.1-04 | As the system, I score dependency/integration conformance | DVE.74 | M |
@@ -297,11 +299,11 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | S7.1-06 | As the pipeline, I receive a "non-conforming" blocking decision on critical findings, independent of total score | DVE.77 | M |
 | S7.1-07 | As an automation client, I run multi-candidate evaluations concurrently with independent operation ids and machine-processable per-unit + aggregate results | DVE.78 | L |
 | S7.2-01 | As an automation client, I start/query evaluations via CLI/build-tool integration with status streaming and concurrent independence | DVE.27 | L |
-| S7.2-02 | As an operator, I export summary/detailed reports (per CDR-13 format) covering all verification/analysis/evaluation results with mandatory content | DVE.26 | L |
+| S7.2-02 | As an operator, I export summary/detailed reports (per ADR-0018 format) covering all verification/analysis/evaluation results with mandatory content | DVE.26 | L |
 | S7.3-01 | As QA, I run the full-stack acceptance demo across all six CSCs | — | L |
 
 ### R8 — Integration Hardening & Capacity Verification (2027-10-11 → 2028-01-28, 16 wk)
-**Goal:** full-stack stabilization at CDR-15/16 targets. No new requirement traces. **Demo:** 72-hour soak under concurrent multi-session load.
+**Goal:** full-stack stabilization at ADR-0006/0020 targets. No new requirement traces. **Demo:** 72-hour soak under concurrent multi-session load.
 
 | Epic | Scope | Traces |
 |---|---|---|
@@ -310,7 +312,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | Story | Title | Traces | Size |
 |---|---|---|---|
 | S8.1-01 | As QA, I pass the complete STD regression suite on the full stack | — | L |
-| S8.1-02 | As the platform team, I pass load/capacity tests at the CDR-15/16 targets | — | L |
+| S8.1-02 | As the platform team, I pass load/capacity tests at the ADR-0006/0020 targets | — | L |
 | S8.1-03 | As the security owner, I pass the LDAP/JWT/authorization-matrix audit | — | M |
 | S8.1-04 | As ops, I run a 72-hour soak plus approved defect burn-down | — | L |
 
@@ -326,7 +328,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | S9.1-01 | As a pilot operator, I run the full workflow suite unassisted | — | L |
 | S9.1-02 | As UX, I burn down pilot feedback with full regression on each change | — | L |
 | S9.1-03 | As the team, we publish user manual, runbooks, and training materials | — | M |
-| S9.1-04 | As an operator, I validate CDR-13 report output on real institutional data | — | M |
+| S9.1-04 | As an operator, I validate ADR-0018 report output on real institutional data | — | M |
 
 ### R10 — Acceptance & Production Handover (2028-05-08 → 2028-06-30, 8 wk) — accepts the CSCI
 **Goal:** formal CSCI acceptance and production handover; document baseline frozen. **Demo:** acceptance run of all six CSCs (per-increment demos re-performed).
@@ -338,7 +340,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | Story | Title | Traces | Size |
 |---|---|---|---|
 | S10.1-01 | As the acceptance board, I see the six-CSC acceptance run pass | — | L |
-| S10.1-02 | As the CDR board, I close every register item (Resolved/Deferred) and freeze the document baseline | — | M |
+| S10.1-02 | As the CDR board, I close every deferred design point in ADR Roadmap §6.1 (ADR Accepted, or explicitly deferred) and freeze the document baseline | — | M |
 | S10.1-03 | As ops, I receive the production handover with a rollback drill and closeout report | — | M |
 
 ---
@@ -360,9 +362,9 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 
 ## Appendix A — Canonical naming map (decision from finding T1)
 
-| Canonical (SRS.md) | SRS.tr / SDP.tr | SDD/STD/CDR (current) | Repo dir (current) | Action |
+| Canonical (SRS.md) | SRS.tr / SDP.tr | SDD/STD (current) | Repo dir (current) | Action |
 |---|---|---|---|---|
-| MDG — Model Data Generator | MVU | "MSG — Model Setup Generator" | `mdg/` | rename SDD/STD/CDR → MDG; keep `mdg/` |
+| MDG — Model Data Generator | MVU | "MSG — Model Setup Generator" | `mdg/` | rename SDD/STD → MDG; keep `mdg/` |
 | SCG — Scenario Generator | SUR | SCG | (missing) | create `scg/` |
 | FDM — Field Data Manager | SVY | "TDM — Telemetry Data Manager" | (missing) | rename → FDM; **eliminate the TDM homonym** |
 | ADM — Analytical Data Manager | AVY | ADM | (missing) | create `adm/` |
