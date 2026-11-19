@@ -1,4 +1,4 @@
-# ADR-0014: System Model graph schema aligned with the Software-as-a-Graph model
+# ADR-0010: System Model graph schema aligned with the Software-as-a-Graph model
 
 | Field | Value |
 |---|---|
@@ -8,7 +8,7 @@
 | Consulted | Development team, system engineering |
 | Kind | Decide |
 | Traces | SMM.1, 4–25; DVE.19, 28–49, 53–58; QA-03, QA-07 |
-| Resolves | DP-30d, DP-30f (SDD §2.4 entity schema of the System Model, also used by the Working Model per ADR-0015) |
+| Resolves | DP-30d, DP-30f (SDD §2.4 entity schema of the System Model, also used by the Working Model per ADR-0011) |
 | Decide by | Wave A (2026-11-27) |
 | Supersedes | — |
 
@@ -18,7 +18,7 @@ SMM.4 requires the validated Model Data to become a node-relationship System Mod
 
 The Software-as-a-Graph (SaaG) research framework already defines a typed multigraph for publish-subscribe systems: [`docs/graph-model.md`](https://github.com/onuralpyigit/software-as-a-graph/blob/d1f8b42438e3c500715daefe2a3500b96b1cac49/docs/graph-model.md) at commit `d1f8b424` (called **the framework model** below). It has six vertex types, six structural edge types, a derived `DEPENDS_ON` edge produced by seven rules, QoS-driven weights, and four layer projections. Its derived dependency graph is the one the JSS manuscript evaluates (§3.1–3.3).
 
-MDG already emits the framework model's vocabulary. As of commit `1157784`, the Model Data `graph` section (ADR-0013) has:
+MDG already emits the framework model's vocabulary. As of commit `1157784`, the Model Data `graph` section (ADR-0009) has:
 
 * the entities `nodes`, `networks`, `applications`, `libraries`, `topics` and `messages`;
 * the relationships `runs_on`, `publishes_to`, `subscribes_to`, `sends`, `receives`, `uses` and `connects_to`;
@@ -34,10 +34,10 @@ The question is: what are the System Model's node labels, relationship types, id
 
 * Every SRS node and relationship type must be representable and queryable by type (SMM.6–24, DVE.19).
 * The analyses, metrics, test corpus and published results of the framework model should apply to the System Model without translation.
-* Rules must address entities by keys that are stable across model instances (working and candidate models, ADR-0015) and across system versions (drift, DVE.66–68).
-* Acquired facts, derived values and placeholders must stay distinguishable (QA-03, ADR-0013).
+* Rules must address entities by keys that are stable across model instances (working and candidate models, ADR-0011) and across system versions (drift, DVE.66–68).
+* Acquired facts, derived values and placeholders must stay distinguishable (QA-03, ADR-0009).
 * Structural facts and derived analysis must stay separate, so editing or re-deriving one never corrupts the other (framework model §2.5).
-* The schema must map onto a labeled property graph without depending on one engine's features (ADR-0015).
+* The schema must map onto a labeled property graph without depending on one engine's features (ADR-0011).
 
 ## Considered Options
 
@@ -47,7 +47,7 @@ The question is: what are the System Model's node labels, relationship types, id
 
 ## Decision Outcome
 
-Chosen option: "Framework-aligned typed property graph, extended with the SRS-only types, with a structural view and a derived dependency view", because it is the only option that serves both the SRS vocabulary and the framework's analyses unchanged. MDG already produces this vocabulary, and typed labels keep rules readable and indexable. Version scoping is per model instance (ADR-0015), not per element.
+Chosen option: "Framework-aligned typed property graph, extended with the SRS-only types, with a structural view and a derived dependency view", because it is the only option that serves both the SRS vocabulary and the framework's analyses unchanged. MDG already produces this vocabulary, and typed labels keep rules readable and indexable. Version scoping is per model instance (ADR-0011), not per element.
 
 ### 1. SRS to schema mapping
 
@@ -124,7 +124,7 @@ The **structural view** (the framework's $G_{\text{structural}}$) holds the rela
 | `SENDS` | Application → Message | extension | — (from Model Data `sends`) |
 | `RECEIVES` | Application → Message | extension | — (from Model Data `receives`) |
 
-`CONNECTS_TO` is stored once, in the direction the source lists it, and read as undirected (framework model §5.2). Its topology comes from ADR-0010.
+`CONNECTS_TO` is stored once, in the direction the source lists it, and read as undirected (framework model §5.2). Its topology comes from ADR-0008.
 
 The **derived dependency view** (the framework's $G_{\text{analysis}}$) holds only `DEPENDS_ON`. It points from the **dependent** to the **dependency**, which is opposite to the data flow. Each edge carries `dependency_type`, `weight`, `path_count` and `origin = derived`.
 
@@ -169,25 +169,25 @@ Extension labels are not part of any projection. Verification rules can still qu
 
 ### 6. Conventions
 
-* **Identity:** `(label, name)` is unique within a model instance and stable across instances and versions. Drift detection, working-model diffs and finding references (ADR-0008) match on it. The Model Data `id` (`A0`, `T3`, …) is stored as `source_id` only, because MDG assigns it by sorting names within one run, so it changes between runs.
-* **Provenance:** every node and relationship carries `origin`: `acquired` (from Model Data), `derived` (computed by SMM: weights, counts and every `DEPENDS_ON`), or `edited` (working model, ADR-0015).
-* **Placeholders:** a value listed in the Model Data `placeholders` (ADR-0013) is stored as absent, with `placeholder_reasons`. Rules treat it as unknown. A weight computed from an absent value or a framework default (for example the 1 Hz default frequency) is still stored, with `weight_basis = partial`. Otherwise `weight_basis = complete`.
+* **Identity:** `(label, name)` is unique within a model instance and stable across instances and versions. Drift detection, working-model diffs and finding references (ADR-0007) match on it. The Model Data `id` (`A0`, `T3`, …) is stored as `source_id` only, because MDG assigns it by sorting names within one run, so it changes between runs.
+* **Provenance:** every node and relationship carries `origin`: `acquired` (from Model Data), `derived` (computed by SMM: weights, counts and every `DEPENDS_ON`), or `edited` (working model, ADR-0011).
+* **Placeholders:** a value listed in the Model Data `placeholders` (ADR-0009) is stored as absent, with `placeholder_reasons`. Rules treat it as unknown. A weight computed from an absent value or a framework default (for example the 1 Hz default frequency) is still stored, with `weight_basis = partial`. Otherwise `weight_basis = complete`.
 * **Structured attributes:** `cpu_allocation`, `os_settings` and `runtime_config` (SMM.24) are JSON-encoded properties, each with its own JSON Schema, so rules can parse them.
-* **Model metadata:** project, platform, system version, Model Data file reference and SHA-256, creation time, status and weighting profile (SMM.5, 26) live on the `Model` node and in the instance registry (ADR-0015). They are not repeated on every element.
-* **Construction errors:** a relationship whose endpoint is missing, or whose endpoint labels are not allowed by Table 4, is not created. It is reported as an invalid-relationship error (SMM.25, ADR-0013).
+* **Model metadata:** project, platform, system version, Model Data file reference and SHA-256, creation time, status and weighting profile (SMM.5, 26) live on the `Model` node and in the instance registry (ADR-0011). They are not repeated on every element.
+* **Construction errors:** a relationship whose endpoint is missing, or whose endpoint labels are not allowed by Table 4, is not created. It is reported as an invalid-relationship error (SMM.25, ADR-0009).
 
 ### 7. Implementation in SMM
 
 * SMM implements this schema, the weights (§4) and the seven derivation rules (§3) itself, in pure Python that runs on CPython 3.9, in `smm/src/smm/graph/`. It does not import the `saag` package at run time. If it needs graph algorithms, it uses networkx 3.2.1, the last release that supports Python 3.9.
 * The framework model at `d1f8b424` stays the normative definition. The port is held to it by parity fixtures copied into `smm/tests/fixtures/framework_d1f8b424/`: the §9 worked example, plus any framework test scenario used to check derivation. Adopting a newer framework revision means refreshing the fixtures and the weighting profile in one pull request.
-* The in-memory implementation is also the derivation engine that ADR-0015's graph-store adapter writes from, and the fake used in tests.
+* The in-memory implementation is also the derivation engine that ADR-0011's graph-store adapter writes from, and the fake used in tests.
 
 ### 8. Lifecycle
 
 1. SMM builds the structural view from validated Model Data (the framework's Import stage).
 2. SMM computes the weights and derives the dependency view (the framework's Pre-Analysis stage).
 3. Working models edit only the structural view. The dependency view and the weights are recomputed after each edit and are never edited directly.
-4. Analytical Evaluation Data is bound alongside, never inside, either view (ADR-0017).
+4. Analytical Evaluation Data is bound alongside, never inside, either view (ADR-0012).
 
 ### Consequences
 
@@ -199,7 +199,7 @@ Extension labels are not part of any projection. Verification rules can still qu
 * Bad, because SaaG depends on a framework revision. A later framework schema change is adopted only through a new ADR or a new weighting profile.
 * Bad, because the derivation rules and weights are re-implemented rather than imported. The parity fixtures are the only guard against divergence.
 * Bad, because the Model Data must gain sections for hierarchy, roles, brokers, communication services and node capacity. Until then, `CONTAINS` is built from the `system_hierarchy` attribute (`csms_name` → `System`, `css_name` → `SoftwareSegment`, `csci_name` → `CSCI`, `csc_name` → `CSC`), `ASSIGNED_TO` from the `role` attribute, Model Data `networks` become `NetworkDevice` with `role = switch`, and `Broker` and `CommunicationService` stay empty.
-* Bad, because derivation adds construction cost on large models. Budgets are set in ADR-0036.
+* Bad, because derivation adds construction cost on large models. Budgets are set in ADR-0020.
 * Follow-up: update SDD §2.4 (System Model store) and §3.5 to cite this ADR; on acceptance, replace the "to be determined during the critical design phase" wording for the System Model schema in SDD §2.4 with a link to this ADR.
 
 ### Confirmation
@@ -235,5 +235,5 @@ Extension labels are not part of any projection. Verification rules can still qu
 * Framework model: [`software-as-a-graph/docs/graph-model.md` @ `d1f8b424`](https://github.com/onuralpyigit/software-as-a-graph/blob/d1f8b42438e3c500715daefe2a3500b96b1cac49/docs/graph-model.md), §4 (formal definition), §5 (weights), §6 (derivation rules), §7 (layers), §9 (worked example)
 * [SRS §5.1.1](../../requirements/SRS.md)
 * Code: `mdg/src/mdg/domain/model_setup_data_graph.py`, `mdg/src/mdg/domain/source_data.py`; framework `pyproject.toml` (Python and dependency floors)
-* Related: ADR-0002, ADR-0010, ADR-0013, ADR-0015, ADR-0017, ADR-0022, ADR-0008, ADR-0026, ADR-0036
+* Related: ADR-0002, ADR-0008, ADR-0009, ADR-0011, ADR-0012, ADR-0016, ADR-0007, ADR-0017, ADR-0020
 * Revisit if the framework model changes its vertex or edge types, or if a verification rule needs a type that Tables 3–4 lack.

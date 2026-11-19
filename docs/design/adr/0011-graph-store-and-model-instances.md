@@ -1,4 +1,4 @@
-# ADR-0015: Graph store and model instances
+# ADR-0011: Graph store and model instances
 
 | Field | Value |
 |---|---|
@@ -10,11 +10,11 @@
 | Traces | SMM.1, 4, 26–31, 36; MDG.15; DVE.17, 19, 26, 28–58, 71–78; QA-02, QA-03, QA-04, QA-07, QA-10, QA-11 |
 | Resolves | DP-29d, DP-29f (storage of the System Model and the Working Model) |
 | Decide by | Wave A (2026-11-27); the engine choice is confirmed by the R3 spike |
-| Supersedes | — (absorbs the former ADR-0015) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
-The System Model (ADR-0014) must be stored, queried by the verification rules (DVE.28–49), traversed by the behavioral analyses (DVE.53–58), and browsed and edited from the Operations Panel (DVE.17, 19–20). The SRS implies three kinds of model, which must coexist under concurrent users and pipeline operations (SMM.29–30):
+The System Model (ADR-0010) must be stored, queried by the verification rules (DVE.28–49), traversed by the behavioral analyses (DVE.53–58), and browsed and edited from the Operations Panel (DVE.17, 19–20). The SRS implies three kinds of model, which must coexist under concurrent users and pipeline operations (SMM.29–30):
 
 1. **Baseline:** built from a Model Data file (SMM.4). It must never be altered by verification, analysis or data binding (DVE.29, 51; SMM.36).
 2. **Working model:** derived from a baseline. The user edits nodes and relationships on it and runs verification (DVE.17).
@@ -23,7 +23,7 @@ The System Model (ADR-0014) must be stored, queried by the verification rules (D
 Nothing is implemented yet; SDP §5 names FalkorDB. Two constraints frame the choice:
 
 * the target host is offline and has no container runtime, so a server must install natively on CentOS 7 or later (ADR-0004);
-* the framework's `saag` engines need Python ≥ 3.10, so SMM implements derivation itself (ADR-0014 §7).
+* the framework's `saag` engines need Python ≥ 3.10, so SMM implements derivation itself (ADR-0010 §7).
 
 The expected scale is hundreds to a few thousand units, topics and messages. The deciding factors are therefore isolation, offline installability, query language and operating cost.
 
@@ -31,8 +31,8 @@ The expected scale is hundreds to a few thousand units, topics and messages. The
 
 * The engine and its Python driver must install offline, and the driver must have a CPython 3.9 wheel.
 * Baselines are immutable by construction (QA-03). Creating, copying and deleting working and candidate models must be cheap (QA-02).
-* Weights and `DEPENDS_ON` must equal the framework model's (ADR-0014); SMM's in-memory engine computes them.
-* Rules need a declarative query language (ADR-0022). Development and tests must run without a server (QA-11).
+* Weights and `DEPENDS_ON` must equal the framework model's (ADR-0010); SMM's in-memory engine computes them.
+* Rules need a declarative query language (ADR-0016). Development and tests must run without a server (QA-11).
 * Working-model edits must be traceable (DVE.17, 26; QA-04), and pipeline evaluations isolated (DVE.78). Licensing must permit on-premises use.
 
 ## Considered Options
@@ -56,13 +56,13 @@ Chosen options:
 | `save_graph`, `get_graph_data`, `get_layer_data`, `get_statistics`, `export_json`, `close` | Build and read one instance (framework names) |
 | `save_derived` | Write the weights and `DEPENDS_ON` computed in memory, in one transaction |
 | `create_instance`, `copy_instance`, `delete_instance`, `list_instances` | Instance lifecycle (§3) |
-| `save_extensions` | Write the ADR-0014 extension labels and relationships |
+| `save_extensions` | Write the ADR-0010 extension labels and relationships |
 | `apply_edit` | Apply one working-model edit command (§3) |
-| `query` | Run a read-only, parameterized Cypher query (ADR-0022 `ModelReader`) |
+| `query` | Run a read-only, parameterized Cypher query (ADR-0016 `ModelReader`) |
 
 * **Engines:**
   * the server adapter, `smm/src/smm/adapters/<engine>_graph_store.py`, in production;
-  * SMM's in-memory engine (`smm/src/smm/graph/`, ADR-0014 §7), which computes weights and `DEPENDS_ON` and is the fake in tests.
+  * SMM's in-memory engine (`smm/src/smm/graph/`, ADR-0010 §7), which computes weights and `DEPENDS_ON` and is the fake in tests.
 * **Derivation:**
   1. SMM builds the structural view in memory from validated Model Data and derives there.
   2. It writes the instance with `save_graph`, `save_extensions` and `save_derived`.
@@ -83,7 +83,7 @@ Chosen options:
 | Licence | GPL-3.0 (Community) | SSPL v1 |
 
 * **Default if the spike is inconclusive: Neo4j Community.** It is the more mature product, its install needs no compiled module, and the framework already uses its Cypher dialect.
-* **Scoping with Neo4j:** the adapter adds the `instance_id` scope to every query. Rule authors and `ModelReader` callers never write it (ADR-0022).
+* **Scoping with Neo4j:** the adapter adds the `instance_id` scope to every query. Rule authors and `ModelReader` callers never write it (ADR-0016).
 
 ### 3. Model instances
 
@@ -101,21 +101,21 @@ Chosen options:
   | Neo4j Community | Indexed `instance_id` on every element | `MATCH … CREATE` in batches, in one transaction | `MATCH (n {instance_id: $id}) DETACH DELETE n`, in batches |
   | In-memory engine (tests) | One Python object | Deep copy | Drop the reference |
 
-* **Registry:** a `model_instance` table in SQLite (ADR-0008) with these columns:
+* **Registry:** a `model_instance` table in SQLite (ADR-0007) with these columns:
   * `instance_id` (`uuid4().hex`), `kind`, `parent_instance_id`;
   * `model_data_ref` and its hash;
   * project, platform and system version;
   * `created_by`, `created_at`, `status`, `revision`.
 * **Immutability:** SMM's façade exposes writes only for `working` instances. Verification and analysis get a read-only handle (ADR-0003).
 * **Edits (DVE.17):** each edit is a command: add or remove a node, add or remove a relationship, or set an attribute. A command:
-  1. is validated against the schema and structural integrity rules (ADR-0014);
+  1. is validated against the schema and structural integrity rules (ADR-0010);
   2. is applied to the working graph;
   3. is appended to `model_edit(instance_id, revision, command JSON, user, at)`;
   4. increments `revision`.
 
   Concurrency follows ADR-0006 §2.
-* **Reproducibility:** every operation records `instance_id` and `revision` (ADR-0008).
-* **Analytical data:** bound as a separable layer (ADR-0017), never written into a baseline.
+* **Reproducibility:** every operation records `instance_id` and `revision` (ADR-0007).
+* **Analytical data:** bound as a separable layer (ADR-0012), never written into a baseline.
 
 ### Consequences
 
@@ -134,7 +134,7 @@ A spike in R3, on a CentOS-7-compatible host without network access, records the
 
 1. **Offline install:** the server installs from copied files with a `deploy/` script, runs under the service manager, and survives a reboot.
 2. **Driver:** the Python driver installs from a cp39 wheelhouse.
-3. **Parity:** a model built from the ADR-0014 worked-example fixture and read back has the same weights and `DEPENDS_ON` as the in-memory engine.
+3. **Parity:** a model built from the ADR-0010 worked-example fixture and read back has the same weights and `DEPENDS_ON` as the in-memory engine.
 4. **Load:** 5,000 Applications, 5,000 Topics and 50,000 relationships are written in under 30 s.
 5. **Copy:** copying that instance takes under 5 s.
 6. **Queries:** the pub/sub-match and cycle queries, and `get_layer_data("app")`, return in under 2 s.
@@ -152,7 +152,7 @@ After the spike, CI runs the parity and isolation tests against the chosen adapt
 * Native graph server (chosen): Good, because it gives a shared model, Cypher and a replaceable engine. Bad, because of the offline operating cost and, for Neo4j Community, scoping by property.
 * In-memory engine only: Good, because it needs no service. Bad, because it has no query language, instances exist only during an operation, and the panel cannot query a shared model (DVE.17, 19).
 * Graph tables in SQLite: Good, because it needs no new service. Bad, because traversals become slow recursive SQL, and the rules lose Cypher.
-* PostgreSQL + AGE: Bad, because it needs a server ADR-0008 does not adopt, and the extension is less mature.
+* PostgreSQL + AGE: Bad, because it needs a server ADR-0007 does not adopt, and the extension is less mature.
 * Separate instance per model (chosen): Good, because it is simple to query and isolation is strong. Bad, because of storage per instance.
 * Delta overlay: Good, because storage is minimal. Bad, because every rule query must merge the overlay, and Cypher has no overlay semantics.
 * Full copy per operation: Bad, because it copies even when nothing changed, and edits would be lost between operations.
@@ -161,5 +161,5 @@ After the spike, CI runs the parity and isolation tests against the chosen adapt
 
 * Framework model: [`software-as-a-graph/docs/graph-model.md` @ `d1f8b424`](https://github.com/onuralpyigit/software-as-a-graph/blob/d1f8b42438e3c500715daefe2a3500b96b1cac49/docs/graph-model.md), §6.4 (implementation parity); framework `pyproject.toml` (Python ≥ 3.10 dependency floors)
 * [SDP §5](../../planning/SDP.md), [UXD §6](../UXD.md)
-* Related: ADR-0003, ADR-0004, ADR-0006, ADR-0008, ADR-0014, ADR-0017, ADR-0022, ADR-0036
+* Related: ADR-0003, ADR-0004, ADR-0006, ADR-0007, ADR-0010, ADR-0012, ADR-0016, ADR-0020
 * Revisit if neither candidate installs offline (fallback: graph tables in SQLite, with the in-memory engine for traversals), or if the licence review rejects the chosen engine.

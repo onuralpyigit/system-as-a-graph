@@ -40,7 +40,7 @@ The process is:
 1. **Location and naming.** `docs/design/adr/NNNN-kebab-case-title.md`, using [template.md](template.md). The [ADR Roadmap](../ADR-ROADMAP.md) reserves numbers. A number is never reused.
 2. **Language.** ADRs and the ADR Roadmap are written in English only; there are no Turkish translations. They use the canonical SRS.md IDs `MDG / SCG / FDM / ADM / SMM / DVE` (BACKLOG Appendix A).
 3. **SaaG fields.** In addition to the MADR sections, every ADR states `Kind`, `Traces`, `Resolves` and `Decide by` in its header table. `Resolves` names the deferred design points the ADR settles, by their SRS or SDD source (for example "SRS MDG.19 mandatory file list").
-4. **Lifecycle.** `Planned` (roadmap only) → `Proposed` (file in an open pull request) → `Accepted` or `Rejected`. Later it may become `Deprecated` or `Superseded by ADR-NNNN`. A roadmap entry dropped before it is proposed becomes `Withdrawn`. An accepted ADR is not edited in substance; a change of decision is a new ADR that supersedes it.
+4. **Lifecycle.** `Planned` (roadmap only) → `Proposed` (file in an open pull request) → `Accepted` or `Rejected`. Later it may become `Deprecated` or `Superseded by ADR-NNNN`. A roadmap entry dropped before acceptance is removed from the catalog, and numbers stay gapless. An accepted ADR is not edited in substance; a change of decision is a new ADR that supersedes it.
 5. **Approval.** The CDR Board accepts or rejects a proposed ADR by approving its pull request.
 6. **ADRs are the only register of deferred design points.** Every point the SRS or SDD defers "to the critical design phase" is listed in [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr) against the ADR that resolves it. There is no separate CDR register. A point is resolved when its ADR is `Accepted`; it is deferred when its ADR is re-planned to a later wave with a recorded reason. The pull request that accepts an ADR replaces the "to be determined during the critical design phase" wording in the SRS or SDD with a link to the ADR, and updates the ADR's status in the roadmap.
 7. **SDP §5 as options.** Technology choices in SDP §5 are candidate options. Where the code differs from them, a *Reconcile* ADR weighs both, and SDP §5 or the code is aligned afterwards.
@@ -54,7 +54,7 @@ The process is:
 
 ### Confirmation
 
-* Each release DoD includes a roadmap check: every ADR scheduled for the wave due at that release is `Accepted`, `Rejected` or `Withdrawn`, or it is re-planned with a reason ([ADR Roadmap §7](../ADR-ROADMAP.md#7-maintaining-this-roadmap)).
+* Each release DoD includes a roadmap check: every ADR scheduled for the wave due at that release is `Accepted` or `Rejected`, or it is re-planned with a reason ([ADR Roadmap §7](../ADR-ROADMAP.md#7-maintaining-this-roadmap)).
 * Pull-request review checks that an accepted ADR's `Resolves` points no longer carry "to be determined during the critical design phase" wording in the SRS or SDD.
 
 ## Pros and Cons of the Options
@@ -87,5 +87,5 @@ The process is:
 * [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr): the deferred design points and the ADR that resolves each one.
 * Amended 2026-11-19: the separate CDR register (`docs/design/CDR.md`) was retired. Its 30 items are now tracked only through ADRs (step 6), and the `Closes` header field is renamed `Resolves`.
 * Amended 2026-11-19: ADRs are kept in English only (step 2). The Turkish `.tr.md` ADR files, `template.tr.md` and the Turkish roadmap (`ADR-ROADMAP.tr.md`) were removed.
-* Amended 2026-11-19: the catalog was consolidated by theme from 42 numbers to 21. When ADRs are merged, the lowest number survives and the others become `Withdrawn — merged into ADR-NNNN`, with no file ([ADR Roadmap §4.1](../ADR-ROADMAP.md#41-withdrawn-numbers)).
+* Amended 2026-11-19: the catalog was consolidated by theme and renumbered gaplessly as ADR-0001…ADR-0021; numbers of ADRs removed before acceptance are not kept.
 * MADR: <https://adr.github.io/madr/>

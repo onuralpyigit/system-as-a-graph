@@ -107,7 +107,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlar:** SaaG-MVU
 
-**Tasarım:** MVU (SRS MVU.1–23) ve oturum açma/MVU kontrol ekranı (TDM.1–8) tam olarak tasarlanmıştır. Hâlâ açık olan konular: her dış bağlantı ve LDAP için kesin protokol, topoloji alım yöntemi ve zorunlu dosya listesi (ADR-0003, ADR-0010, ADR-0030).
+**Tasarım:** MVU (SRS MVU.1–23) ve oturum açma/MVU kontrol ekranı (TDM.1–8) tam olarak tasarlanmıştır. Hâlâ açık olan konular: her dış bağlantı ve LDAP için kesin protokol, topoloji alım yöntemi ve zorunlu dosya listesi (ADR-0003, ADR-0008, ADR-0019).
 
 **Geliştirme:** MVU arka ucu inşa edilir — dört dış kaynaktan veriye bağlanma, doğrulama ve derleme — ayrıca oturum açma/oturum yönetimi eklenir. Ön yüzde: oturum açma, proje/platform/sürüm seçimi, kaynak yapılandırması ve bir MVU üretim/durum ekranı.
 
@@ -119,7 +119,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlanma Tanımı:**
 - [ ] MVU (MVU.1–23) ve oturum açma/MVU kontrolü (TDM.1–8) inşa edildi ve çalışıyor
-- [ ] ADR-0003 (INT-IF-01), ADR-0010, ADR-0030 kabul edildi veya yeniden planlandı
+- [ ] ADR-0003 (INT-IF-01), ADR-0008, ADR-0019 kabul edildi veya yeniden planlandı
 - [ ] MVU ve oturum açma/iş akışı testleri geçiyor
 - [ ] MVU/web servisleri birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
@@ -131,19 +131,19 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | SMY *(devam ediyor)* | Yapısal Model İnşası (SMY.1–31) |
 | TDM *(devam ediyor)* | Modelin Oluşturulması ve Görüntülenmesi (TDM.9, 19–20) |
 
-**Tasarım:** Sistem Model Yöneticisi (SRS SMY.1–31) ve model inşa/gezinme ekranı (TDM.9, 19–20) tam olarak tasarlanmıştır. En büyük açık: modelin depolama teknolojisi ve şeması henüz kararlaştırılmamıştır (ADR-0014, ADR-0015); eşzamanlılık sınırları ve TDM okuma protokolü de açıktır (ADR-0006, ADR-0003).
+**Tasarım:** Sistem Model Yöneticisi (SRS SMY.1–31) ve model inşa/gezinme ekranı (TDM.9, 19–20) tam olarak tasarlanmıştır. En büyük açık: modelin depolama teknolojisi ve şeması henüz kararlaştırılmamıştır (ADR-0010, ADR-0011); eşzamanlılık sınırları ve TDM okuma protokolü de açıktır (ADR-0006, ADR-0003).
 
 **Geliştirme:** Model Yöneticisi arka ucu bir graf veritabanı üzerinde inşa edilir — Model Verisini bir grafa dönüştürme, eşzamanlı erişim altında güvende tutma, izole değerlendirme kopyalarını destekleme. Ön yüzde: model gezinme (arama/süzme/yakınlaştırma/kaydırma/öznitelikler).
 
 **Test:** Modelin doğru şekilde inşa edildiği, tüm düğüm/ilişki türlerini temsil ettiği, eşzamanlı erişim altında tutarlı kaldığı ve gezinmenin çalıştığı doğrulanır — Artım 1'in iş akışı testini tamamlayacak şekilde uçtan uca.
 
-**Paketleme:** `smm` dağıtımı ve wheelhouse'u eklenir, ADR-0015 denemesiyle seçilen graf sunucusu çevrimdışı kurulur ve sınıf başına işlem sınırları etkinleştirilir (ADR-0006).
+**Paketleme:** `smm` dağıtımı ve wheelhouse'u eklenir, ADR-0011 denemesiyle seçilen graf sunucusu çevrimdışı kurulur ve sınıf başına işlem sınırları etkinleştirilir (ADR-0006).
 
 **Demo:** Bir operatör, Artım 1'deki Model Verisi dosyasından Sistem Model Yöneticisini inşa eder; ortaya çıkan düğüm-ilişki yapısında gezinir ve görsel olarak dolaşır (arama/süzme, yakınlaştırma/kaydırma, öznitelik gösterimi); bu sırada model, eşzamanlı çoklu oturum erişimine açık şekilde sunulur.
 
 **Tamamlanma Tanımı:**
 - [ ] Sistem Model Yöneticisi (SMY.1–31) ve gezinme ekranı (TDM.9, 19–20) inşa edildi ve çalışıyor
-- [ ] ADR-0003 (INT-IF-05), ADR-0014, ADR-0015, ADR-0006 kabul edildi veya yeniden planlandı
+- [ ] ADR-0003 (INT-IF-05), ADR-0010, ADR-0011, ADR-0006 kabul edildi veya yeniden planlandı
 - [ ] Model Yöneticisi ve gezinme testleri, Artım 1'inkini tamamlayacak şekilde geçiyor
 - [ ] Model Yöneticisi servisi ve graf veritabanı birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
@@ -155,9 +155,9 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | TDM *(devam ediyor)* | Yapısal Tasarım Doğrulama (TDM.28–49) |
 | TDM *(devam ediyor)* | Modelin Düzenlenmesi ve Bulguların Görüntülenmesi (TDM.17–18, 21–24) |
 
-**Tasarım:** Yapısal Tasarım Doğrulama (SRS TDM.28–49) ve model düzenleyici/bulgu ekranı (TDM.17–18, 21–24) taslak olarak ortaya konmuştur; ancak fiili geçti/kaldı kurallarının çoğu henüz kararlaştırılmamıştır — bu planın en büyük tasarım açığı (ADR-0022 kataloğundaki kural aileleri).
+**Tasarım:** Yapısal Tasarım Doğrulama (SRS TDM.28–49) ve model düzenleyici/bulgu ekranı (TDM.17–18, 21–24) taslak olarak ortaya konmuştur; ancak fiili geçti/kaldı kurallarının çoğu henüz kararlaştırılmamıştır — bu planın en büyük tasarım açığı (ADR-0016 kataloğundaki kural aileleri).
 
-**Geliştirme:** Tasarım Doğrulayıcının altı kontrol motoru, ADR-0022 kural aileleri onaylanana kadar geçici kurallara göre inşa edilir. Ön yüzde: çalışma modeli düzenleyicisi (güvenli sandbox) ve bulgu gösterimi/sınıflandırması.
+**Geliştirme:** Tasarım Doğrulayıcının altı kontrol motoru, ADR-0016 kural aileleri onaylanana kadar geçici kurallara göre inşa edilir. Ön yüzde: çalışma modeli düzenleyicisi (güvenli sandbox) ve bulgu gösterimi/sınıflandırması.
 
 **Test:** Altı motorun tamamının kendi hata koşullarını yakaladığı, düzenleyicideki değişikliklerin gerçek modele hiçbir zaman dokunmadığı ve bulguların doğru şekilde gösterildiği doğrulanır — bazı kontroller, kurallar kapanana kadar yalnızca mekaniği doğrulayabilir, eşik değerlerini değil. Uçtan uca: düzenle ve doğrula.
 
@@ -167,7 +167,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlanma Tanımı:**
 - [ ] Yapısal Tasarım Doğrulama (TDM.28–49) ve düzenleyici/bulgu ekranı (TDM.17–18, 21–24) inşa edildi ve çalışıyor
-- [ ] DVE.18, 32–35, 39–45 ve 49 için ADR-0022 kural aileleri — bu plandaki en büyük açık madde — onaylandı veya yeniden planlandı
+- [ ] DVE.18, 32–35, 39–45 ve 49 için ADR-0016 kural aileleri — bu plandaki en büyük açık madde — onaylandı veya yeniden planlandı
 - [ ] Doğrulayıcı ve düzenleyici/bulgu testleri (kuralların izin verdiği ölçüde) geçiyor
 - [ ] Tasarım Doğrulayıcı servisi dağıtılıyor ve çalışıyor
 - [ ] Demo uçtan uca çalıştırıldı
@@ -182,7 +182,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlar:** SaaG-SUR
 
-**Tasarım:** Senaryo Üreteci (SRS SUR.1–7) ve sentetik veri kurulum ekranı (TDM.11, 13–15) tam olarak tasarlanmıştır. Hâlâ açık olan konular: sentetik verinin neyi simüle edeceği, Analitik Değerlendirme Verisi biçimi ve SUR→AVY devir teslimi (ADR-0018, ADR-0017, ADR-0003).
+**Tasarım:** Senaryo Üreteci (SRS SUR.1–7) ve sentetik veri kurulum ekranı (TDM.11, 13–15) tam olarak tasarlanmıştır. Hâlâ açık olan konular: sentetik verinin neyi simüle edeceği, Analitik Değerlendirme Verisi biçimi ve SUR→AVY devir teslimi (ADR-0013, ADR-0012, ADR-0003).
 
 **Geliştirme:** Senaryo Üreteci inşa edilir (girdileri alma, izlenebilir sentetik veri üretme ve kayıt altına alma) ve Analitik Veri Yöneticisinin sentetik-alım yarısı geliştirilir. Ön yüzde: senaryo girdisi ve üretim/durum ekranları.
 
@@ -194,7 +194,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlanma Tanımı:**
 - [ ] Senaryo Üreteci (SUR.1–7) ve kurulum ekranı (TDM.11, 13–15) inşa edildi ve çalışıyor
-- [ ] ADR-0018, ADR-0017, ADR-0003 (INT-IF-02) kabul edildi veya yeniden planlandı
+- [ ] ADR-0013, ADR-0012, ADR-0003 (INT-IF-02) kabul edildi veya yeniden planlandı
 - [ ] Senaryo Üreteci ve sentetik veri yolu testleri geçiyor
 - [ ] Her iki servis birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
@@ -210,19 +210,19 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlar:** SaaG-SVY, SaaG-AVY, SaaG-SMY
 
-**Tasarım:** Analitik Veri Bağlama (SRS SMY.32–37) ve Saha Veri Yöneticisi (SVY.1–5), saha kaydı kaynak seçimi ve bağlama durumu ekranlarıyla (TDM.10, 12, 16) birlikte tam olarak tasarlanmıştır. Hâlâ açık olan konular: saha kaydı depolama kapasitesi, SVY dış arayüz protokolü, SVY→AVY ve AVY→SMY devir teslimleri ve bir önceki artımdan devreden Analitik Değerlendirme Verisi format kararı (ADR-0036, ADR-0020, ADR-0003, ADR-0017).
+**Tasarım:** Analitik Veri Bağlama (SRS SMY.32–37) ve Saha Veri Yöneticisi (SVY.1–5), saha kaydı kaynak seçimi ve bağlama durumu ekranlarıyla (TDM.10, 12, 16) birlikte tam olarak tasarlanmıştır. Hâlâ açık olan konular: saha kaydı depolama kapasitesi, SVY dış arayüz protokolü, SVY→AVY ve AVY→SMY devir teslimleri ve bir önceki artımdan devreden Analitik Değerlendirme Verisi format kararı (ADR-0020, ADR-0014, ADR-0003, ADR-0012).
 
 **Geliştirme:** Saha Veri Yöneticisi (yükleme/kataloglama/arama), Analitik Veri Yöneticisinin saha-alım yarısı ve Veri Bağlayıcısı (davranışsal veriyi modeli değiştirmeden bağlama) inşa edilir. Ön yüzde: saha kaydı kaynak seçimi, yükleme/kataloglama ve bağlama durumu ekranları.
 
 **Test:** Kayıtların doğru şekilde yüklendiği/katalogladığı, saha alımı/derlemesinin (sentetik veriyle asla karışmadan) tamamlandığı ve bağlamanın veriyi modeli değiştirmeden modelle eşleştirdiği doğrulanır — Artım 2'deki modelin dokunulmamış kaldığının kontrolü dâhil, uçtan uca.
 
-**Paketleme:** `fdm` dağıtımı ve ADR-0020 ile seçilen saha kaydı depolaması eklenir; ham yüklemelerin saklanması ADR-0020'ye göre yapılır.
+**Paketleme:** `fdm` dağıtımı ve ADR-0014 ile seçilen saha kaydı depolaması eklenir; ham yüklemelerin saklanması ADR-0014'ye göre yapılır.
 
 **Demo:** Artım 4'teki sentetik kaynaklı Analitik Değerlendirme Verisi, düğümlerini/ilişkilerini değiştirmeden Sistem Model Yöneticisine bağlanır; bağlama durumu ve veri kökeni operatöre görünür şekilde sunulur. Operatör ardından Analitik Değerlendirme Verisi kaynağı olarak Sistem Saha Kayıtlarını seçer, Sistem Saha Kayıtlarını yükler (proje, platform, sürüm, kaynak veya yükleme zamanına göre listeleyerek/arayarak/seçerek) ve ortaya çıkan saha kaynaklı Analitik Değerlendirme Verisi aynı kaynaktan bağımsız bağlayıcı üzerinden modele bağlanır — böylece SaaG-SVY, SaaG-AVY (hem sentetik hem saha yolları artık uçtan uca çalışır durumdadır) ve SaaG-SMY tamamlanmış olur.
 
 **Tamamlanma Tanımı:**
 - [ ] Analitik Veri Bağlama (SMY.32–37), SVY (SVY.1–5) ve saha seçimi/bağlama durumu ekranları (TDM.10, 12, 16) inşa edildi ve çalışıyor
-- [ ] ADR-0036, ADR-0020, ADR-0003 (INT-IF-03, INT-IF-04), ADR-0017 kabul edildi veya yeniden planlandı
+- [ ] ADR-0020, ADR-0014, ADR-0003 (INT-IF-03, INT-IF-04), ADR-0012 kabul edildi veya yeniden planlandı
 - [ ] Saha kaydı, bağlayıcı ve saha veri yolu testleri, Artım 4'ünkini tamamlayacak şekilde geçiyor
 - [ ] Yeni servisler ve telemetri veritabanı birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı
@@ -234,7 +234,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 | TDM *(devam ediyor)* | Davranışsal Simülasyon ve Analiz (TDM.50–70) |
 | TDM *(devam ediyor)* | Simülasyon Senaryolarının Kaydedilmesi (TDM.25) |
 
-**Tasarım:** Davranışsal Simülasyon ve Analiz (SRS TDM.50–70) ve simülasyon kayıt ekranı (TDM.25) tam olarak tasarlanmıştır. Hiçbir madde bunu doğrudan adlandırmasa da, iki devreden karara bağımlıdır: TDM okuma protokolü ve modelin depolama/şeması (ADR-0003, ADR-0014, ADR-0015).
+**Tasarım:** Davranışsal Simülasyon ve Analiz (SRS TDM.50–70) ve simülasyon kayıt ekranı (TDM.25) tam olarak tasarlanmıştır. Hiçbir madde bunu doğrudan adlandırmasa da, iki devreden karara bağımlıdır: TDM okuma protokolü ve modelin depolama/şeması (ADR-0003, ADR-0010, ADR-0011).
 
 **Geliştirme:** Tasarım Analizcisinin üç motoru inşa edilir (sentetik veri simülasyonu, saha verisi analizi, sapma tespiti). Ön yüzde: simülasyon senaryosu kaydı ve yüksek hacimli saha izi grafikleri.
 
@@ -246,7 +246,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlanma Tanımı:**
 - [ ] Davranışsal Simülasyon ve Analiz (TDM.50–70) ve kayıt ekranı (TDM.25) inşa edildi ve çalışıyor
-- [ ] Devreden ADR-0003 (INT-IF-05), ADR-0014, ADR-0015 kabul edildi veya yeniden planlandı
+- [ ] Devreden ADR-0003 (INT-IF-05), ADR-0010, ADR-0011 kabul edildi veya yeniden planlandı
 - [ ] Tasarım Analizcisi testleri geçiyor
 - [ ] Tasarım Analizcisi servisi dağıtılıyor ve çalışıyor
 - [ ] Demo uçtan uca çalıştırıldı
@@ -260,19 +260,19 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlar:** SaaG-TDM
 
-**Tasarım:** Kurulum Uygunluk Değerlendirmesi (SRS TDM.71–78) ve raporlama/CLI ekranı (TDM.26–27) tam olarak tasarlanmıştır. Hâlâ açık olan konular: puanlama yöntemi, rapor dosya biçimi ve CLI protokolü/sonuç biçimi (ADR-0027, ADR-0005) — bu son artım teslim edilmeden önce hepsinin kapanması gerekir.
+**Tasarım:** Kurulum Uygunluk Değerlendirmesi (SRS TDM.71–78) ve raporlama/CLI ekranı (TDM.26–27) tam olarak tasarlanmıştır. Hâlâ açık olan konular: puanlama yöntemi, rapor dosya biçimi ve CLI protokolü/sonuç biçimi (ADR-0018, ADR-0005) — bu son artım teslim edilmeden önce hepsinin kapanması gerekir.
 
 **Geliştirme:** Tasarım Değerlendiricisi inşa edilir (adayları puanlama, kritik bulgularda zorunlu olarak "uygun değil" belirleme, değerlendirmeleri eşzamanlı yürütme) ve CLI geliştirilir. PDF/JSON rapor üretimi ve rapor ekranı eklenir.
 
 **Test:** Puanlama, zorunlu "uygun değil" kuralı, eşzamanlı değerlendirme ve CLI isteği/durumu doğrulanır — karar ve rapora kadar uçtan uca bir CLI değerlendirmesiyle, her bileşeni kapatarak.
 
-**Paketleme:** `dve`'nin değerlendirme kısmı, `dsm` CLI alt komutları (ADR-0005) ve rapor üretimi (ADR-0027) eklenir; böylece tüm CSC'ler hedef sunucuya birlikte kurulur.
+**Paketleme:** `dve`'nin değerlendirme kısmı, `dsm` CLI alt komutları (ADR-0005) ve rapor üretimi (ADR-0018) eklenir; böylece tüm CSC'ler hedef sunucuya birlikte kurulur.
 
 **Demo:** Bir otomasyon istemcisi (ör. Jenkins), bir veya birden fazla aday yazılım birimi için CLI üzerinden kurulum uygunluk değerlendirmesi başlatır; sistem her birimi kendi değerlendirme başlıkları ve kontrol kurallarına göre puanlar, her birim için bağımsız ve eşzamanlı şekilde bloke edici/bloke edici olmayan bir karar ve makine tarafından işlenebilir sonuçlar döndürür; tüm doğrulama, analiz ve değerlendirme sonuçlarını kapsayan özet/ayrıntılı bir rapor üretilir — böylece SaaG-TDM ve altı CSC'nin tamamı tamamlanmış olur.
 
 **Tamamlanma Tanımı:**
 - [ ] Kurulum Uygunluk Değerlendirmesi (TDM.71–78) ve raporlama/CLI ekranı (TDM.26–27) inşa edildi ve çalışıyor
-- [ ] ADR-0027, ADR-0005 kabul edildi veya yeniden planlandı
+- [ ] ADR-0018, ADR-0005 kabul edildi veya yeniden planlandı
 - [ ] Değerlendirici ve CLI testleri, Artım 3/6/7'den gelen raporlama testini tamamlayacak şekilde geçiyor
 - [ ] Tam servis yığını birlikte dağıtılıyor
 - [ ] Demo uçtan uca çalıştırıldı — altı bileşenin tamamı tamamlandı
@@ -283,11 +283,11 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 |---|---|
 | — | Tam yığın bütünleştirme sertleştirmesi, performans/kapasite ve güvenlik doğrulama |
 
-**Tasarım:** Herhangi yeni SRS isteri gerçekleştirilmez; STD'deki tüm test tanımları tam yığın üzerinde uygulanır. Sertleştirme hedefleri, önceki artımlardaki ADR'lerle tanımlanır: eşzamanlı işlemin kullanıcı/işlem sayısı (ADR-0006) ve saha kaydı depolama kapasitesi (ADR-0036).
+**Tasarım:** Herhangi yeni SRS isteri gerçekleştirilmez; STD'deki tüm test tanımları tam yığın üzerinde uygulanır. Sertleştirme hedefleri, önceki artımlardaki ADR'lerle tanımlanır: eşzamanlı işlemin kullanıcı/işlem sayısı (ADR-0006) ve saha kaydı depolama kapasitesi (ADR-0020).
 
-**Geliştirme:** Uçtan uca (acceptance) regresyon paketi tamamlanır; arka plan iş kuyruğu, yeniden deneme ve kurtarma davranışları sertleştirilir; LDAP, oturum, API token'ı ve yetki modeli güvenlik denetimi yürütülür (ADR-0030); üretim sunucusu yapılandırması ve servis birimi, çalışma zamanı izlemeyle (log/metrik, ADR-0036, ADR-0004) eklenir.
+**Geliştirme:** Uçtan uca (acceptance) regresyon paketi tamamlanır; arka plan iş kuyruğu, yeniden deneme ve kurtarma davranışları sertleştirilir; LDAP, oturum, API token'ı ve yetki modeli güvenlik denetimi yürütülür (ADR-0019); üretim sunucusu yapılandırması ve servis birimi, çalışma zamanı izlemeyle (log/metrik, ADR-0020, ADR-0004) eklenir.
 
-**Test:** Tüm STD test paketleri tam yığın üzerinde geçer; eşzamanlı yükleme/hacim testleri ADR-0036 ve ADR-0006 hedeflerini karşılar; 72 saatlik soak (kalıcılık) koşusu planlanan sapma olmadan tamamlanır.
+**Test:** Tüm STD test paketleri tam yığın üzerinde geçer; eşzamanlı yükleme/hacim testleri ADR-0020 ve ADR-0006 hedeflerini karşılar; 72 saatlik soak (kalıcılık) koşusu planlanan sapma olmadan tamamlanır.
 
 **Paketleme:** Üretim adayı: tüm CSC'ler yayın arşivinden üretime benzer bir sunucuya çevrimdışı kurulur (ADR-0004).
 
@@ -295,7 +295,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tamamlanma Tanımı:**
 - [ ] Tüm STD test paketleri tam yığın üzerinde geçiyor
-- [ ] Performans/hacim hedefleri (ADR-0006, ADR-0036) karşılanıyor
+- [ ] Performans/hacim hedefleri (ADR-0006, ADR-0020) karşılanıyor
 - [ ] Güvenlik denetimi (LDAP, oturumlar, API token'ları, yetkilendirme) kapatıldı
 - [ ] 72 saatlik soak kesintisiz tamamlandı
 - [ ] Kalan hata listesi Artım 9'a devir için onaylandı
@@ -308,7 +308,7 @@ Artım 0, depo iskeletini, paylaşılan altyapıyı ve dokümantasyon iskeletini
 
 **Tasarım:** Yeni ister tasarımı yapılmaz. Pilot senaryoları, artım demo senaryolarının kurumsal verilerle yeniden koşumu olarak tanımlanır; kullanıcı el kitabı ve işletim runbook'ları tamamlanır.
 
-**Geliştirme:** Pilot geri bildirimlerinden doğan kullanılabilirlik (usability) işleri yakıt olarak kullanılarak kapatılır; rapor çıktısı (ADR-0027 biçimi) gerçek verilerle doğrulanır; eğitim materyalleri üretilir.
+**Geliştirme:** Pilot geri bildirimlerinden doğan kullanılabilirlik (usability) işleri yakıt olarak kullanılarak kapatılır; rapor çıktısı (ADR-0018 biçimi) gerçek verilerle doğrulanır; eğitim materyalleri üretilir.
 
 **Test:** Pilot operatör ekip desteği olmaksızın tam iş akışlarını koşar; geri bildirim kaynaklı her değişiklik tam regresyonu tetikler ve geçirir.
 
@@ -428,7 +428,7 @@ gantt
 
 ## 4. Proje Yapısı
 
-Depo yerleşimi [ADR-0004](../design/adr/0004-deployment-and-repository-layout.md)'te, paket içi yerleşim [ADR-0003](../design/adr/0003-ports-adapters-and-csc-integration.md)'te kararlaştırılmıştır. Her üst düzey CSC dizini, kanonik CSC kimliğiyle ([ADR-0002](../design/adr/0002-canonical-component-identifiers.md)) adlandırılmış tek bir Python dağıtımıdır ve kendi çevrimdışı wheelhouse'una sahiptir ([ADR-0004](../design/adr/0004-deployment-and-repository-layout.md)). Operasyon Paneli ön yüzü `dve` içinde yer alır ([ADR-0009](../design/adr/0009-operations-panel.md)). `mdg/`, `dve/` ve `dev/` mevcuttur; diğer dizinler ilgili artım başladığında oluşturulur.
+Depo yerleşimi [ADR-0004](../design/adr/0004-deployment-and-repository-layout.md)'te, paket içi yerleşim [ADR-0003](../design/adr/0003-ports-adapters-and-csc-integration.md)'te kararlaştırılmıştır. Her üst düzey CSC dizini, kanonik CSC kimliğiyle ([ADR-0002](../design/adr/0002-canonical-component-identifiers.md)) adlandırılmış tek bir Python dağıtımıdır ve kendi çevrimdışı wheelhouse'una sahiptir ([ADR-0004](../design/adr/0004-deployment-and-repository-layout.md)). Operasyon Paneli ön yüzü `dve` içinde yer alır ([ADR-0015](../design/adr/0015-operations-panel.md)). `mdg/`, `dve/` ve `dev/` mevcuttur; diğer dizinler ilgili artım başladığında oluşturulur.
 
 ```text
 system-as-a-graph/
@@ -439,7 +439,7 @@ system-as-a-graph/
 │   ├── design/            SDD.md, UXD.md, ADR-ROADMAP.md, adr/
 │   └── test/              STD.md
 │
-├── common/                # ortak çekirdek: hata kayıtları, köken (provenance) tipleri (ADR-0013, ADR-0008)
+├── common/                # ortak çekirdek: hata kayıtları, köken (provenance) tipleri (ADR-0009, ADR-0007)
 ├── mdg/                   # CSC-1: Model Veri Üreteci (gerçekleştirildi)
 ├── scg/                   # CSC-2: Senaryo Üreteci
 ├── fdm/                   # CSC-3: Saha Veri Yöneticisi
@@ -450,8 +450,8 @@ system-as-a-graph/
 │   ├── wheelhouse/        # çevrimdışı kurulum için sabitlenmiş CPython 3.9 wheel'leri
 │   ├── src/dve/
 │   │   ├── domain/  ports/  services/  adapters/
-│   │   ├── rules/         # doğrulama kural kataloğu (ADR-0022)
-│   │   ├── templates/  static/   # Operasyon Paneli (ADR-0009)
+│   │   ├── rules/         # doğrulama kural kataloğu (ADR-0016)
+│   │   ├── templates/  static/   # Operasyon Paneli (ADR-0015)
 │   │   └── __init__.py    # façade ve çalışma zamanı bağlantıları
 │   └── tests/             # adapters/ domain/ services/ fakes/ …
 │
@@ -484,7 +484,7 @@ Her CSC dağıtımı yukarıdaki `dve/` ile aynı biçimdedir: `setup.py`, `whee
 | `services/` | Kullanım senaryoları; her senaryo için bir sınıf, yalnızca portlara bağımlı |
 | `adapters/<alan>/` | `<Teknoloji><Port>` gerçekleştirimleri; ör. MySQL, Git, SQLite, graf sunucusu veya LDAP adaptörleri |
 | `__init__.py` | CSC'nin genel façade'ı: adaptörleri servislere bağlayan fabrika fonksiyonları |
-| `tests/` | CSC'nin test paketi; sahte adaptörler için `tests/fakes/` (ADR-0041) |
+| `tests/` | CSC'nin test paketi; sahte adaptörler için `tests/fakes/` (ADR-0021) |
 
 ---
 
@@ -502,7 +502,7 @@ Her satır, son sütununda adı geçen ADR ile kararlaştırılır; ikisi farkl�
 | Çalışma zamanı | CPython 3.9, x86_64, glibc ≥ 2.17 (CentOS 7+) — gerçekleştirildi | Tüm CSC'ler | [0004](../design/adr/0004-deployment-and-repository-layout.md) |
 | Dağıtım | Paket başına wheelhouse'lardan sabitlenmiş wheel'lerin sanal ortama çevrimdışı kurulumu, sunucunun servis yöneticisiyle çalıştırma; hedefte konteyner çalışma ortamı yok — gerçekleştirildi | Kurum içi hedef sunucu | [0004](../design/adr/0004-deployment-and-repository-layout.md) |
 | Yapılandırma | Paketle gelen `.ini` varsayılanları ve `/etc/dsm` altındaki sunucu `.ini` dosyalarıyla üzerine yazma — paket kısmı gerçekleştirildi | Tüm CSC'ler | [0004](../design/adr/0004-deployment-and-repository-layout.md) |
-| Geliştirme yığını | MySQL 9.7.2 ve Gitea 1.27.3 sahte sistemleriyle Docker Compose (OpenLDAP eklenecek), yalnızca geliştirici makinelerinde — gerçekleştirildi | Adaptör geliştirme ve sözleşme testleri | [0004](../design/adr/0004-deployment-and-repository-layout.md), [0041](../design/adr/0041-test-strategy-and-quality-gates.md) |
+| Geliştirme yığını | MySQL 9.7.2 ve Gitea 1.27.3 sahte sistemleriyle Docker Compose (OpenLDAP eklenecek), yalnızca geliştirici makinelerinde — gerçekleştirildi | Adaptör geliştirme ve sözleşme testleri | [0004](../design/adr/0004-deployment-and-repository-layout.md), [0021](../design/adr/0021-test-strategy-and-quality-gates.md) |
 | **Arka Uç ve API** | | | |
 | Web çatısı | Flask 2.3 + Flask-WTF (CSRF) — gerçekleştirildi; üretim WSGI sunucusu olarak waitress | Operasyon Paneli API'si ve otomasyon API'si (DVE.1–2, 27) | [0005](../design/adr/0005-api-and-automation-contract.md) |
 | API biçimi | REST/JSON; otomasyon istemcileri için `/api/v1/` ve elle tutulan bir OpenAPI dosyası | DVE.27, 77–78 | [0005](../design/adr/0005-api-and-automation-contract.md) |
@@ -510,28 +510,28 @@ Her satır, son sütununda adı geçen ADR ile kararlaştırılır; ikisi farkl�
 | Arka plan yürütme | `ITaskRunner` arkasında işlem başına bir alt süreç (spawn), sınıf başına sınırlar — gerçekleştirildi (tek sınır) | DVE.6, 9, 14–15, 27, 78; SMM.30 | [0006](../design/adr/0006-operation-execution-and-concurrency.md) |
 | Durum iletimi | Log imleçli REST yoklaması (polling) — gerçekleştirildi | Arayüz ve CLI (DVE.6, 15, 27) | [0006](../design/adr/0006-operation-execution-and-concurrency.md) |
 | **Veri Depolama** | | | |
-| Model Verisi | Dosya sisteminde çalıştırma başına sürümlü JSON dosyası — gerçekleştirildi (sürümsüz) | MDG.23; SMM.2–3 | [0013](../design/adr/0013-model-data-file-and-error-records.md) |
-| Kayıt deposu | `sqlite3` ile SQLite (sistem kütüphanesi 3.24'ten eskiyse paketlenmiş `pysqlite3`) | Envanter, işlemler, bulgular, raporlar, kayıt defterleri, oturumlar (MDG.8, 14–15; DVE.21–26) | [0008](../design/adr/0008-records-store.md) |
-| Graf depolama | `IGraphStore` arkasında yerel graf sunucusu: çevrimdışı kurulum denemesiyle (spike) seçilecek Neo4j Community 5 veya FalkorDB | Sistem Modeli örnekleri (SMM.1, 4, 27–31) | [0015](../design/adr/0015-graph-store-and-model-instances.md) |
-| Graf şeması ve türetme | Çerçeveyle uyumlu şema ve `DEPENDS_ON` kuralları, `smm` içinde saf Python'a aktarılmış | SMM.4–24; DVE.53–58 | [0014](../design/adr/0014-system-model-graph-schema.md) |
-| Saha kaydı ve telemetri depolama | Açık | FDM.1, DVE.59–65 | ADR-0020 |
+| Model Verisi | Dosya sisteminde çalıştırma başına sürümlü JSON dosyası — gerçekleştirildi (sürümsüz) | MDG.23; SMM.2–3 | [0009](../design/adr/0009-model-data-file-and-error-records.md) |
+| Kayıt deposu | `sqlite3` ile SQLite (sistem kütüphanesi 3.24'ten eskiyse paketlenmiş `pysqlite3`) | Envanter, işlemler, bulgular, raporlar, kayıt defterleri, oturumlar (MDG.8, 14–15; DVE.21–26) | [0007](../design/adr/0007-records-store.md) |
+| Graf depolama | `IGraphStore` arkasında yerel graf sunucusu: çevrimdışı kurulum denemesiyle (spike) seçilecek Neo4j Community 5 veya FalkorDB | Sistem Modeli örnekleri (SMM.1, 4, 27–31) | [0011](../design/adr/0011-graph-store-and-model-instances.md) |
+| Graf şeması ve türetme | Çerçeveyle uyumlu şema ve `DEPENDS_ON` kuralları, `smm` içinde saf Python'a aktarılmış | SMM.4–24; DVE.53–58 | [0010](../design/adr/0010-system-model-graph-schema.md) |
+| Saha kaydı ve telemetri depolama | Açık | FDM.1, DVE.59–65 | ADR-0014 |
 | **Ön Yüz ve Arayüz** | | | |
-| Operasyon Paneli | Flask'ın sunduğu sayfa, yalın JavaScript, derleme adımı yok, gömülü kütüphaneler, kendi sunulan yazı tipleri — gerçekleştirildi | DVE.1, 4–27 | [0009](../design/adr/0009-operations-panel.md) |
-| Graf görselleştirme | AntV G6 5.1.1 (gömülü) — gerçekleştirildi; sunucu tarafı görünüm kapsamlama eklenecek | DVE.17, 19–20 | [0009](../design/adr/0009-operations-panel.md) |
-| Grafikler | Gerektiğinde gömülü ECharts | DVE.58, 70 | [0009](../design/adr/0009-operations-panel.md) |
-| Tarayıcı tabanı | Firefox 90+, WCAG 2.1 AA — gerçekleştirildi | QA-12 | [0009](../design/adr/0009-operations-panel.md) |
+| Operasyon Paneli | Flask'ın sunduğu sayfa, yalın JavaScript, derleme adımı yok, gömülü kütüphaneler, kendi sunulan yazı tipleri — gerçekleştirildi | DVE.1, 4–27 | [0015](../design/adr/0015-operations-panel.md) |
+| Graf görselleştirme | AntV G6 5.1.1 (gömülü) — gerçekleştirildi; sunucu tarafı görünüm kapsamlama eklenecek | DVE.17, 19–20 | [0015](../design/adr/0015-operations-panel.md) |
+| Grafikler | Gerektiğinde gömülü ECharts | DVE.58, 70 | [0015](../design/adr/0015-operations-panel.md) |
+| Tarayıcı tabanı | Firefox 90+, WCAG 2.1 AA — gerçekleştirildi | QA-12 | [0015](../design/adr/0015-operations-panel.md) |
 | **Güvenlik ve Kimlik Doğrulama** | | | |
-| Kimlik doğrulama | `ldap3` ile LDAP ara-ve-bağlan (search-and-bind) (sahte adaptör gerçekleştirildi) | DVE.3 | [0030](../design/adr/0030-security.md) |
-| Oturumlar ve token'lar | CSRF korumalı Flask imzalı çerez — gerçekleştirildi; sunucu tarafı epoch iptali ve özetlenmiş (hash) API token'ları eklenecek | DVE.3, 27 | [0030](../design/adr/0030-security.md) |
-| Gizli bilgiler | Paket dışında, 0600 izinli sunucu dosyaları; kaydedilen veri kaynağı kimlik bilgileri SQLite'ta AES-256-GCM ile şifreli | MDG.8; QA-01 | [0030](../design/adr/0030-security.md) |
+| Kimlik doğrulama | `ldap3` ile LDAP ara-ve-bağlan (search-and-bind) (sahte adaptör gerçekleştirildi) | DVE.3 | [0019](../design/adr/0019-security.md) |
+| Oturumlar ve token'lar | CSRF korumalı Flask imzalı çerez — gerçekleştirildi; sunucu tarafı epoch iptali ve özetlenmiş (hash) API token'ları eklenecek | DVE.3, 27 | [0019](../design/adr/0019-security.md) |
+| Gizli bilgiler | Paket dışında, 0600 izinli sunucu dosyaları; kaydedilen veri kaynağı kimlik bilgileri SQLite'ta AES-256-GCM ile şifreli | MDG.8; QA-01 | [0019](../design/adr/0019-security.md) |
 | **Dış Entegrasyonlar** | | | |
 | Entegrasyon mimarisi | Portlar ve Adaptörler, sahteler enjeksiyonla seçilir — gerçekleştirildi | Tüm dış sistemler | [0003](../design/adr/0003-ports-adapters-and-csc-integration.md) |
-| Konfigürasyon yönetim veri tabanı | PyMySQL, salt okunur parametreli SQL — gerçekleştirildi | MDG.2, 8, 10–13 | [0010](../design/adr/0010-model-data-acquisition.md) |
-| Kaynak kod deposu | HTTPS üzerinden `git` komut satırı, etikete göre sığ klon, ortam değişkenli kimlik bilgisi yardımcısı — gerçekleştirildi | MDG.3, 17–20 | [0010](../design/adr/0010-model-data-acquisition.md) |
-| Ağ topolojisi | Git üzerinden ansible deposu, YAML envanter ve değişken dosyaları (ayrıştırıcı sahte) | MDG.5–7 | [0010](../design/adr/0010-model-data-acquisition.md) |
-| Paket deposu | Standart kütüphane ile HTTPS REST | MDG.4 | [0010](../design/adr/0010-model-data-acquisition.md) |
+| Konfigürasyon yönetim veri tabanı | PyMySQL, salt okunur parametreli SQL — gerçekleştirildi | MDG.2, 8, 10–13 | [0008](../design/adr/0008-model-data-acquisition.md) |
+| Kaynak kod deposu | HTTPS üzerinden `git` komut satırı, etikete göre sığ klon, ortam değişkenli kimlik bilgisi yardımcısı — gerçekleştirildi | MDG.3, 17–20 | [0008](../design/adr/0008-model-data-acquisition.md) |
+| Ağ topolojisi | Git üzerinden ansible deposu, YAML envanter ve değişken dosyaları (ayrıştırıcı sahte) | MDG.5–7 | [0008](../design/adr/0008-model-data-acquisition.md) |
+| Paket deposu | Standart kütüphane ile HTTPS REST | MDG.4 | [0008](../design/adr/0008-model-data-acquisition.md) |
 | **Raporlama ve Veri İşleme** | | | |
-| Rapor üretimi | Açık: önce HTML ve JSON; PDF yalnızca çevrimdışı kurulabilen bir oluşturucuyla | DVE.26, 78 | ADR-0027 |
-| Ham yükleme saklama | Açık | FDM.2 | ADR-0020 |
+| Rapor üretimi | Açık: önce HTML ve JSON; PDF yalnızca çevrimdışı kurulabilen bir oluşturucuyla | DVE.26, 78 | ADR-0018 |
+| Ham yükleme saklama | Açık | FDM.2 | ADR-0014 |
 | **Test** | | | |
-| Test | Paket başına sahtelerle pytest — gerçekleştirildi; sözleşme, kural, eşlik (parity), Playwright (Firefox 90 ESR) ve çevrimdışı kurulum kapıları | QA-11 | [0041](../design/adr/0041-test-strategy-and-quality-gates.md) |
+| Test | Paket başına sahtelerle pytest — gerçekleştirildi; sözleşme, kural, eşlik (parity), Playwright (Firefox 90 ESR) ve çevrimdışı kurulum kapıları | QA-11 | [0021](../design/adr/0021-test-strategy-and-quality-gates.md) |

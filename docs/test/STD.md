@@ -157,7 +157,7 @@ Procedure:
 2. Using ingested synthetic data (TC-ADM-02), independently produce Analytical Evaluation Data and verify the same handoff.
 3. Verify the two runs never combine field-record and synthetic data within a single Analytical Evaluation Data set.
 
-Expected Result: Analytical Evaluation Data is correctly assembled and handed off for both upstream sources, and the two sources are never mixed in one production run. Analytical Evaluation Data format/content details are pending ADR-0017; this test case verifies successful assembly and handoff, not the internal schema.
+Expected Result: Analytical Evaluation Data is correctly assembled and handed off for both upstream sources, and the two sources are never mixed in one production run. Analytical Evaluation Data format/content details are pending ADR-0012; this test case verifies successful assembly and handoff, not the internal schema.
 
 ---
 
@@ -310,7 +310,7 @@ Procedure:
 6. Run a simulation and verify scenario name, inputs, production time, and project/platform/version are recorded.
 7. Generate a summary report and a detailed report and verify each contains all fields listed in DVE.26.
 
-Expected Result: Findings are classified, fully attributed, sortable/filterable, and cause-and-effect linked; interruption and simulation metadata are recorded; both report types contain all required fields. Conforming/non-conforming classification rules (ADR-0022, `classification.yaml`) and the exportable report file format (ADR-0027) are pending; this test case verifies presence and structure of the required data, not specific thresholds or file format.
+Expected Result: Findings are classified, fully attributed, sortable/filterable, and cause-and-effect linked; interruption and simulation metadata are recorded; both report types contain all required fields. Conforming/non-conforming classification rules (ADR-0016, `classification.yaml`) and the exportable report file format (ADR-0018) are pending; this test case verifies presence and structure of the required data, not specific thresholds or file format.
 
 **TC-DVE-07: Automation Interface (CLI/Build Tools)**
 Traces to: DVE.27 / SDD §3.6.2.1
@@ -341,7 +341,7 @@ Procedure:
 1. Configure topics with Durability, Reliability, Lifespan, and Transport Priority QoS parameters, including at least one non-conformant value per parameter.
 2. Run QoS verification and verify each of the four parameters is checked and incompatibilities detected.
 
-Expected Result: All four QoS parameters are verified and non-conformant values flagged. Conformance rules for each parameter are pending approval of the ADR-0022 `qos.yaml` rule family; this test case verifies that verification runs and reports against whatever rule set is configured, not specific pass/fail thresholds.
+Expected Result: All four QoS parameters are verified and non-conformant values flagged. Conformance rules for each parameter are pending approval of the ADR-0016 `qos.yaml` rule family; this test case verifies that verification runs and reports against whatever rule set is configured, not specific pass/fail thresholds.
 
 **TC-DVE-10: Publisher/Consumer Matcher**
 Traces to: DVE.36–38 / SDD §3.6.2.2
@@ -360,7 +360,7 @@ Procedure:
 1. Configure an external-to-middleware communication with consistent source, destination, message, and direction information, and verify it passes.
 2. Configure the same communication with one inconsistent attribute (e.g. mismatched direction), and verify it is flagged.
 
-Expected Result: Consistent communications pass; inconsistent ones are flagged. Which communication services are in scope is pending approval of the ADR-0022 `communication.yaml` rule family; this test case exercises the verification mechanism against the currently configured service set.
+Expected Result: Consistent communications pass; inconsistent ones are flagged. Which communication services are in scope is pending approval of the ADR-0016 `communication.yaml` rule family; this test case exercises the verification mechanism against the currently configured service set.
 
 **TC-DVE-12: Resource Allocation Verifier**
 Traces to: DVE.40–45 / SDD §3.6.2.2
@@ -373,7 +373,7 @@ Procedure:
 5. Audit OS settings against the core allocation.
 6. Configure a non-conformant runtime environment memory allocation, and verify detection.
 
-Expected Result: Load-balancing distribution is analyzed and all core-allocation, OS-settings, and memory-allocation conditions are correctly detected. Load-balancing, core-allocation, OS-settings, and memory-allocation conformance rules are pending approval of the ADR-0022 `load_balancing.yaml`, `cpu_allocation.yaml`, `os_settings.yaml` and `memory.yaml` rule families; this test case verifies detection mechanics against whatever rule set is configured.
+Expected Result: Load-balancing distribution is analyzed and all core-allocation, OS-settings, and memory-allocation conditions are correctly detected. Load-balancing, core-allocation, OS-settings, and memory-allocation conformance rules are pending approval of the ADR-0016 `load_balancing.yaml`, `cpu_allocation.yaml`, `os_settings.yaml` and `memory.yaml` rule families; this test case verifies detection mechanics against whatever rule set is configured.
 
 **TC-DVE-13: Architectural Rule Verifier**
 Traces to: DVE.49 / SDD §3.6.2.2
@@ -382,7 +382,7 @@ Procedure:
 1. Construct a model containing a known architectural-rule-violating design pattern.
 2. Run architectural rule verification and verify the violation is detected.
 
-Expected Result: The configured architectural-rule violation is detected. Architectural rules are pending approval of the ADR-0022 `architecture.yaml` rule family; this test case verifies detection against whatever rule set is configured.
+Expected Result: The configured architectural-rule violation is detected. Architectural rules are pending approval of the ADR-0016 `architecture.yaml` rule family; this test case verifies detection against whatever rule set is configured.
 
 ### 6.3 Behavioral Simulation and Analysis
 
@@ -436,7 +436,7 @@ Procedure:
 3. Verify each control rule result carries a rule identifier, evaluation heading, severity, weight, acceptance criterion, and blocking status.
 4. Verify a conformance score is produced from the scored rule results.
 
-Expected Result: All four evaluation headings are assessed with fully-attributed rule results and an overall conformance score. Scoring method details are pending ADR-0027; this test case verifies that scoring is produced and rule attribution is complete, not a specific scoring formula.
+Expected Result: All four evaluation headings are assessed with fully-attributed rule results and an overall conformance score. Scoring method details are pending ADR-0018; this test case verifies that scoring is produced and rule attribution is complete, not a specific scoring formula.
 
 **TC-DVE-18: Blocking Decision Engine**
 Traces to: DVE.77 / SDD §3.6.2.4
@@ -506,4 +506,4 @@ Expected Result: Concurrent multi-unit evaluation produces correctly-isolated pe
 | TC-DVE-18 | Blocking Decision Engine | DVE.77 |
 | TC-DVE-19 | Concurrent Evaluation Orchestrator | DVE.78 |
 
-**Coverage check:** all 40 SDD §3 design elements have exactly one test case above, and all 156 SRS requirements are covered through their owning design element, consistent with SDD §4. Test cases TC-ADM-03, TC-CSM-04, TC-DVE-06, TC-DVE-09, TC-DVE-11, TC-DVE-12, TC-DVE-13, and TC-DVE-17 carry acceptance criteria pending ADR-0017, ADR-0022, ADR-0027 and ADR-0006 (see [ADR Roadmap §6.1](../design/ADR-ROADMAP.md#61-deferred-design-points--adr)).
+**Coverage check:** all 40 SDD §3 design elements have exactly one test case above, and all 156 SRS requirements are covered through their owning design element, consistent with SDD §4. Test cases TC-ADM-03, TC-CSM-04, TC-DVE-06, TC-DVE-09, TC-DVE-11, TC-DVE-12, TC-DVE-13, and TC-DVE-17 carry acceptance criteria pending ADR-0012, ADR-0016, ADR-0018 and ADR-0006 (see [ADR Roadmap §6.1](../design/ADR-ROADMAP.md#61-deferred-design-points--adr)).

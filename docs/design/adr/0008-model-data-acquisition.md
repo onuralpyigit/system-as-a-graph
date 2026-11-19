@@ -1,4 +1,4 @@
-# ADR-0010: MDG acquisition: data sources, network topology and source files
+# ADR-0008: MDG acquisition: data sources, network topology and source files
 
 | Field | Value |
 |---|---|
@@ -10,7 +10,7 @@
 | Traces | MDG.2–13, 17–21; SMM.12–15, 18, 20–22, 24; DVE.7, 32–35, 40–46; QA-01, QA-05, QA-06 |
 | Resolves | DP-09 (MDG.6 topology source and method); DP-10 (MDG.19 mandatory file list); DP-17, DP-18, DP-19, DP-20 (protocols of EXT-IF-01 CMDB, EXT-IF-02 source repository, EXT-IF-03 package repository, EXT-IF-04 topology source) |
 | Decide by | Wave A (2026-11-27) |
-| Supersedes | — (absorbs the former ADR-0010) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
@@ -69,12 +69,12 @@ Chosen options: **PyMySQL**, **the `git` CLI over HTTPS**, **HTTPS REST through 
 * **EXT-IF-02, source repository:** Git over HTTPS with the `git` CLI, shallow clone by tag, and the environment-based credential helper.
 * **EXT-IF-03, package repository:** HTTPS REST behind a new `IPackageRepository` port. It returns metadata (name, version, checksum) and downloads by version, using `urllib.request` with a token. The product is confirmed with its owners before R5, with a fake until then.
 * **Configuration (MDG.8):** `DataSourceConfig` stays the domain type, and `access_method` selects the adapter (ADR-0003).
-  * Configurations are saved per user in SQLite (ADR-0008), with credentials encrypted (ADR-0030).
+  * Configurations are saved per user in SQLite (ADR-0007), with credentials encrypted (ADR-0019).
   * `dve.ini` gives only defaults.
   * Each source is verified with one cheap call when it is connected (DVE.7).
 * **To build:**
   * TLS verification on, with a per-source `ca_bundle` (`-c http.sslCAInfo=<path>`); remove `sslVerify=false`.
-  * Record `git rev-parse HEAD` before deleting `.git`, on every `AcquiredFile` and in the Model Data provenance (ADR-0013, ADR-0008).
+  * Record `git rev-parse HEAD` before deleting `.git`, on every `AcquiredFile` and in the Model Data provenance (ADR-0009, ADR-0007).
   * One CMDB connection per run.
   * The package adapter, and saved configurations with a write-only secret field.
 
@@ -85,7 +85,7 @@ Chosen options: **PyMySQL**, **the `git` CLI over HTTPS**, **HTTPS REST through 
   * the inventory file (`inventory.yml` or `hosts.yml`, path configurable), whose groups give `Node.group`;
   * `host_vars/<host>.yml` and `group_vars/<group>.yml`.
 
-  It reads nothing else and evaluates no Jinja. A templated value becomes a placeholder (ADR-0013).
+  It reads nothing else and evaluates no Jinja. A templated value becomes a placeholder (ADR-0009).
 * **SaaG keys** in host or group variables. The names must be confirmed with the ansible repository owners; this point is open.
 
   | Key | Model field | Used by |
@@ -96,18 +96,18 @@ Chosen options: **PyMySQL**, **the `git` CLI over HTTPS**, **HTTPS REST through 
   | `saag_interfaces`: list of `{device, dev_raw, network, bandwidth_gbps}` | `ConnectsTo`, `Network` (as built) | SMM.15, 18; DVE.40 |
 
 * **Validation:**
-  * A missing file gives `missing_data` (MDG.19), and a malformed file gives a `format` error record (ADR-0013).
+  * A missing file gives `missing_data` (MDG.19), and a malformed file gives a `format` error record (ADR-0009).
   * A host without capacity keys is kept and listed as a placeholder, so the rules report it instead of guessing.
   * Nodes named only by the system repository are kept as placeholders.
-* **Manual entry (MDG.7):** the UI edits the same fields and saves them as an override attached to the run in SQLite. The override is recorded as manual (ADR-0008) and never written back to the repository.
+* **Manual entry (MDG.7):** the UI edits the same fields and saves them as an override attached to the run in SQLite. The override is recorded as manual (ADR-0007) and never written back to the repository.
 * **To build:**
   * a real `AnsibleRepoParser`, with seed files (valid, missing and invalid hosts) in `dev/gitea/seed/ansible_repo_1.0.0/`;
-  * numeric `cores`, `ram_gb` and `kind` on `Node`, carried into Model Data (ADR-0013, ADR-0014);
+  * numeric `cores`, `ram_gb` and `kind` on `Node`, carried into Model Data (ADR-0009, ADR-0010);
   * the override API and screen.
 
 ### 3. Mandatory files and extraction (MDG.17–21)
 
-* **Mandatory set (DP-10):** per software unit. A missing file marks the unit `missing_data` with an error record (ADR-0013).
+* **Mandatory set (DP-10):** per software unit. A missing file marks the unit `missing_data` with an error record (ADR-0009).
 
   | File | Rule |
   |---|---|
@@ -148,7 +148,7 @@ Chosen options: **PyMySQL**, **the `git` CLI over HTTPS**, **HTTPS REST through 
   * tag clone arguments and version ordering;
   * no password on a `git` command line or in error text;
   * mandatory files, including the comment-only include case.
-* Adapter contract tests (ADR-0041) run the same cases against the `dev/` MySQL and Gitea stack.
+* Adapter contract tests (ADR-0021) run the same cases against the `dev/` MySQL and Gitea stack.
 * New tests:
   * `git` arguments never contain `sslVerify=false` outside a test override;
   * the topology parser handles the valid, missing and invalid seeds and never calls Ansible or Jinja;
@@ -177,5 +177,5 @@ Chosen options: **PyMySQL**, **the `git` CLI over HTTPS**, **HTTPS REST through 
   * `mdg/src/mdg/services/produce_model_setup_data.py`
   * `mdg/src/mdg/mdg.ini`
   * `dve/src/dve/services/data_source_service.py`
-* Related: ADR-0003, ADR-0004, ADR-0008, ADR-0013, ADR-0014, ADR-0030, ADR-0041
+* Related: ADR-0003, ADR-0004, ADR-0007, ADR-0009, ADR-0010, ADR-0019, ADR-0021
 * Revisit if the production CMDB is not MySQL-compatible.

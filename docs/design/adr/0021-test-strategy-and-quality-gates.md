@@ -1,4 +1,4 @@
-# ADR-0041: Test strategy and quality gates
+# ADR-0021: Test strategy and quality gates
 
 | Field | Value |
 |---|---|
@@ -32,7 +32,7 @@ As built (`1157784`):
 * Domain logic, adapters and rules must be testable without the external systems (QA-11, ADR-0003).
 * Tests must run in the offline target environment: CPython 3.9 with the wheelhouses (ADR-0004).
 * The real external systems differ from the fakes, so each adapter also needs a test against something real.
-* UI regressions must be caught in the oldest supported browser (ADR-0009).
+* UI regressions must be caught in the oldest supported browser (ADR-0015).
 
 ## Considered Options
 
@@ -51,9 +51,9 @@ Chosen option: "Per-package pytest with fakes (as built), extended with contract
 | Unit and service | `<csc>/tests/{domain,services,adapters}` with fakes | Python only | Every change |
 | API | `dve/tests/test_api.py` through `create_app()` | Python only | Every change |
 | Adapter contract | `<csc>/tests/contract/`: the same cases against the fake and the real adapter | The `dev/` Docker stack (MySQL, Gitea, OpenLDAP) | Every change to an adapter; nightly |
-| Rule fixtures | `dve/tests/rules/fixtures/`: models that must and must not trigger each rule (ADR-0022) | Python only | Every change to a rule or the engine |
-| Graph parity | `smm/tests/fixtures/framework_d1f8b424/` (ADR-0014), plus the isolation tests of ADR-0015 against the chosen graph server | The graph server for the second part | Every change to SMM |
-| Browser | Playwright against `dsm` running with fake adapters, in Firefox 90 ESR and the current Firefox ESR (ADR-0009) | Firefox builds | Every change to `static/` or `templates/`; nightly |
+| Rule fixtures | `dve/tests/rules/fixtures/`: models that must and must not trigger each rule (ADR-0016) | Python only | Every change to a rule or the engine |
+| Graph parity | `smm/tests/fixtures/framework_d1f8b424/` (ADR-0010), plus the isolation tests of ADR-0011 against the chosen graph server | The graph server for the second part | Every change to SMM |
+| Browser | Playwright against `dsm` running with fake adapters, in Firefox 90 ESR and the current Firefox ESR (ADR-0015) | Firefox builds | Every change to `static/` or `templates/`; nightly |
 | Install | `deploy/install.sh` on a CentOS-7-compatible host without network (ADR-0004) | That host or VM | Every release |
 | Qualification | STD test cases | Test environment | Each release DoD |
 
@@ -63,7 +63,7 @@ Chosen option: "Per-package pytest with fakes (as built), extended with contract
 * the `import-linter` contracts of ADR-0003 and ADR-0004 pass;
 * the citation grep of ADR-0002 passes;
 * the OpenAPI contract test of ADR-0005 passes;
-* the external-URL check of ADR-0009 passes.
+* the external-URL check of ADR-0015 passes.
 
 **Rules:**
 
@@ -107,4 +107,4 @@ Chosen option: "Per-package pytest with fakes (as built), extended with contract
 
 * Code: `mdg/pytest.ini`, `dve/pytest.ini`, `mdg/tests/`, `dve/tests/`, `dve/tests/conftest.py`, `dve/setup.py`, `dve/wheelhouse/`
 * [STD](../../test/STD.md)
-* Related: ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0009, ADR-0014, ADR-0015, ADR-0022
+* Related: ADR-0002, ADR-0003, ADR-0004, ADR-0005, ADR-0015, ADR-0010, ADR-0011, ADR-0016

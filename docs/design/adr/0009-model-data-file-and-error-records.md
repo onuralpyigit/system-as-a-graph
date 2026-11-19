@@ -1,4 +1,4 @@
-# ADR-0013: Model Data file format, and common validation and error records
+# ADR-0009: Model Data file format, and common validation and error records
 
 | Field | Value |
 |---|---|
@@ -10,7 +10,7 @@
 | Traces | MDG.1, 14–16, 18–23; SCG.4; FDM.5; ADM.5–6; SMM.2–3, 25–26, 37; DVE.5, 8, 14–15, 24; SDD §1 decision 5; QA-03, QA-04, QA-05 |
 | Resolves | DP-29a, DP-30a (storage and entity schema of the Model Data file) |
 | Decide by | Wave A (2026-11-27) |
-| Supersedes | — (absorbs the former ADR-0013) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
@@ -54,19 +54,19 @@ Chosen options: **a versioned, schema-validated JSON file per run (as built, ext
 
 ### 1. Model Data file
 
-* **Location:** unchanged. The workspace root comes from host configuration outside the package (ADR-0004). The `run_id` is the producing operation's ID (ADR-0006, ADR-0008).
+* **Location:** unchanged. The workspace root comes from host configuration outside the package (ADR-0004). The `run_id` is the producing operation's ID (ADR-0006, ADR-0007).
 * **Schema:**
   * `"schema_version": "1.0"` at the top level, and `mdg/src/mdg/schemas/model-data-1.0.schema.json` shipped as package data.
   * MDG validates before saving, the upload path validates instead of only calling `check_payload`, and SMM validates again on input (SMM.3).
   * Validation uses `jsonschema` 4.17.x, which supports Python 3.7+ and whose dependencies (`attrs`, `pyrsistent`) publish cp39 manylinux2014 wheels. They are added to `mdg/wheelhouse/`.
-* **Section names:** `graph` keeps the framework names MDG emits today, because they are the System Model vocabulary (ADR-0014). Later sections take ADR-0014 names too: hierarchy, roles, brokers, communication services and node capacity. The ADR-0002 terms apply to code and documents, not to these names.
+* **Section names:** `graph` keeps the framework names MDG emits today, because they are the System Model vocabulary (ADR-0010). Later sections take ADR-0010 names too: hierarchy, roles, brokers, communication services and node capacity. The ADR-0002 terms apply to code and documents, not to these names.
 * **Evolution:** minor versions only add optional fields. A major version ships a reader for the previous one. Files from before 1.0 are read as `0.x`, best effort and read-only.
-* **Integrity:** the file is written once to a temporary name and atomically renamed. Its SHA-256 goes to the artifact registry (ADR-0008), and SMM verifies it before construction.
+* **Integrity:** the file is written once to a temporary name and atomically renamed. Its SHA-256 goes to the artifact registry (ADR-0007), and SMM verifies it before construction.
 * **Timestamps:** UTC, ISO 8601 with offset.
 * **Placeholders:** values not acquired are written as `null` and listed in a `placeholders` array with JSON path and reason.
-  * Examples: the seeded `priority`/`hotstandby`, mocked QoS and the frequency derived from it, and node capacity not yet in the ansible repository (ADR-0010).
+  * Examples: the seeded `priority`/`hotstandby`, mocked QoS and the frequency derived from it, and node capacity not yet in the ansible repository (ADR-0008).
   * The `"NOT_FOUND"` and `-1` sentinels are retired, and graph construction never turns placeholders into facts.
-* **Provenance block:** `produced_by`, the operation ID, the tool version, and the clone commit hash per unit (ADR-0010).
+* **Provenance block:** `produced_by`, the operation ID, the tool version, and the clone commit hash per unit (ADR-0008).
 
 ### 2. Common validation and error records
 
@@ -81,7 +81,7 @@ Chosen options: **a versioned, schema-validated JSON file per run (as built, ext
   | `stage` | Processing stage, e.g. `acquire_context`, `clone`, `parse`, `validate`, `construct`, `bind` (DVE.24) |
   | `project`, `platform`, `system_version` | Separate fields, replacing `project_platform` |
   | `subject` | Optional: unit name, file path, record ID or entity key |
-  | `operation_id` | The owning operation (ADR-0008) |
+  | `operation_id` | The owning operation (ADR-0007) |
   | `occurred_at` | UTC, ISO 8601 with offset |
 
 * **Raising:**
@@ -97,13 +97,13 @@ Chosen options: **a versioned, schema-validated JSON file per run (as built, ext
 
   All failures of one item are collected before it is rejected.
 * **Per-item status:** an enum like `UnitStatus` is kept for batch inputs, and the operation result summarizes it.
-* **Storage:** records are persisted with their operation in SQLite (ADR-0008), and embedded in the artifact they concern where the SRS asks, as in the Model Data `errors` section.
+* **Storage:** records are persisted with their operation in SQLite (ADR-0007), and embedded in the artifact they concern where the SRS asks, as in the Model Data `errors` section.
 
 ### Consequences
 
 * Good, because SMM gets a contract it can validate, old files stay readable, and results trace back to a byte-identical input.
 * Good, because DVE can filter every CSC's errors by category, stage and scope (DVE.8, 23–24), and records keep their structure across processes.
-* Bad, because the seeded placeholder logic in `ModelSetupDataGraph` must go, and `graph.js` must read `placeholders` instead of `"NOT_FOUND"` (ADR-0009).
+* Bad, because the seeded placeholder logic in `ModelSetupDataGraph` must go, and `graph.js` must read `placeholders` instead of `"NOT_FOUND"` (ADR-0015).
 * Bad, because `ErrorRecord` changes shape. Schema 1.0 adopts the new fields, with a converter for old files.
 * Bad, because `jsonschema` and its dependencies add wheels to the offline wheelhouse.
 
@@ -119,7 +119,7 @@ Chosen options: **a versioned, schema-validated JSON file per run (as built, ext
 
 * JSON file per run (as built, versioned): Good, because it is simple, inspectable, downloadable, and matches the SRS wording. Bad, because there are no queries across runs; listing reads each file's header.
 * Relational rows: Bad, because the graph-shaped payload would be split across many tables, losing the single-file evidence.
-* Graph-DB import format: Bad, because it binds MDG to ADR-0015's choice and is not human-readable.
+* Graph-DB import format: Bad, because it binds MDG to ADR-0011's choice and is not human-readable.
 * Shared, extended error type: Good, because there is one filterable, durable model. Bad, because `mdg` and the schema must migrate.
 * Copying the current record: Bad, because the category stays text-only and the record is lost across processes.
 * Per-CSC models: Bad, because they contradict SDD §1 decision 5, and DVE would need one renderer per CSC.
@@ -127,4 +127,4 @@ Chosen options: **a versioned, schema-validated JSON file per run (as built, ext
 ## More Information
 
 * Code: `mdg/src/mdg/domain/model_setup_data.py`, `mdg/src/mdg/domain/model_setup_data_graph.py`, `mdg/src/mdg/domain/workspace.py`, `mdg/src/mdg/domain/error_record.py`, `mdg/src/mdg/adapters/model_setup_data/`, `mdg/src/mdg/ports/`
-* Related: ADR-0002, ADR-0004, ADR-0006, ADR-0008, ADR-0009, ADR-0010, ADR-0014, ADR-0015
+* Related: ADR-0002, ADR-0004, ADR-0006, ADR-0007, ADR-0015, ADR-0008, ADR-0010, ADR-0011

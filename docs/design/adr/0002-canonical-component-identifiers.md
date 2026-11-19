@@ -51,7 +51,7 @@ Chosen option: "SRS.md IDs and terms everywhere", because the SRS is the contrac
 * Good, because every trace becomes resolvable, and the links from ADR `Resolves` fields to requirements can be checked mechanically.
 * Good, because new R3 code starts with the right vocabulary.
 * Bad, because the SDD and STD need a rename pass (BACKLOG story S0.2-01). The code refactor touches the `mdg` public API and the `dve` imports of it.
-* Bad, because the existing Model Data JSON files carry the old naming in field names. ADR-0013 handles their versioning.
+* Bad, because the existing Model Data JSON files carry the old naming in field names. ADR-0009 handles their versioning.
 * Follow-up: BACKLOG S0.2-01 (document renames); a code refactor story in R3. (The CDR register's "Source" cells no longer need fixing: the register was retired and its items are cited by canonical SRS IDs in [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr).)
 
 ### Confirmation

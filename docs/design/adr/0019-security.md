@@ -1,4 +1,4 @@
-# ADR-0030: Security: authentication, sessions, authorization and secrets
+# ADR-0019: Security: authentication, sessions, authorization and secrets
 
 | Field | Value |
 |---|---|
@@ -10,7 +10,7 @@
 | Traces | DVE.3, 7, 27, 77–78; MDG.8; QA-01, QA-10 |
 | Resolves | DP-22 (EXT-IF-06 LDAP directory service protocol) |
 | Decide by | Wave A (2026-11-27); §3 authorization by Wave B (2027-01-22) |
-| Supersedes | — (absorbs the planned ADR-0030 and the former ADR-0030) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
@@ -28,14 +28,14 @@ As built (`1157784`):
 * **Data-source credentials:**
   * held per session in memory (`DataSourceService._sessions`, keyed by `conn_token`), joined as `"<user>:<password>"`, lost on restart, and not savable;
   * passed to operations as spawn arguments, with no broker;
-  * kept out of the `git` command line by the environment credential helper, with errors redacted (ADR-0010).
+  * kept out of the `git` command line by the environment credential helper, with errors redacted (ADR-0008).
 * **Browser storage:** only the last usernames are kept in `localStorage`.
 
 ## Decision Drivers
 
 * Logout and role changes must take effect promptly. Browser sessions must resist XSS token theft and CSRF.
 * Automation clients need long-lived, revocable, scoped credentials.
-* There is one backend process on one host (ADR-0004), with an SQLite store (ADR-0008). No vault exists on the offline host.
+* There is one backend process on one host (ADR-0004), with an SQLite store (ADR-0007). No vault exists on the offline host.
 * No credential may appear in plain text in logs, process arguments, records or the repository (QA-01), and rotation must not need code changes.
 * The tested session and CSRF code should be kept if it can meet these drivers.
 
@@ -80,7 +80,7 @@ This keeps the tested cookie and CSRF code and adds what it lacks: immediate log
   * A user with the right role creates named tokens with scopes (e.g. `evaluation:run`) and an expiry.
   * A token is 32 random bytes, shown once, and only its SHA-256 is stored, in `dve_api_token`.
   * Clients send `Authorization: Bearer <token>`. Token requests are exempt from CSRF and accepted only on `/api/v1/` (ADR-0005).
-  * Revocation is in the UI. Token use is audited (ADR-0008).
+  * Revocation is in the UI. Token use is audited (ADR-0007).
 * **Development:** `dev/compose.yaml` gains an OpenLDAP container with seed users and groups. The mock stays for tests and quick local runs.
 
 ### 2. Secrets and credentials
@@ -92,7 +92,7 @@ This keeps the tested cookie and CSRF code and adds what it lacks: immediate log
   * In development, `DSM_SECRET_KEY` and `DSM_DATA_KEY` may supply the values. The task runner removes them from every child process and subprocess environment.
   * In production mode, start-up refuses a missing secret, a secret file readable by others, or the development secret key.
 * **Saved data-source configurations (MDG.8):**
-  * Each is a `dve_data_source` row (ADR-0008, ADR-0010).
+  * Each is a `dve_data_source` row (ADR-0007, ADR-0008).
   * Its password or token is encrypted with AES-256-GCM (`cryptography`'s `AESGCM`; 43.0.3 is already in `mdg/wheelhouse/`). Each row stores a key ID, so the key can be rotated by re-encrypting.
   * Configurations belong to their creator, and sharing follows §3.
 * **Unsaved connections:** kept per session in memory, as built.
@@ -101,7 +101,7 @@ This keeps the tested cookie and CSRF code and adds what it lacks: immediate log
   * For a saved configuration, operation arguments carry `data_source_id` only, and the child decrypts at the moment of use.
   * An unsaved connection's value may still be a spawn argument, but never goes into records, logs or `repr()`. `DataSourceConfig.__repr__` masks `user_info`.
 * **Git and logging:**
-  * The credential helper stays as built, and TLS verification is turned on (ADR-0010).
+  * The credential helper stays as built, and TLS verification is turned on (ADR-0008).
   * A log filter on the `dve` and `mdg` loggers redacts secret fields and URL user-info.
 
 ### 3. Authorization (open, decide by Wave B)
@@ -145,4 +145,4 @@ This keeps the tested cookie and CSRF code and adds what it lacks: immediate log
 ## More Information
 
 * Code: `dve/src/dve/adapters/ldap_directory_service.py` (mock), `dve/src/dve/ports/directory_service.py`, `dve/src/dve/api.py`, `dve/src/dve/services/data_source_service.py`, `dve/src/dve/services/task_service.py`, `dve/src/dve/dve.ini`, `dve/src/dve/config.py`
-* Related: ADR-0003, ADR-0004, ADR-0005, ADR-0006, ADR-0008, ADR-0010
+* Related: ADR-0003, ADR-0004, ADR-0005, ADR-0006, ADR-0007, ADR-0008

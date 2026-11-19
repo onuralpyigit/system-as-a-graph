@@ -107,7 +107,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Completes:** SaaG-MDG
 
-**Design:** MDG (SRS MDG.1–23) and the login/MDG-control screen (DVE.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (ADR-0003, ADR-0010, ADR-0030).
+**Design:** MDG (SRS MDG.1–23) and the login/MDG-control screen (DVE.1–8) are fully designed. Still open: the exact protocol for each external connection and for LDAP, the topology method, and the required file list (ADR-0003, ADR-0008, ADR-0019).
 
 **Development:** Build the MDG backend — connect to, validate, and assemble data from the four external sources — plus login/session handling. On the frontend: login, project/platform/version selection, source configuration, and an MDG production/status screen.
 
@@ -119,7 +119,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Definition of Done:**
 - [ ] MDG (MDG.1–23) and login/MDG-control (DVE.1–8) built and working
-- [ ] ADR-0003 (INT-IF-01), ADR-0010, ADR-0030 accepted or re-planned
+- [ ] ADR-0003 (INT-IF-01), ADR-0008, ADR-0019 accepted or re-planned
 - [ ] MDG and login/workflow tests pass
 - [ ] MDG/web services deploy together
 - [ ] Demo run end-to-end
@@ -131,19 +131,19 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | SMM *(ongoing)* | Structural Model Construction (SMM.1–31) |
 | DVE *(ongoing)* | Building & Viewing the Model (DVE.9, 19–20) |
 
-**Design:** System Model Manager (SRS SMM.1–31) and the model-build/browsing screen (DVE.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (ADR-0014, ADR-0015); concurrency limits and the DVE read protocol are also open (ADR-0006, ADR-0003).
+**Design:** System Model Manager (SRS SMM.1–31) and the model-build/browsing screen (DVE.9, 19–20) are fully designed. Biggest gap: the model's storage technology and schema aren't decided (ADR-0010, ADR-0011); concurrency limits and the DVE read protocol are also open (ADR-0006, ADR-0003).
 
 **Development:** Build the Model Manager backend — turn Model Data into a graph, keep it safe under concurrent access, support isolated evaluation copies — on a graph database. On the frontend: model browsing (search/filter/zoom/pan/attributes).
 
 **Test:** Verify the model builds correctly, represents all node/relationship types, stays consistent under concurrent access, and browsing works — end-to-end, completing Increment 1's workflow test.
 
-**Packaging:** Add the `smm` distribution and its wheelhouse, install the graph server chosen by the ADR-0015 spike offline, and enable per-class operation limits (ADR-0006).
+**Packaging:** Add the `smm` distribution and its wheelhouse, install the graph server chosen by the ADR-0011 spike offline, and enable per-class operation limits (ADR-0006).
 
 **Demo:** An operator builds the System Model Manager from the Increment 1 Model Data file, browses and visually navigates the resulting node-relationship structure (search/filter, zoom/pan, attribute display), while the model is served for concurrent multi-session access.
 
 **Definition of Done:**
 - [ ] System Model Manager (SMM.1–31) and browsing screen (DVE.9, 19–20) built and working
-- [ ] ADR-0003 (INT-IF-05), ADR-0014, ADR-0015, ADR-0006 accepted or re-planned
+- [ ] ADR-0003 (INT-IF-05), ADR-0010, ADR-0011, ADR-0006 accepted or re-planned
 - [ ] Model Manager and browsing tests pass, completing Increment 1's
 - [ ] Model Manager service and graph database deploy together
 - [ ] Demo run end-to-end
@@ -155,9 +155,9 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | DVE *(ongoing)* | Structural Design Verification (DVE.28–49) |
 | DVE *(ongoing)* | Editing the Model & Viewing Findings (DVE.17–18, 21–24) |
 
-**Design:** Structural Design Verification (SRS DVE.28–49) and the model-editor/findings screen (DVE.17–18, 21–24) are laid out, but most of the actual pass/fail rules are undecided — the biggest design gap in this plan (rule families in the ADR-0022 catalog).
+**Design:** Structural Design Verification (SRS DVE.28–49) and the model-editor/findings screen (DVE.17–18, 21–24) are laid out, but most of the actual pass/fail rules are undecided — the biggest design gap in this plan (rule families in the ADR-0016 catalog).
 
-**Development:** Build the Design Verifier's six checking engines against provisional rules until the ADR-0022 rule families are approved. On the frontend: the working-model editor (safe sandbox) and findings display/classification.
+**Development:** Build the Design Verifier's six checking engines against provisional rules until the ADR-0016 rule families are approved. On the frontend: the working-model editor (safe sandbox) and findings display/classification.
 
 **Test:** Verify all six engines catch their fault conditions, editor changes never touch the real model, and findings display correctly — though some checks can only verify mechanics, not thresholds, until the rules close. End-to-end: edit and verify.
 
@@ -167,7 +167,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Definition of Done:**
 - [ ] Structural Design Verification (DVE.28–49) and editor/findings screen (DVE.17–18, 21–24) built and working
-- [ ] ADR-0022 rule families for DVE.18, 32–35, 39–45 and 49 — the biggest open item in this plan — approved or re-planned
+- [ ] ADR-0016 rule families for DVE.18, 32–35, 39–45 and 49 — the biggest open item in this plan — approved or re-planned
 - [ ] Verifier and editor/findings tests pass (to the extent rules allow)
 - [ ] Design Verifier service deploys and runs
 - [ ] Demo run end-to-end
@@ -182,7 +182,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Completes:** SaaG-SCG
 
-**Design:** Scenario Generator (SRS SCG.1–7) and the synthetic-data setup screen (DVE.11, 13–15) are fully designed. Still open: what the synthetic data should simulate, the Analytical Evaluation Data format, and the SCG→ADM handoff (ADR-0018, ADR-0017, ADR-0003).
+**Design:** Scenario Generator (SRS SCG.1–7) and the synthetic-data setup screen (DVE.11, 13–15) are fully designed. Still open: what the synthetic data should simulate, the Analytical Evaluation Data format, and the SCG→ADM handoff (ADR-0013, ADR-0012, ADR-0003).
 
 **Development:** Build the Scenario Generator (capture inputs, produce and record traceable synthetic data) and the synthetic-intake half of Analytical Data Manager. On the frontend: scenario input and production/status screens.
 
@@ -194,7 +194,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Definition of Done:**
 - [ ] Scenario Generator (SCG.1–7) and setup screen (DVE.11, 13–15) built and working
-- [ ] ADR-0018, ADR-0017, ADR-0003 (INT-IF-02) accepted or re-planned
+- [ ] ADR-0013, ADR-0012, ADR-0003 (INT-IF-02) accepted or re-planned
 - [ ] Scenario Generator and synthetic-path tests pass
 - [ ] Both services deploy together
 - [ ] Demo run end-to-end
@@ -210,19 +210,19 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Completes:** SaaG-FDM, SaaG-ADM, SaaG-SMM
 
-**Design:** Analytical Data Binding (SRS SMM.32–37) and Field Data Manager (FDM.1–5) are fully designed, as are the field-record source-selection and binding-status screens (DVE.10, 12, 16). Still open: field-record storage capacity, the FDM external interface protocol, the FDM→ADM and ADM→SMM handoffs, and the carried-over AED format decision (ADR-0036, ADR-0020, ADR-0003, ADR-0017).
+**Design:** Analytical Data Binding (SRS SMM.32–37) and Field Data Manager (FDM.1–5) are fully designed, as are the field-record source-selection and binding-status screens (DVE.10, 12, 16). Still open: field-record storage capacity, the FDM external interface protocol, the FDM→ADM and ADM→SMM handoffs, and the carried-over AED format decision (ADR-0020, ADR-0014, ADR-0003, ADR-0012).
 
 **Development:** Build the Field Data Manager (upload/catalog/search), the field-intake half of Analytical Data Manager, and the Data Binder (attach behavioral data without altering the model). On the frontend: field-record source-selection, upload/catalog, and binding-status screens.
 
 **Test:** Verify records upload/catalog correctly, the field intake/assembly completes (never mixing with synthetic data), and binding matches data to the model without changing it — end-to-end, including a check that Increment 2's model is untouched.
 
-**Packaging:** Add the `fdm` distribution and the field-record storage chosen by ADR-0020; raw-upload retention follows ADR-0020.
+**Packaging:** Add the `fdm` distribution and the field-record storage chosen by ADR-0014; raw-upload retention follows ADR-0014.
 
 **Demo:** The synthetic-sourced AED from Increment 4 is bound onto the System Model Manager without altering its nodes/relationships, with binding status and provenance visible to the operator. The operator then selects System Field Records as the Analytical Evaluation Data source, uploads System Field Records (listing/searching/selecting them by project, platform, version, source, or upload time), and the resulting field-sourced AED is bound onto the model via the same source-agnostic binder — completing SaaG-FDM, SaaG-ADM (both the synthetic and field paths now work end-to-end), and SaaG-SMM.
 
 **Definition of Done:**
 - [ ] Analytical Data Binding (SMM.32–37), FDM (FDM.1–5), and field-selection/binding-status screens (DVE.10, 12, 16) built and working
-- [ ] ADR-0036, ADR-0020, ADR-0003 (INT-IF-03, INT-IF-04), ADR-0017 accepted or re-planned
+- [ ] ADR-0020, ADR-0014, ADR-0003 (INT-IF-03, INT-IF-04), ADR-0012 accepted or re-planned
 - [ ] Field-records, binder, and field-path tests pass, completing Increment 4's
 - [ ] New services and telemetry database deploy together
 - [ ] Demo run end-to-end
@@ -234,7 +234,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 | DVE *(ongoing)* | Behavioral Simulation and Analysis (DVE.50–70) |
 | DVE *(ongoing)* | Recording Simulation Scenarios (DVE.25) |
 
-**Design:** Behavioral Simulation and Analysis (SRS DVE.50–70) and the simulation-recording screen (DVE.25) are fully designed. No item names it directly, but it depends on two carried-over decisions: the DVE read protocol and the model's storage/schema (ADR-0003, ADR-0014, ADR-0015).
+**Design:** Behavioral Simulation and Analysis (SRS DVE.50–70) and the simulation-recording screen (DVE.25) are fully designed. No item names it directly, but it depends on two carried-over decisions: the DVE read protocol and the model's storage/schema (ADR-0003, ADR-0010, ADR-0011).
 
 **Development:** Build the Design Analyzer's three engines (synthetic-data simulation, field-data analysis, drift detection). On the frontend: simulation-scenario recording and high-volume field-trace charts.
 
@@ -246,7 +246,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Definition of Done:**
 - [ ] Behavioral Simulation and Analysis (DVE.50–70) and recording screen (DVE.25) built and working
-- [ ] Carried-over ADR-0003 (INT-IF-05), ADR-0014, ADR-0015 accepted or re-planned
+- [ ] Carried-over ADR-0003 (INT-IF-05), ADR-0010, ADR-0011 accepted or re-planned
 - [ ] Design Analyzer tests pass
 - [ ] Design Analyzer service deploys and runs
 - [ ] Demo run end-to-end
@@ -260,19 +260,19 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Completes:** SaaG-DVE
 
-**Design:** Installation Suitability Evaluation (SRS DVE.71–78) and the reporting/CLI screen (DVE.26–27) are fully designed. Still open: the scoring method, report file format, and CLI protocol/result format (ADR-0027, ADR-0005) — all should close before this final increment ships.
+**Design:** Installation Suitability Evaluation (SRS DVE.71–78) and the reporting/CLI screen (DVE.26–27) are fully designed. Still open: the scoring method, report file format, and CLI protocol/result format (ADR-0018, ADR-0005) — all should close before this final increment ships.
 
 **Development:** Build the Design Evaluator (score candidates, force non-conforming on critical findings, run evaluations concurrently) and the CLI. Add PDF/JSON report generation and the report screen.
 
 **Test:** Verify scoring, the forced non-conforming rule, concurrent evaluation, and CLI request/status — end-to-end CLI evaluation through decision and report, closing out every component.
 
-**Packaging:** Add the evaluation part of `dve`, the `dsm` CLI subcommands (ADR-0005) and report generation (ADR-0027), so every CSC is installed together on the target host.
+**Packaging:** Add the evaluation part of `dve`, the `dsm` CLI subcommands (ADR-0005) and report generation (ADR-0018), so every CSC is installed together on the target host.
 
 **Demo:** An automation client (e.g., Jenkins) submits an installation-suitability evaluation via CLI for one or more candidate software units; the system scores each unit against its evaluation headings and control rules, returns a blocking/non-blocking decision and machine-processable results concurrently and independently per unit, and a comprehensive summary/detailed report covering all verification, analysis, and evaluation results is generated — completing SaaG-DVE and all six CSCs.
 
 **Definition of Done:**
 - [ ] Installation Suitability Evaluation (DVE.71–78) and reporting/CLI screen (DVE.26–27) built and working
-- [ ] ADR-0027, ADR-0005 accepted or re-planned
+- [ ] ADR-0018, ADR-0005 accepted or re-planned
 - [ ] Evaluator and CLI tests pass, completing the reporting test from Increments 3/6/7
 - [ ] Full service stack deploys together
 - [ ] Demo run end-to-end — all six components complete
@@ -283,11 +283,11 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 |---|---|
 | — | Full-stack integration hardening, performance/capacity, and security verification |
 
-**Design:** No new SRS requirement is realized; every STD test definition is executed against the full stack. Hardening targets are defined by prior ADRs: the concurrent user/operation count (ADR-0006) and the field-record storage capacity (ADR-0036).
+**Design:** No new SRS requirement is realized; every STD test definition is executed against the full stack. Hardening targets are defined by prior ADRs: the concurrent user/operation count (ADR-0006) and the field-record storage capacity (ADR-0020).
 
-**Development:** Complete the end-to-end (acceptance) regression suite; harden the background-job queue, retry, and recovery behavior; run a security audit of the LDAP, session, API-token and authorization model (ADR-0030); add the production host configuration and service unit with runtime observability (logs/metrics, ADR-0036, ADR-0004).
+**Development:** Complete the end-to-end (acceptance) regression suite; harden the background-job queue, retry, and recovery behavior; run a security audit of the LDAP, session, API-token and authorization model (ADR-0019); add the production host configuration and service unit with runtime observability (logs/metrics, ADR-0020, ADR-0004).
 
-**Test:** All STD test packages pass on the full stack; concurrent load/volume tests meet the ADR-0036 and ADR-0006 targets; a 72-hour soak run completes without unplanned deviation.
+**Test:** All STD test packages pass on the full stack; concurrent load/volume tests meet the ADR-0020 and ADR-0006 targets; a 72-hour soak run completes without unplanned deviation.
 
 **Packaging:** Release candidate: all CSCs installed offline from the release tarball on a production-like host (ADR-0004).
 
@@ -295,7 +295,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Definition of Done:**
 - [ ] All STD test packages pass on the full stack
-- [ ] Performance/capacity targets (ADR-0006, ADR-0036) met
+- [ ] Performance/capacity targets (ADR-0006, ADR-0020) met
 - [ ] Security audit (LDAP, sessions, API tokens, authorization) closed
 - [ ] 72-hour soak completed without interruption
 - [ ] Residual defect list approved for handover to Increment 9
@@ -308,7 +308,7 @@ Increment 0 establishes the repository scaffolding, shared infrastructure, and d
 
 **Design:** No new requirement design. Pilot scenarios are defined as re-runs of the increment demo scenarios against institutional data; the user manual and operations runbooks are completed.
 
-**Development:** Burn down usability items raised from pilot feedback; validate report output (the ADR-0027 format) on real data; produce training materials.
+**Development:** Burn down usability items raised from pilot feedback; validate report output (the ADR-0018 format) on real data; produce training materials.
 
 **Test:** Pilot operators run full workflows without team support; every feedback-driven change triggers and passes full regression.
 
@@ -428,7 +428,7 @@ gantt
 
 ## 4. Project Structure
 
-The repository layout is decided in [ADR-0004](../design/adr/0004-deployment-and-repository-layout.md), and the package-internal layout in [ADR-0003](../design/adr/0003-ports-adapters-and-csc-integration.md). Every top-level CSC directory is one Python distribution named by its canonical CSC ID ([ADR-0002](../design/adr/0002-canonical-component-identifiers.md)), with its own offline wheelhouse ([ADR-0004](../design/adr/0004-deployment-and-repository-layout.md)). The Operations Panel front end lives inside `dve` ([ADR-0009](../design/adr/0009-operations-panel.md)). `mdg/`, `dve/` and `dev/` exist; the other directories are created when their increment starts.
+The repository layout is decided in [ADR-0004](../design/adr/0004-deployment-and-repository-layout.md), and the package-internal layout in [ADR-0003](../design/adr/0003-ports-adapters-and-csc-integration.md). Every top-level CSC directory is one Python distribution named by its canonical CSC ID ([ADR-0002](../design/adr/0002-canonical-component-identifiers.md)), with its own offline wheelhouse ([ADR-0004](../design/adr/0004-deployment-and-repository-layout.md)). The Operations Panel front end lives inside `dve` ([ADR-0015](../design/adr/0015-operations-panel.md)). `mdg/`, `dve/` and `dev/` exist; the other directories are created when their increment starts.
 
 ```text
 system-as-a-graph/
@@ -439,7 +439,7 @@ system-as-a-graph/
 │   ├── design/            SDD.md, UXD.md, ADR-ROADMAP.md, adr/
 │   └── test/              STD.md
 │
-├── common/                # shared kernel: error records, provenance types (ADR-0013, ADR-0008)
+├── common/                # shared kernel: error records, provenance types (ADR-0009, ADR-0007)
 ├── mdg/                   # CSC-1: Model Data Generator (built)
 ├── scg/                   # CSC-2: Scenario Generator
 ├── fdm/                   # CSC-3: Field Data Manager
@@ -450,8 +450,8 @@ system-as-a-graph/
 │   ├── wheelhouse/        # pinned CPython 3.9 wheels for offline install
 │   ├── src/dve/
 │   │   ├── domain/  ports/  services/  adapters/
-│   │   ├── rules/         # verification rule catalog (ADR-0022)
-│   │   ├── templates/  static/   # Operations Panel (ADR-0009)
+│   │   ├── rules/         # verification rule catalog (ADR-0016)
+│   │   ├── templates/  static/   # Operations Panel (ADR-0015)
 │   │   └── __init__.py    # façade and runtime wiring
 │   └── tests/             # adapters/ domain/ services/ fakes/ …
 │
@@ -484,7 +484,7 @@ Every CSC distribution has the same shape as `dve/` above: `setup.py`, `wheelhou
 | `services/` | Use cases, one class per use case, depending on ports only |
 | `adapters/<area>/` | Implementations `<Technology><Port>`, such as MySQL, Git, SQLite, graph-server or LDAP adapters |
 | `__init__.py` | The CSC's public façade: factory functions that wire adapters to services |
-| `tests/` | The CSC's test suite, with `tests/fakes/` for fake adapters (ADR-0041) |
+| `tests/` | The CSC's test suite, with `tests/fakes/` for fake adapters (ADR-0021) |
 
 ---
 
@@ -502,7 +502,7 @@ Each row is decided by the ADR named in its last column; the ADR is normative wh
 | Runtime | CPython 3.9, x86_64, glibc ≥ 2.17 (CentOS 7+) — built | All CSCs | [0004](../design/adr/0004-deployment-and-repository-layout.md) |
 | Deployment | Offline install of pinned wheels from per-package wheelhouses into a virtual environment, run by the host service manager; no container runtime on the target — built | On-premises target host | [0004](../design/adr/0004-deployment-and-repository-layout.md) |
 | Configuration | Packaged `.ini` defaults plus host `.ini` overrides under `/etc/dsm` — packaged part built | All CSCs | [0004](../design/adr/0004-deployment-and-repository-layout.md) |
-| Development stack | Docker Compose with MySQL 9.7.2 and Gitea 1.27.3 mocks (OpenLDAP to be added), developer machines only — built | Adapter development and contract tests | [0004](../design/adr/0004-deployment-and-repository-layout.md), [0041](../design/adr/0041-test-strategy-and-quality-gates.md) |
+| Development stack | Docker Compose with MySQL 9.7.2 and Gitea 1.27.3 mocks (OpenLDAP to be added), developer machines only — built | Adapter development and contract tests | [0004](../design/adr/0004-deployment-and-repository-layout.md), [0021](../design/adr/0021-test-strategy-and-quality-gates.md) |
 | **Backend & API** | | | |
 | Web framework | Flask 2.3 + Flask-WTF (CSRF) — built; waitress as production WSGI server | Operations Panel API and automation API (DVE.1–2, 27) | [0005](../design/adr/0005-api-and-automation-contract.md) |
 | API style | REST/JSON; `/api/v1/` with a hand-kept OpenAPI file for automation clients | DVE.27, 77–78 | [0005](../design/adr/0005-api-and-automation-contract.md) |
@@ -510,29 +510,29 @@ Each row is decided by the ADR named in its last column; the ADR is normative wh
 | Background execution | One spawned child process per operation behind `ITaskRunner`, per-class limits — built (single limit) | DVE.6, 9, 14–15, 27, 78; SMM.30 | [0006](../design/adr/0006-operation-execution-and-concurrency.md) |
 | Status delivery | REST polling with a log cursor — built | UI and CLI (DVE.6, 15, 27) | [0006](../design/adr/0006-operation-execution-and-concurrency.md) |
 | **Data Storage** | | | |
-| Model Data | Versioned JSON file per run on the filesystem — built (unversioned) | MDG.23; SMM.2–3 | [0013](../design/adr/0013-model-data-file-and-error-records.md) |
-| Records store | SQLite through `sqlite3` (bundled `pysqlite3` where the system library is older than 3.24) | Inventory, operations, findings, reports, registries, sessions (MDG.8, 14–15; DVE.21–26) | [0008](../design/adr/0008-records-store.md) |
-| Graph storage | Native graph server behind `IGraphStore`: Neo4j Community 5 or FalkorDB, chosen by an offline-install spike | System Model instances (SMM.1, 4, 27–31) | [0015](../design/adr/0015-graph-store-and-model-instances.md) |
-| Graph schema and derivation | Framework-aligned schema and `DEPENDS_ON` rules ported to pure Python in `smm` | SMM.4–24; DVE.53–58 | [0014](../design/adr/0014-system-model-graph-schema.md) |
-| Field-record and telemetry storage | Open | FDM.1, DVE.59–65 | ADR-0020 |
+| Model Data | Versioned JSON file per run on the filesystem — built (unversioned) | MDG.23; SMM.2–3 | [0009](../design/adr/0009-model-data-file-and-error-records.md) |
+| Records store | SQLite through `sqlite3` (bundled `pysqlite3` where the system library is older than 3.24) | Inventory, operations, findings, reports, registries, sessions (MDG.8, 14–15; DVE.21–26) | [0007](../design/adr/0007-records-store.md) |
+| Graph storage | Native graph server behind `IGraphStore`: Neo4j Community 5 or FalkorDB, chosen by an offline-install spike | System Model instances (SMM.1, 4, 27–31) | [0011](../design/adr/0011-graph-store-and-model-instances.md) |
+| Graph schema and derivation | Framework-aligned schema and `DEPENDS_ON` rules ported to pure Python in `smm` | SMM.4–24; DVE.53–58 | [0010](../design/adr/0010-system-model-graph-schema.md) |
+| Field-record and telemetry storage | Open | FDM.1, DVE.59–65 | ADR-0014 |
 | **Frontend & UI** | | | |
-| Operations Panel | Flask-served page, vanilla JavaScript, no build step, vendored libraries, self-hosted fonts — built | DVE.1, 4–27 | [0009](../design/adr/0009-operations-panel.md) |
-| Graph visualization | AntV G6 5.1.1 (vendored) — built; server-side view scoping to come | DVE.17, 19–20 | [0009](../design/adr/0009-operations-panel.md) |
-| Charts | Vendored ECharts when needed | DVE.58, 70 | [0009](../design/adr/0009-operations-panel.md) |
-| Browser floor | Firefox 90+, WCAG 2.1 AA — built | QA-12 | [0009](../design/adr/0009-operations-panel.md) |
+| Operations Panel | Flask-served page, vanilla JavaScript, no build step, vendored libraries, self-hosted fonts — built | DVE.1, 4–27 | [0015](../design/adr/0015-operations-panel.md) |
+| Graph visualization | AntV G6 5.1.1 (vendored) — built; server-side view scoping to come | DVE.17, 19–20 | [0015](../design/adr/0015-operations-panel.md) |
+| Charts | Vendored ECharts when needed | DVE.58, 70 | [0015](../design/adr/0015-operations-panel.md) |
+| Browser floor | Firefox 90+, WCAG 2.1 AA — built | QA-12 | [0015](../design/adr/0015-operations-panel.md) |
 | **Security & Authentication** | | | |
-| Authentication | LDAP search-and-bind via `ldap3` (mock built) | DVE.3 | [0030](../design/adr/0030-security.md) |
-| Sessions and tokens | Flask signed cookie with CSRF — built; server-side epoch revocation and hashed API tokens to come | DVE.3, 27 | [0030](../design/adr/0030-security.md) |
-| Secrets | Host files outside the package, mode 0600; saved data-source credentials AES-256-GCM-encrypted in SQLite | MDG.8; QA-01 | [0030](../design/adr/0030-security.md) |
+| Authentication | LDAP search-and-bind via `ldap3` (mock built) | DVE.3 | [0019](../design/adr/0019-security.md) |
+| Sessions and tokens | Flask signed cookie with CSRF — built; server-side epoch revocation and hashed API tokens to come | DVE.3, 27 | [0019](../design/adr/0019-security.md) |
+| Secrets | Host files outside the package, mode 0600; saved data-source credentials AES-256-GCM-encrypted in SQLite | MDG.8; QA-01 | [0019](../design/adr/0019-security.md) |
 | **External Integrations** | | | |
 | Integration architecture | Ports and Adapters, fakes selected by injection — built | All external systems | [0003](../design/adr/0003-ports-adapters-and-csc-integration.md) |
-| Configuration management DB | PyMySQL, read-only parameterised SQL — built | MDG.2, 8, 10–13 | [0010](../design/adr/0010-model-data-acquisition.md) |
-| Source code repository | `git` CLI over HTTPS, shallow clone by tag, environment-based credential helper — built | MDG.3, 17–20 | [0010](../design/adr/0010-model-data-acquisition.md) |
-| Network topology | Ansible repository over Git, YAML inventory and variables (parser mocked) | MDG.5–7 | [0010](../design/adr/0010-model-data-acquisition.md) |
-| Package repository | HTTPS REST via the standard library | MDG.4 | [0010](../design/adr/0010-model-data-acquisition.md) |
+| Configuration management DB | PyMySQL, read-only parameterised SQL — built | MDG.2, 8, 10–13 | [0008](../design/adr/0008-model-data-acquisition.md) |
+| Source code repository | `git` CLI over HTTPS, shallow clone by tag, environment-based credential helper — built | MDG.3, 17–20 | [0008](../design/adr/0008-model-data-acquisition.md) |
+| Network topology | Ansible repository over Git, YAML inventory and variables (parser mocked) | MDG.5–7 | [0008](../design/adr/0008-model-data-acquisition.md) |
+| Package repository | HTTPS REST via the standard library | MDG.4 | [0008](../design/adr/0008-model-data-acquisition.md) |
 | **Reporting & Data Handling** | | | |
-| Report generation | Open: HTML and JSON first; PDF only with an offline-installable renderer | DVE.26, 78 | ADR-0027 |
-| Raw upload retention | Open | FDM.2 | ADR-0020 |
+| Report generation | Open: HTML and JSON first; PDF only with an offline-installable renderer | DVE.26, 78 | ADR-0018 |
+| Raw upload retention | Open | FDM.2 | ADR-0014 |
 | **Testing** | | | |
-| Testing | pytest per package with fakes — built; contract, rule, parity, Playwright (Firefox 90 ESR) and offline-install gates | QA-11 | [0041](../design/adr/0041-test-strategy-and-quality-gates.md) |
+| Testing | pytest per package with fakes — built; contract, rule, parity, Playwright (Firefox 90 ESR) and offline-install gates | QA-11 | [0021](../design/adr/0021-test-strategy-and-quality-gates.md) |
 

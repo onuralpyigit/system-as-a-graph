@@ -1,4 +1,4 @@
-# ADR-0022: Verification rules: engine, rule model and catalog
+# ADR-0016: Verification rules: engine, rule model and catalog
 
 | Field | Value |
 |---|---|
@@ -10,7 +10,7 @@
 | Traces | DVE.18, 28–49, 72–77; QA-03, QA-04, QA-11 |
 | Resolves | DP-01…DP-08: the SRS rule sets deferred to the critical design phase, namely DVE.32–35 (topic QoS), DVE.39 (communication services in scope), DVE.40 (load balancing), DVE.41–43 (core allocation), DVE.44 (OS settings), DVE.45 (runtime memory allocation), DVE.49 (architectural rules) and DVE.18 (conformance classification), each through its catalog family (§2) |
 | Decide by | Wave A (2026-11-27) |
-| Supersedes | — (absorbs the former ADR-0022) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
@@ -57,7 +57,7 @@ Chosen options: **the hybrid engine** and **a versioned catalog in the repositor
 | `check` | Name of the registered check function |
 | `params` | Parameters passed to the check |
 | `severity` | `informational` / `low` / `medium` / `high` / `critical` (DVE.21) |
-| `weight` | Used by installation scoring (DVE.76, ADR-0027) |
+| `weight` | Used by installation scoring (DVE.76, ADR-0018) |
 | `acceptance_criterion` | Human-readable statement of what conforms |
 | `blocking` | Whether a violation blocks installation (DVE.77) |
 | `status` | `provisional` / `approved` (§2) |
@@ -69,10 +69,10 @@ Chosen options: **the hybrid engine** and **a versioned catalog in the repositor
 def topic_has_publisher(model: ModelReader, params: Mapping) -> Iterable[Violation]: ...
 ```
 
-* **`ModelReader`** is SMM's read-only handle (ADR-0003, ADR-0015). It offers parameterized Cypher and `to_networkx(subgraph)` (networkx 3.2.1, the last release for Python 3.9).
+* **`ModelReader`** is SMM's read-only handle (ADR-0003, ADR-0011). It offers parameterized Cypher and `to_networkx(subgraph)` (networkx 3.2.1, the last release for Python 3.9).
   * It is engine-neutral. The `IGraphStore` adapter scopes every query to the reader's instance, so checks never mention `instance_id` or graph names.
   * Its in-memory implementation runs the same checks in tests without a server.
-* **Checks** yield `Violation`s: affected entity keys, evidence and an optional message. The engine adds the rule metadata to make findings (ADR-0008). A check never writes, calls external systems, or reads the clock or randomness.
+* **Checks** yield `Violation`s: affected entity keys, evidence and an optional message. The engine adds the rule metadata to make findings (ADR-0007). A check never writes, calls external systems, or reads the clock or randomness.
 * **Engine run:**
   1. Load a rule profile (§2).
   2. Run each check against the instance.
@@ -80,7 +80,7 @@ def topic_has_publisher(model: ModelReader, params: Mapping) -> Iterable[Violati
   4. Classify the result.
 
   A check that raises an exception yields an `error` finding for that rule, and the other rules still run (DVE.24). At start-up the engine validates that every record's `check` exists.
-* **Classification (DVE.18):** an operation is `non-conforming` if any finding comes from an approved rule with severity at or above the profile's threshold (default `high`), or from an approved blocking rule. Findings from provisional rules are reported but do not classify. Installation scoring adds weights (ADR-0027).
+* **Classification (DVE.18):** an operation is `non-conforming` if any finding comes from an approved rule with severity at or above the profile's threshold (default `high`), or from an approved blocking rule. Findings from provisional rules are reported but do not classify. Installation scoring adds weights (ADR-0018).
 
 ### 2. Catalog and governance
 
@@ -99,7 +99,7 @@ def topic_has_publisher(model: ModelReader, params: Mapping) -> Iterable[Violati
   | `classification.yaml` | Conformance classification thresholds (DVE.18) | DP-08 |
 
 * **Profiles:** `dve/src/dve/rules/profiles/<name>.yaml` selects rule IDs and overrides parameters, and can be scoped to a project or platform. `default.yaml` applies when none is named. Each installation-evaluation request names its profile (DVE.77).
-* **Versioning:** each rule has its own `version`, and the catalog is versioned by the tag of the release that ships it. Every operation records the catalog version and profile (ADR-0008).
+* **Versioning:** each rule has its own `version`, and the catalog is versioned by the tag of the release that ships it. Every operation records the catalog version and profile (ADR-0007).
 * **Approval:**
   * A rule enters as `provisional`, merged with development-team review.
   * Setting `status: approved` needs the CDR Board's domain owner for that family, recorded in the pull request.
@@ -113,12 +113,12 @@ def topic_has_publisher(model: ModelReader, params: Mapping) -> Iterable[Violati
 * Good, because R3 and R7 share one engine and finding model, and every finding is reproducible from (catalog version, profile, instance revision).
 * Good, because each check is a pure function, testable with fixture graphs.
 * Bad, because a new *kind* of check, or a new threshold, needs a release. That is accepted, because traceability is worth more than edit speed.
-* Bad, because checks must keep networkx subgraphs small for ADR-0036's budgets. Until the engine is chosen, their Cypher must stay within what both ADR-0015 candidates support.
+* Bad, because checks must keep networkx subgraphs small for ADR-0020's budgets. Until the engine is chosen, their Cypher must stay within what both ADR-0011 candidates support.
 * Bad, because domain owners review YAML in pull requests, so the format must stay readable and documented.
 
 ### Confirmation
 
-* Every registered check has fixture tests that must and must not produce violations (ADR-0041).
+* Every registered check has fixture tests that must and must not produce violations (ADR-0021).
 * The whole approved profile runs against the dev seed model and is compared with a stored snapshot.
 * A CI schema check validates every rule file against the rule record and every profile against the catalog.
 * CI fails if an `approved` rule changes without a `version` bump.
@@ -135,4 +135,4 @@ def topic_has_publisher(model: ModelReader, params: Mapping) -> Iterable[Violati
 ## More Information
 
 * [SRS §6.1.2, §6.1.4](../../requirements/SRS.md), [ADR Roadmap §6.1](../ADR-ROADMAP.md#61-deferred-design-points--adr)
-* Related: ADR-0003, ADR-0004, ADR-0008, ADR-0014, ADR-0015, ADR-0027, ADR-0036, ADR-0041
+* Related: ADR-0003, ADR-0004, ADR-0007, ADR-0010, ADR-0011, ADR-0018, ADR-0020, ADR-0021

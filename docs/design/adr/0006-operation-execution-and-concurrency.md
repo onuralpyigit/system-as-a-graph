@@ -10,7 +10,7 @@
 | Traces | DVE.6–7, 9, 14–15, 17, 24, 27, 78; SMM.29–31; QA-02, QA-07, QA-08 |
 | Resolves | DP-16 (SRS SMM.30 concurrent user/operation count) |
 | Decide by | Wave A (2026-11-27); §4 retries and source health by Wave B (2027-01-22) |
-| Supersedes | — (absorbs the former ADR-0006 and the planned ADR-0006) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
@@ -39,7 +39,7 @@ SDP §5 specifies Procrastinate, a PostgreSQL-backed queue. The first implementa
 
 ## Decision Outcome
 
-Chosen options: **a spawned child process per operation (as built)**, **optimistic revisions for working-model writes**, and **per-class queues with configured limits**. The runner uses only the standard library and isolates each operation in its own process, so a crash, a memory spike or a cancellation affects only that operation. Durability comes from SQLite records (ADR-0008), not from a broker.
+Chosen options: **a spawned child process per operation (as built)**, **optimistic revisions for working-model writes**, and **per-class queues with configured limits**. The runner uses only the standard library and isolates each operation in its own process, so a crash, a memory spike or a cancellation affects only that operation. Durability comes from SQLite records (ADR-0007), not from a broker.
 
 ### 1. Execution
 
@@ -61,15 +61,15 @@ Chosen options: **a spawned child process per operation (as built)**, **optimist
 
 **To build:**
 
-* **Durable records:** the API creates an `operation` row (ADR-0008) before `submit` and uses the operation ID as the task ID. The watcher thread writes state, progress, failure and log lines to SQLite. `InMemoryTaskLog` is replaced behind `ITaskLog`.
+* **Durable records:** the API creates an `operation` row (ADR-0007) before `submit` and uses the operation ID as the task ID. The watcher thread writes state, progress, failure and log lines to SQLite. `InMemoryTaskLog` is replaced behind `ITaskLog`.
 * **Restart recovery:** at start-up, every operation left `queued` or `running` becomes `failed`, with stage `interrupted` and the last recorded phase (DVE.24). On SIGTERM, the parent first marks running operations `cancelled` with stage `shutdown`.
-* **Arguments:** picklable values only (ADR-0003), passed at spawn time and never through a broker. Credentials of unsaved connections may be passed this way, but never logged or recorded (ADR-0030).
+* **Arguments:** picklable values only (ADR-0003), passed at spawn time and never through a broker. Credentials of unsaved connections may be passed this way, but never logged or recorded (ADR-0019).
 * **Status contract:** REST polling with an incremental cursor for UI and CLI: `GET /api/v1/operations/{id}?log_after=<n>` (ADR-0005). `/api/mdg/tasks/...` becomes an alias over the same records.
 
 ### 2. Concurrency control (SMM.29)
 
 * **Reads are snapshot-consistent:**
-  * Verification and analysis read a fixed `(instance_id, revision)` (ADR-0015).
+  * Verification and analysis read a fixed `(instance_id, revision)` (ADR-0011).
   * Before an operation starts on a working model, SMM copies it at the current revision into a short-lived instance, and the operation runs on that copy.
 * **Writes are optimistic:**
   * Each edit carries `expected_revision`, and SMM applies it only if that matches. Otherwise it returns `409 Conflict` with the current revision.
@@ -79,7 +79,7 @@ Chosen options: **a spawned child process per operation (as built)**, **optimist
 
 ### 3. Queues and limits (SMM.30, DP-16)
 
-The runner keeps one FIFO and one limit per operation class, set in `[operations]` of `dve.ini`. If the sum of the class limits exceeds the CPU count, start-up logs a warning. The values below need at least 10 cores (ADR-0036), and the CDR Board and pipeline owners must confirm them before acceptance.
+The runner keeps one FIFO and one limit per operation class, set in `[operations]` of `dve.ini`. If the sum of the class limits exceeds the CPU count, start-up logs a warning. The values below need at least 10 cores (ADR-0020), and the CDR Board and pipeline owners must confirm them before acceptance.
 
 | Class | Runner queue | Initial concurrent operations | Notes |
 |---|---|---|---|
@@ -94,7 +94,7 @@ The runner keeps one FIFO and one limit per operation class, set in `[operations
 | Total live model instances | 200 |
 
 * Requests beyond a queue's capacity wait as `queued`.
-* Requests beyond a user or instance limit get `429` with an error record. The counts come from SQLite (ADR-0008, ADR-0030).
+* Requests beyond a user or instance limit get `429` with an error record. The counts come from SQLite (ADR-0007, ADR-0019).
 * **To build:** the per-class queues, the `[operations]` section, the counters, and SMM's revision check.
 
 ### 4. Reliability (open, decide by Wave B)
@@ -111,7 +111,7 @@ The runner keeps one FIFO and one limit per operation class, set in `[operations
 * Good, because there is no broker or queue server to install, secure or back up.
 * Good, because each operation has its own address space, and pipeline capacity is reserved.
 * Good, because running operations are reproducible regardless of concurrent edits, and conflicts are explicit.
-* Bad, because the runner and its limits are bounded by one host. Scaling out needs a queue and a new decision (ADR-0036).
+* Bad, because the runner and its limits are bounded by one host. Scaling out needs a queue and a new decision (ADR-0020).
 * Bad, because spawning costs about a second per operation, and a snapshot copy is made per operation on working models.
 * Bad, because the parent process is a single point of failure for running operations, which are recorded as interrupted rather than resumed.
 
@@ -122,13 +122,13 @@ The runner keeps one FIFO and one limit per operation class, set in `[operations
 * A long `simulation` operation does not delay a queued `pipeline` operation.
 * While a verification runs on a working model, an edit commits, and the result matches a run on the pre-edit revision.
 * Two edits with the same `expected_revision`: one succeeds and one gets `409`.
-* Load test (R8): the limits hold, and pipeline latency stays within the ADR-0036 budget under full load.
+* Load test (R8): the limits hold, and pipeline latency stays within the ADR-0020 budget under full load.
 
 ## Pros and Cons of the Options
 
 * Child process per operation (as built): Good, because it uses only the standard library and is tested. Bad, because durability needs its own persistence, and it does not scale beyond one host.
 * Celery with Redis: Good, because it has mature routing and retries. Bad, because Redis and the worker are extra services on an offline host, which is why they were removed in `1157784`.
-* Procrastinate on PostgreSQL: Good, because enqueueing and records share a transaction. Bad, because it needs a PostgreSQL server, which ADR-0008 does not adopt.
+* Procrastinate on PostgreSQL: Good, because enqueueing and records share a transaction. Bad, because it needs a PostgreSQL server, which ADR-0007 does not adopt.
 * Optimistic revisions: Good, because they never block. Bad, because the UI must handle `409`. Pessimistic locks block users and go stale. Last write wins silently loses edits, which violates SMM.29.
 * Per-class limits: Good, because pipeline capacity is guaranteed. Bad, because some capacity may sit idle. A shared limit risks starving the pipeline.
 
@@ -136,4 +136,4 @@ The runner keeps one FIFO and one limit per operation class, set in `[operations
 
 * Code: `dve/src/dve/adapters/multiprocessing_task_runner.py`, `dve/src/dve/adapters/in_memory_task_log.py`, `dve/src/dve/services/task_service.py`, `dve/src/dve/domain/task_status.py`
 * [SRS SMM.30](../../requirements/SRS.md)
-* Related: ADR-0003, ADR-0004, ADR-0005, ADR-0008, ADR-0015, ADR-0030, ADR-0036
+* Related: ADR-0003, ADR-0004, ADR-0005, ADR-0007, ADR-0011, ADR-0019, ADR-0020

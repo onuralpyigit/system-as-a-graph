@@ -1,4 +1,4 @@
-# ADR-0009: Operations Panel: frontend, graph view and browser support
+# ADR-0015: Operations Panel: frontend, graph view and browser support
 
 | Field | Value |
 |---|---|
@@ -10,7 +10,7 @@
 | Traces | DVE.1, 4–27, 57; QA-07, QA-10, QA-12; UXD §1–7 |
 | Resolves | — |
 | Decide by | Wave A (2026-11-27) |
-| Supersedes | — (absorbs the former ADR-0009) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
@@ -72,7 +72,7 @@ Chosen options: **the Flask-served vanilla-JS page (as built)**, **AntV G6 5 wit
 
 ### 1. Frontend rules
 
-* **Serving:** `dve` serves the page at `/` and every asset from `dve/src/dve/static/` as package data, at the API's origin. Cookies stay first-party (ADR-0030).
+* **Serving:** `dve` serves the page at `/` and every asset from `dve/src/dve/static/` as package data, at the API's origin. Cookies stay first-party (ADR-0019).
 * **No build step:** the browser runs the files as committed. There is no transpiler, bundler or package manager.
 * **Vendored libraries:** `static/vendor/<name>.min.js` with `<name>.LICENSE` beside it, and the version in an `index.html` comment. A new library needs a line in *More Information*.
 * **Module split:**
@@ -88,14 +88,14 @@ Chosen options: **the Flask-served vanilla-JS page (as built)**, **AntV G6 5 wit
 
 * **Pinning:** G6 stays vendored at a fixed version. An upgrade replaces `g6.min.js` and `g6.LICENSE` and passes the browser tests on Firefox 90.
 * **One adapter:** only `graph.js` and future `static/views/graph-*.js` touch the G6 API. Other screens use the `window.Dsm` graph object, so a later library change stays local.
-* **To build, once SMM exists (ADR-0014, ADR-0015):**
+* **To build, once SMM exists (ADR-0010, ADR-0011):**
   * **Scoping:** the API serves *views* of a model instance. These are an overview aggregated by processing unit or CSC, an N-hop neighbourhood, and a search and filter subset (DVE.19: type, project, platform, system version, software unit).
     * A view is capped at the UXD §6 threshold of 1,000 elements. Larger results come back aggregated with counts.
     * Above the threshold, nodes draw as simple shapes instead of HTML cards.
-  * **Editing (DVE.17):** canvas edits call SMM's working-model commands with `expected_revision` (ADR-0006, ADR-0015). They apply optimistically, and a `409` reloads the view. Node positions are saved with the instance. G6's `click-select`, `drag-element` and `create-edge` behaviours are the starting point.
+  * **Editing (DVE.17):** canvas edits call SMM's working-model commands with `expected_revision` (ADR-0006, ADR-0011). They apply optimistically, and a `409` reloads the view. Node positions are saved with the instance. G6's `click-select`, `drag-element` and `create-edge` behaviours are the starting point.
   * **Overlays:** findings (DVE.22) and propagation paths (DVE.57) drawn as G6 element states.
-  * **Placeholders:** when ADR-0013 retires `"NOT_FOUND"`, `graph.js` reads the `placeholders` list instead.
-  * **Fallback:** a WebGL renderer for a read-only overview, if ADR-0036's measurements require it. That needs a new ADR.
+  * **Placeholders:** when ADR-0009 retires `"NOT_FOUND"`, `graph.js` reads the `placeholders` list instead.
+  * **Fallback:** a WebGL renderer for a read-only overview, if ADR-0020's measurements require it. That needs a new ADR.
 
 ### 3. Browser and accessibility baseline
 
@@ -107,7 +107,7 @@ Chosen options: **the Flask-served vanilla-JS page (as built)**, **AntV G6 5 wit
   * status changes announced through live regions;
   * dialogs trap and restore focus.
   * Every graph view has a keyboard-operable list or search that selects the same elements as the canvas.
-* **States:** every data view shows the UXD §7 empty, loading and error states. Errors show the record's source, reason and time (ADR-0013).
+* **States:** every data view shows the UXD §7 empty, loading and error states. Errors show the record's source, reason and time (ADR-0009).
 
 ### Consequences
 
@@ -119,7 +119,7 @@ Chosen options: **the Flask-served vanilla-JS page (as built)**, **AntV G6 5 wit
 
 ### Confirmation
 
-* Browser tests (ADR-0041) load every stage view in Firefox 91 ESR and the current ESR, against `dsm` with fake adapters.
+* Browser tests (ADR-0021) load every stage view in Firefox 91 ESR and the current ESR, against `dsm` with fake adapters.
 * A performance test pans and zooms a 1,000-element view against UXD §6. An API test asserts that no view exceeds the cap.
 * An axe-core check, vendored for tests only, runs on each stage view and fails on WCAG A or AA violations.
 * A keyboard-only test walks login, sources, selection, a production run and graph search, and checks that list selection highlights the canvas element.
@@ -141,4 +141,4 @@ Chosen options: **the Flask-served vanilla-JS page (as built)**, **AntV G6 5 wit
 * Code: `dve/src/dve/templates/index.html`, `dve/src/dve/static/app.js`, `dve/src/dve/static/graph.js`, `dve/src/dve/static/app.css`, `dve/src/dve/static/fonts/fonts.css`, `dve/src/dve/static/vendor/g6.min.js`
 * Vendored: AntV G6 5.1.1 (MIT); Barlow 400 and Orbitron 600 (OFL); Lucide icon subset v1.43.0 (ISC)
 * [UXD](../UXD.md), [SDP §5](../../planning/SDP.md)
-* Related: ADR-0005, ADR-0006, ADR-0013, ADR-0014, ADR-0015, ADR-0030, ADR-0036, ADR-0041
+* Related: ADR-0005, ADR-0006, ADR-0009, ADR-0010, ADR-0011, ADR-0019, ADR-0020, ADR-0021

@@ -8,12 +8,12 @@
 >
 > | UXD names | Superseded by | ADR |
 > |---|---|---|
-> | Next.js shell, routes and `next/font` | One Flask-served page with stage views, self-hosted fonts, no build step | [ADR-0009](adr/0009-operations-panel.md) |
-> | React Flow | AntV G6 5.1.1 (vendored), with server-side view scoping | [ADR-0009](adr/0009-operations-panel.md) |
-> | TanStack Table, React Hook Form, shadcn/ui, Radix, Refine, Tailwind | In-house components; server-side paging and sorting for tables | [ADR-0009](adr/0009-operations-panel.md) |
-> | Recharts and ECharts | Vendored ECharts | [ADR-0009](adr/0009-operations-panel.md) |
+> | Next.js shell, routes and `next/font` | One Flask-served page with stage views, self-hosted fonts, no build step | [ADR-0015](adr/0015-operations-panel.md) |
+> | React Flow | AntV G6 5.1.1 (vendored), with server-side view scoping | [ADR-0015](adr/0015-operations-panel.md) |
+> | TanStack Table, React Hook Form, shadcn/ui, Radix, Refine, Tailwind | In-house components; server-side paging and sorting for tables | [ADR-0015](adr/0015-operations-panel.md) |
+> | Recharts and ECharts | Vendored ECharts | [ADR-0015](adr/0015-operations-panel.md) |
 > | Procrastinate + SSE status strip | Child-process task runner with REST polling | [ADR-0006](adr/0006-operation-execution-and-concurrency.md) |
-> | Firefox 90+ floor | Unchanged | [ADR-0009](adr/0009-operations-panel.md) |
+> | Firefox 90+ floor | Unchanged | [ADR-0015](adr/0015-operations-panel.md) |
 >
 > The as-built page uses Barlow and Orbitron rather than Geist Sans and Mono. Aligning the typography in §2 with the page is a UXD revision, not an ADR decision.
 
@@ -333,7 +333,7 @@ canvas entirely.
 
 **Evaluation** — *DVE.71–78, DVE.18, 21–25* — Installation suitability runs (DVE.71–78), one row per software unit: score, score class, decision (conforming/non-conforming — DVE.77–78), and a Blocking count of violations forcing non-conforming regardless of score.
 
-Row selection: blocking findings behind the decision (rule ID, heading, severity, weight, acceptance criterion — DVE.74, 76). Scoring method/score-class open pending ADR-0027 (DVE.76); labels shown are illustrative.
+Row selection: blocking findings behind the decision (rule ID, heading, severity, weight, acceptance criterion — DVE.74, 76). Scoring method/score-class open pending ADR-0018 (DVE.76); labels shown are illustrative.
 
 **Figure 10. Evaluation**
 
@@ -353,7 +353,7 @@ Row selection: blocking findings behind the decision (rule ID, heading, severity
 │ svc-router@1.4    91    Good      conforming       0             | (blocking):         │
 │ svc-cache@3.0     78    Fair      conforming       0             | dependency &        │
 │                                                                  | integration         │
-│ Score/class illustrative, pending ADR-0027 (DVE.76)            | conformance         │
+│ Score/class illustrative, pending ADR-0018 (DVE.76)            | conformance         │
 │                                                                  | (DVE.74)          │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -444,7 +444,7 @@ Concrete, testable targets, not a hope.
 | §4 Model Visualization & Navigation | DVE.9, 19–20 |
 | §4 Verification | DVE.18, 21–25 *(structural verification slice: DVE.28–49)* |
 | §4 Analysis | DVE.18, 21–25, DVE.58, 70 *(behavioral analysis slice: DVE.50–70)* |
-| §4 Evaluation | DVE.18, 21–25, DVE.74, 76–78 *(installation evaluation slice; DVE.76 scoring method open pending ADR-0027)* |
+| §4 Evaluation | DVE.18, 21–25, DVE.74, 76–78 *(installation evaluation slice; DVE.76 scoring method open pending ADR-0018)* |
 | §4 Reports | DVE.26 |
 | §5 Background operations status pattern | DVE.16, 27 (status delivery, shared pattern) |
 | §7 Error-state convention | DVE.18 (conforming/non-conforming classification), SDD §1 decision 5 |

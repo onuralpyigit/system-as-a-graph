@@ -10,7 +10,7 @@
 | Traces | QA-11; MDG.2–5, 23; SCG.7; FDM.4; ADM.2–4; SMM.2, 27–28, 33; DVE.3, 27; SDD §2.3 EXT-IF-01…07, INT-IF-01…05 |
 | Resolves | DP-24…DP-28 (communication method/protocol of INT-IF-01…05) |
 | Decide by | Wave A (2026-11-27) |
-| Supersedes | — (absorbs the former ADR-0003) |
+| Supersedes | — |
 
 ## Context and Problem Statement
 
@@ -59,33 +59,33 @@ Rules for every CSC package `<csc>/src/<csc>/`:
 
   | Mock adapter | Replaced by |
   |---|---|
-  | `dve/src/dve/adapters/ldap_directory_service.py` `LdapDirectoryService` | ADR-0030, before production use |
-  | `mdg/src/mdg/adapters/source_data/system_repo_parser.py` `SystemRepoParser` | ADR-0010, before the R3 resource rules (DVE.40–46) |
-  | `mdg/src/mdg/adapters/source_data/ansible_repo_parser.py` `AnsibleRepoParser` | ADR-0010 |
-  | `mdg/src/mdg/adapters/source_data/type_support_parser.py` `TypeSupportParser` | ADR-0010, before the R3 QoS rules (DVE.32–35) |
-  | `mdg/src/mdg/adapters/source_data/message_file_parser.py` `MessageFileParser` | ADR-0010 |
+  | `dve/src/dve/adapters/ldap_directory_service.py` `LdapDirectoryService` | ADR-0019, before production use |
+  | `mdg/src/mdg/adapters/source_data/system_repo_parser.py` `SystemRepoParser` | ADR-0008, before the R3 resource rules (DVE.40–46) |
+  | `mdg/src/mdg/adapters/source_data/ansible_repo_parser.py` `AnsibleRepoParser` | ADR-0008 |
+  | `mdg/src/mdg/adapters/source_data/type_support_parser.py` `TypeSupportParser` | ADR-0008, before the R3 QoS rules (DVE.32–35) |
+  | `mdg/src/mdg/adapters/source_data/message_file_parser.py` `MessageFileParser` | ADR-0008 |
 
 * **Adapter selection:** today the façades wire one adapter per port by hand (`mdg/src/mdg/__init__.py:92-141`). MySQL and Git are always chosen, and `DataSourceConfig.access_method` is never read. New façade factories select the adapter from `access_method`, or from a `[…] backend =` ini key for ports that are not data sources, through a registry dictionary in the façade. An unknown value is a start-up configuration error. Callers may still pass their own port instances, which is how tests inject fakes.
 
 ### 2. Internal integration (INT-IF-01…05)
 
 * **Method:** a consumer calls the producer CSC's façade functions, never its internal modules. Long-running calls run inside an operation's child process (ADR-0006).
-* **Payload:** the producer persists the artifact first and returns an artifact reference: ID, kind, location and content hash (ADR-0008). The consumer loads the artifact by reference.
+* **Payload:** the producer persists the artifact first and returns an artifact reference: ID, kind, location and content hash (ADR-0007). The consumer loads the artifact by reference.
 
   | Interface | Producer call returns | Artifact store |
   |---|---|---|
-  | INT-IF-01 MDG → SMM | Model Data file reference | Filesystem (ADR-0013) |
-  | INT-IF-02 SCG → ADM | Synthetic data set reference | ADR-0017 |
-  | INT-IF-03 FDM → ADM | Field record selection (record IDs) | ADR-0020 |
-  | INT-IF-04 ADM → SMM | Analytical Evaluation Data reference | ADR-0017 |
-  | INT-IF-05 SMM → DVE | Read-only model instance handle | Graph store (ADR-0015) |
+  | INT-IF-01 MDG → SMM | Model Data file reference | Filesystem (ADR-0009) |
+  | INT-IF-02 SCG → ADM | Synthetic data set reference | ADR-0012 |
+  | INT-IF-03 FDM → ADM | Field record selection (record IDs) | ADR-0014 |
+  | INT-IF-04 ADM → SMM | Analytical Evaluation Data reference | ADR-0012 |
+  | INT-IF-05 SMM → DVE | Read-only model instance handle | Graph store (ADR-0011) |
 
-* **INT-IF-05:** DVE gets a model access object from SMM's façade. It only exposes queries and is bound to one model instance. Writes go through SMM's working-model API (ADR-0015), never through the handle.
-* **Errors:** façade functions raise domain errors carrying an error record (ADR-0013).
+* **INT-IF-05:** DVE gets a model access object from SMM's façade. It only exposes queries and is bound to one model instance. Writes go through SMM's working-model API (ADR-0011), never through the handle.
+* **Errors:** façade functions raise domain errors carrying an error record (ADR-0009).
 * **Process boundary:**
   * Arguments are picklable: identifiers, plain dataclasses and `to_dict()` forms.
   * Results are plain dicts, as built: `ProductionResult.to_dict()`.
-  * Exceptions must survive pickling with their error record. Today `DataAcquisitionError` loses it (ADR-0013).
+  * Exceptions must survive pickling with their error record. Today `DataAcquisitionError` loses it (ADR-0009).
 * **Progress:** long-running façade functions accept a `progress(percent, phase)` callback, as `mdg.produce_model_setup_data` does.
 
 **As built:** INT-IF-01 works as above, with two gaps. The reference is the tuple (project, platform, version, `run_id`), not an artifact ID, and there is no content hash yet. The other four interfaces are not built.
@@ -102,7 +102,7 @@ Rules for every CSC package `<csc>/src/<csc>/`:
 ### Confirmation
 
 * `import-linter` contracts per package: `domain` imports nothing from the package, `services` does not import `adapters`, and consumers import only `<csc>`, never `<csc>.services` or `<csc>.adapters`.
-* Adapter contract tests run the same cases against the fake and the real adapter (ADR-0041).
+* Adapter contract tests run the same cases against the fake and the real adapter (ADR-0021).
 * Each façade function has a contract test with a fake producer artifact.
 
 ## Pros and Cons of the Options
@@ -124,4 +124,4 @@ Rules for every CSC package `<csc>/src/<csc>/`:
 
 * Code: `mdg/src/mdg/{domain,ports,services,adapters}`, `mdg/src/mdg/__init__.py`, `dve/src/dve/{domain,ports,services,adapters}`, `dve/src/dve/__init__.py`
 * [SDD §2.3](../SDD.md), [SDP §5](../../planning/SDP.md)
-* Related: ADR-0004, ADR-0006, ADR-0008, ADR-0010, ADR-0013, ADR-0015, ADR-0017, ADR-0020, ADR-0030, ADR-0041
+* Related: ADR-0004, ADR-0006, ADR-0007, ADR-0008, ADR-0009, ADR-0011, ADR-0012, ADR-0014, ADR-0019, ADR-0021
