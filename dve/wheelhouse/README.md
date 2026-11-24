@@ -20,5 +20,5 @@ Regenerate where PyPI is reachable:
 python3 -m pip download --dest dve/wheelhouse --only-binary=:all: \
   --python-version 3.9 --implementation cp \
   --platform manylinux2014_x86_64 --platform manylinux_2_28_x86_64 \
-  --abi cp39 --abi abi3 "Flask==2.3.2" "Flask-WTF==1.2.2"
+  --abi cp39 --abi abi3 "Flask==2.3.2" "Flask-WTF==1.2.2" "Werkzeug>=2.3.7,<3.1"
 ```
