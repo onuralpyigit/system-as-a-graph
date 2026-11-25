@@ -3,109 +3,117 @@
 | Field | Value |
 |---|---|
 | Status | Proposed |
-| Date | 2026-11-19 |
+| Date | 2026-11-25 |
 | Deciders | CDR Board |
 | Consulted | Development team, system engineering |
 | Kind | Decide |
-| Traces | DVE.50–58, 59–70; SMM.28; QA-03, QA-07 |
+| Traces | DVE.50–70; SMM.28, 37; QA-03, QA-07 |
 | Resolves | — |
 | Decide by | Wave D (2027-05-14) |
 | Supersedes | — |
 
 ## Context and Problem Statement
 
-R6 builds behavioral analysis on the System Model, without altering it (DVE.50–51).
+R6 implements non-destructive behavioral analysis over the System Model (`DVE.50–51`):
 
-* **From synthetic AED** (DVE.52–58):
-  * evaluate the effect of an entity becoming inactive (DVE.54) and of load changes (DVE.55–56);
-  * determine how fault, load, communication interruption or bandwidth narrowing **propagates** to dependent nodes, with the directly and indirectly affected elements and the **propagation path** (DVE.57);
-  * name the entities with the highest resource use or most intensive messaging (DVE.58).
-* **From field AED** (DVE.59–70):
-  * analyse status, resources, events, flow, latency and loss (DVE.60–65, 69–70);
-  * detect **architectural drift** between the Model Data and the runtime (DVE.66–68): entities present in the model but not observed, observed but not in the model, and present in both but incompatible.
+* **Synthetic simulation analyses (`DVE.52–58`):** analyze message flow direction, count, volume and frequency (`DVE.53`); evaluate node **or relationship** inactivity (`DVE.54`), topic/message density increases (`DVE.55`), and pub/sub behavior changes (`DVE.56`); trace propagation of **fault, load, communication interruption, or bandwidth narrowing** onto directly and indirectly dependent elements with explicit **propagation paths** (`DVE.57`); and compute top resource-consuming and most messaging-intensive entities (`DVE.58`).
+* **Field-record analyses & architectural drift (`DVE.59–70`):** analyze operational/health status (`DVE.60`), CPU/RAM/storage/network usage (`DVE.61`), error/warning/restart/timeout events (`DVE.62`), message flow (`DVE.63`), latency/loss/success rates (`DVE.64`), topic pub/sub activity (`DVE.65`), node **and relationship** event records (`DVE.69`), and top-N resource/messaging entities (`DVE.70`); plus compare Model Data nodes/relationships against observed runtime data to detect **missing (`DVE.66`), unexpected (`DVE.67`), and attribute-incompatible (`DVE.68`)** elements.
 
-ADR-0010 already defines the derived `DEPENDS_ON` view with weights, ADR-0013 defines simulation scenarios, and ADR-0012 defines AED and its key-based binding. This ADR fixes the algorithms.
+ADR-0010 fixes the structural and `DEPENDS_ON` graph views, ADR-0012 fixes the AED streams (`observed_topology`, `relation_metrics` direction, node+edge `events`), ADR-0013 fixes dual-snapshot ($G_{\text{pre}}, G_{\text{post}}$) scenarios, and ADR-0016 fixes the `@check(model, params, aed)` rule engine. This ADR specifies the exact propagation and drift algorithms so no structural or cross-layer dependency blind spots exist.
 
 ## Decision Drivers
 
-* Results must follow the framework model's dependency semantics, so they stay comparable with its published results (ADR-0010).
-* Every affected element must come with an explainable path (DVE.57) and be recorded as a finding (ADR-0007).
-* Drift must use the same identity keys as binding, so the two never disagree.
-* The algorithms run in an operation's child process on one host, within ADR-0020's budgets, with pure Python 3.9.
+* Propagation must handle node removal/inactivity (`DVE.54`), `Node` → hosted `Application`/`Broker` lifting (`RUNS_ON`), `Topic`/`Message`/relationship origins (`DVE.54–56`), and non-articulation `CONNECTS_TO` mesh-link congestion (`DVE.57`) without missing affected dependents!
+* Every affected element must record an explicit, human-inspectable path (`DVE.57`) and cause-and-effect `dve_finding_link` (`DVE.22`).
+* Drift detection (`DVE.66–68`) must use the exact same entity/relationship identity keys and `smm_aed_alias` table as `SMM.bind` (`ADR-0012 §2`).
+* All algorithms must execute in pure Python 3.9 (+ `networkx 3.2.1`) within ADR-0020's latency budgets.
 
 ## Considered Options
 
-* Propagation: weighted traversal of `DEPENDS_ON` / dependency-matrix (DSM) analysis / re-running full simulation per change
-* Drift matching: entity keys with an alias table / fingerprint similarity (attributes and neighbours) / manual mapping only
+* Propagation algorithm: Dual-graph ($G_{\text{pre}}, G_{\text{post}}$) redundancy-aware reverse traversal over `DEPENDS_ON` + `RUNS_ON` with link-congestion seeding
+* Propagation algorithm: Naive post-removal `DEPENDS_ON`-only BFS (misses severed origins and hosted `RUNS_ON` apps)
+* Propagation algorithm: Dense Design Structure Matrix (DSM) transitive closure
+* Drift matching: Deterministic `(label_or_type, key)` matching with version-scoped `smm_aed_alias` and catalog-driven attribute comparators
+* Drift matching: Heuristic graph-fingerprint / neighborhood similarity matching
 
 ## Decision Outcome
 
-Chosen options: **a weighted traversal of the derived `DEPENDS_ON` view** for propagation, and **matching by entity key with a reviewed alias table** for drift. The traversal reuses the framework's dependency semantics and weights directly and yields explicit paths. Key matching is deterministic and identical to AED binding.
+Chosen options: **dual-graph ($G_{\text{pre}}, G_{\text{post}}$) redundancy-aware reverse traversal over `DEPENDS_ON` and incoming `RUNS_ON` with structural/link-congestion seeding**, and **deterministic key matching with `smm_aed_alias` plus catalog-declared attribute comparators**.
 
-### 1. Propagation (DVE.54–58)
+### 1. Multi-layer behavioral propagation (`DVE.53–58`)
 
-* **Input:** a model instance and revision, a scenario's conditions (ADR-0013), and optionally bound AED (ADR-0012).
-* **Algorithm:**
-  1. Apply the conditions to an in-memory copy of the analysis view (SMM's engine, ADR-0010 §7).
-  2. Re-derive the weights.
-  3. From each *origin* element (the element the condition hits), walk `DEPENDS_ON` edges **in reverse**, from a dependency to its dependents, breadth first.
-  4. An effect reaching element *v* along path *P* has strength *s(v) = s₀ · Π w(e)* over the edges *e* in *P*, where *s₀ = 1* for a hard fault or inactivity, and the relative change for load.
-  5. Stop below the profile's `min_effect` (default 0.05) or at `max_depth` (default 10).
-  6. Keep the strongest path per element.
-* **Condition mapping:**
-  * `inactive` and `fault` start at the element itself;
-  * `density_increase` and `behaviour_change` start at the affected topics, through `app_to_app` and `app_to_broker` edges;
-  * `bandwidth_narrowing` starts at the `NetworkDevice` or link, through `node_to_device` (rule 7) and `node_to_node`.
-* **Output (DVE.57–58):**
-  * one finding per affected element, with type `propagated_effect`, severity from the profile's strength bands, and the path as evidence;
-  * a finding link from the origin to each affected element (DVE.22);
-  * the top-N entities by resource use and messaging, from AED aggregates (DVE.58), as summary indicators in the operation result.
-* **Algorithms library:** networkx 3.2.1 where needed (ADR-0016); the traversal itself is a plain BFS.
+Given $G_{\text{pre}}$ (baseline/working state before scenario perturbations), $G_{\text{post}}$ (state after applying ADR-0013 §1 perturbations and re-deriving loads/weights/`DEPENDS_ON`), and bound synthetic `AedReader`:
 
-### 2. Field analyses and drift (DVE.59–70)
+1. **Seed computation ($s_0 \in (0, 1]$) on $G_{\text{pre}}$ vs. $G_{\text{post}}$:**
+   * **Why $G_{\text{pre}}$ is traversed:** when `inactive` (`DVE.54`) or `communication_interruption` (`DVE.57`) removes a node or edge in $G_{\text{post}}$, its `DEPENDS_ON` edges disappear from $G_{\text{post}}$. Seeding from the loss between $G_{\text{pre}}$ and $G_{\text{post}}$ and walking **$G_{\text{pre}}$** ensures severed dependents are always reached while respecting redundancy (`hotstandby` publishers, redundant switches/links) that survives in $G_{\text{post}}$!
+   * **Origin seeding rules by element & condition kind:**
+     * *Node `inactive` / `fault` (`Application`, `Broker`, `CommunicationService`, `Node`, `NetworkDevice`):* $s_0(u) = 1.0$ on the failed/removed node $u$. For a subscriber depending on topic $t$, if redundant active publishers of $t$ remain in $G_{\text{post}}$, the first hop attenuates by the fraction of lost publisher capacity; if zero publishers remain, full starvation ($1.0 \cdot w(e)$) propagates.
+     * *Structural relationship `inactive` / `communication_interruption` (`DVE.54, 57`):* deactivating `u -[:PUBLISHES_TO]-> t`, `b -[:ROUTES]-> t`, or `cs -[:TRANSFERS]-> m` seeds affected subscribers/consumers of `t`/`m` according to lost publisher/route coverage between $G_{\text{pre}}$ and $G_{\text{post}}$; deactivating `a -[:RUNS_ON]-> n` seeds `a` ($s_0 = 1.0$ unless a `hotstandby` replica remains on another `Node`).
+     * *`Topic` / `Message` `density_increase` & `behaviour_change` (`DVE.55–56`):* `Topic` and `Message` have no `DEPENDS_ON` edges of their own; the seed step transitions across structural `SUBSCRIBES_TO`, `PUBLISHES_TO`, `ROUTES`, `CARRIES`, `SENDS`, `RECEIVES`, and `TRANSFERS` to the directly connected `Application`, `Library`, `Broker`, and `CommunicationService` nodes with $s_0 = \min(1.0, |\Delta \text{rate}| / \text{rate}_{\text{pre}})$, and recomputes link/host utilization.
+     * *`load` (`DVE.57`):* seeds overloaded `Application`s or `Node`s with $s_0 = \min(1.0, \max(0, \text{util}_{\text{post}} - \text{threshold}) / (1 - \text{threshold}))$.
+     * *`bandwidth_narrowing` & link congestion (`DVE.57`):* recomputes offered traffic (`bytes × freq_hz` from synthetic AED / Phase 5c) across surviving shortest `CONNECTS_TO` paths in $G_{\text{post}}$ (covering **both** articulation `NetworkDevice`s from Rule 7 **and** non-articulation host-mesh or dual-switch links!). Every saturated link (`utilization = load_mbps / capacity_mbps > 1.0`) seeds its endpoint `Node`s/`NetworkDevice`s with $s_0 = \min(1.0, (\text{utilization} - 1.0) / \text{utilization})$.
+2. **Cross-layer reverse traversal (`DEPENDS_ON` + `RUNS_ON`):**
+   * From each seeded element $u$, run a priority-queue best-first search (Dijkstra in $-\log w$, bounded by `max_depth = 10` and `min_effect = 0.05` from `propagation.yaml`) over **two reverse transition types** on $G_{\text{pre}}$:
+     * **Reverse `DEPENDS_ON`:** `dependency ← dependent` with factor $w(e)$ (`app_to_app`, `app_to_lib`, `app_to_broker`, `node_to_node`, `node_to_broker`, `broker_to_broker`, `node_to_device`);
+     * **Reverse `RUNS_ON` (host-to-guest lift):** `Node ← Application | Broker | CommunicationService` with factor $1.0$—ensuring that a failed, overloaded, or network-congested `Node` immediately propagates to every software unit and broker hosted on it, and from there along `app_to_app` / `app_to_broker` to remote dependents!
+   * Path strength along $P = (u_0, e_1, u_1, \dots, e_k, v)$ is $s(v) = s_0(u_0) \cdot \prod_{i=1}^{k} w(e_i)$; the strongest simple path $P^*(v)$ (and hop classification: `direct` for $k=1$, `indirect` for $k>1$) is retained per affected element $v$.
+3. **Findings, links and KPIs (`DVE.57–58`):**
+   * Emits one `dve_finding` (`finding_type = 'propagated_effect'`) per affected element with `P*(v)` and `s(v)` in `evidence`, mapped to severity via `propagation.yaml` bands (defaults: `critical ≥ 0.70`, `high ≥ 0.40`, `medium ≥ 0.20`, `low ≥ 0.05`), plus `dve_finding_link` rows from the origin finding to each downstream finding (`DVE.22`).
+   * Computes top-$N$ (default $N = 10$) entities by peak/mean CPU, memory, network bandwidth, message count, and data volume from `AedReader` (`DVE.58`) into `common_operation.result_summary`.
 
-* **Field analyses (DVE.60–65, 69–70):** per-entity aggregates and thresholds over bound field AED, implemented as check functions in the rule engine (ADR-0016), with their thresholds in the rule catalog. Event analysis (DVE.69) groups `events` by entity and kind.
-* **Drift (DVE.66–68):** compares the model's entity and relationship keys with those observed in field AED, after applying the alias table (ADR-0012):
+### 2. Field behavioral checks and architectural drift (`DVE.59–70`)
 
-  | Class | Rule | Finding type |
-  |---|---|---|
-  | Present in the model, not observed (DVE.66) | Model key with no observation in the record's time range | `drift_missing` |
-  | Observed, not in the model (DVE.67) | Observed key with no model counterpart, which is the same set as SMM.37's unmatched records | `drift_unexpected` |
-  | Incompatible (DVE.68) | Matched key whose observed attributes contradict the model, for example a publisher of a topic the model says it only consumes, or a node with a different core count | `drift_mismatch` |
+* **Field checks (`DVE.60–65, 69–70`):** executed as ADR-0016 `@check(model, params, aed)` functions configured by `field_health.yaml` and `field_traffic.yaml` over bound `field` `overlay.db` (`entity_metrics`, directed `relation_metrics`, and node+relationship `events`), writing top-$N$ field resource/messaging KPIs (`DVE.70`) into `common_operation.result_summary`.
+* **Architectural drift detection (`DVE.66–68`, `drift.yaml`):** compares the System Model's nodes and structural relationships (`ModelReader`) against `aed_observed` (`observed_topology.jsonl.gz` in `overlay.db`, ADR-0012 §1) after resolving `smm_aed_alias` (`ADR-0012 §2`):
 
-  * Attribute comparisons are declared per label in the rule catalog, so new ones need no engine change.
+  | SRS | Drift class | Comparison over `(element_kind, label_or_type, key)` | `finding_type` |
+  |---|---|---|---|
+  | DVE.66 | Present in Model Data / System Model, not observed in runtime field data | Model node or structural relationship within expected runtime scope (`Application`, `Broker`, `CommunicationService`, `Node`, `Topic`, `PUBLISHES_TO`, `SUBSCRIBES_TO`, `RUNS_ON`, `CONNECTS_TO`, `TRANSFERS`) absent from `aed_observed` | `drift_missing` |
+  | DVE.67 | Not present in Model Data / System Model, observed in runtime field data | Observed runtime node or relationship in `aed_observed` (after alias resolution) with no counterpart in `ModelReader` (identical key set to `SMM.37` `unmatched_aed_count`) | `drift_unexpected` |
+  | DVE.68 | Present in both, showing incompatibility between model and runtime data | Matched node or relationship whose `aed_observed.observed_attributes` contradict model attributes per comparators declared in `drift.yaml` (e.g. `Node.cpu_cores` or `os_type`, `Application.version` or hosting `RUNS_ON` `Node`, `Topic` QoS parameters, or direction reversal where a subscriber-only unit publishes at runtime) | `drift_mismatch` |
 
 ### Consequences
 
-* Good, because propagation uses exactly the framework's dependency semantics and weights, and every effect has a path.
-* Good, because drift and binding share one identity scheme, so "unmatched" means the same thing everywhere.
-* Good, because field thresholds live in the reviewed rule catalog (ADR-0016).
-* Bad, because the product-of-weights model is a heuristic. It ranks effects but does not predict magnitudes such as latency in milliseconds.
-* Bad, because renamed entities appear as missing plus unexpected until the alias table maps them.
+* Good, because dual-graph ($G_{\text{pre}}, G_{\text{post}}$) seeding + `RUNS_ON` host lifting + `CONNECTS_TO` path congestion closes all structural-removal, host-to-app, topic-origin and mesh-network blind spots in `DVE.54–57`.
+* Good, because `observed_topology` and `smm_aed_alias` make `DVE.66–68` deterministic across both nodes and relationships and consistent with `SMM.37`.
+* Bad, because multiplicative weight attenuation $s_0 \cdot \prod w(e)$ is an analytical impact-ranking index $\in [0, 1]$ rather than a physical millisecond latency predictor.
 
 ### Confirmation
 
-* A test on the framework model's worked example (ADR-0010 fixtures): an inactive library yields the expected dependent set and paths.
-* Scenario tests per condition type on the dev seed model.
-* A drift test with a field AED sample containing one missing, one unexpected and one mismatched entity yields exactly three drift findings of the right classes.
-* A performance test runs propagation on the ADR-0020 reference model within its budget.
-
-### Open points
-
-* The strength bands that map effect strength to severity, and the default `min_effect` and `max_depth`, are confirmed with system engineering.
-* The initial list of attribute comparisons for DVE.68 is agreed with the rule-catalog owners.
+* Worked-example & redundancy tests: deactivating `L0` or single publisher `A0` propagates to `A1` with expected `s(A1)` and path; deactivating one replica of a dual-node `hotstandby` publisher attenuates rather than reporting total starvation.
+* Cross-layer test: injecting `fault` on `Node N0` or `bandwidth_narrowing` on a direct `Node ↔ Node` `CONNECTS_TO` link propagates across `RUNS_ON` to hosted `Application`s and downstream remote subscribers (`TC-DVE-14`).
+* Drift test (`TC-DVE-16`): running `field_analysis` against a sample `observed_topology` with one missing node/edge, one unexpected node/edge, and one mismatched `cpu_cores`/QoS attribute produces exact `drift_missing`, `drift_unexpected`, and `drift_mismatch` findings.
 
 ## Pros and Cons of the Options
 
-* Weighted traversal (chosen): Good, because it is explainable, fast and consistent with the framework. Bad, because it is a ranking heuristic.
-* Dependency matrix: Good, because it gives a compact overview. Bad, because it gives no per-path explanation, and it is quadratic in memory.
-* Full re-simulation: Good, because it is the most realistic. Bad, because it needs an execution model, which the SRS excludes.
-* Key matching with aliases (chosen): Good, because it is deterministic and reviewable. Bad, because aliases must be maintained.
-* Fingerprint similarity: Good, because it finds renamed entities automatically. Bad, because it is probabilistic and can mis-match silently.
-* Manual mapping only: Bad, because it does not scale.
+### Dual-graph ($G_{\text{pre}}, G_{\text{post}}$) reverse traversal over `DEPENDS_ON` + `RUNS_ON` (chosen)
+
+* Good, because it preserves severed edges for traversal, accounts for surviving redundancy in $G_{\text{post}}$, lifts infrastructure faults to hosted software units, and outputs explicit paths (`DVE.57`).
+* Bad, because maintaining two in-memory copies during an operation roughly doubles child-process graph RAM (~tens of MB at 50k edges, well within ADR-0020 budgets).
+
+### Naive post-removal `DEPENDS_ON`-only BFS
+
+* Good, because only one graph copy is held.
+* Bad, because removing an inactive origin deletes its incoming `DEPENDS_ON` edges (yielding zero affected nodes!) and `Node` faults never reach hosted `Application`s.
+
+### Dense Design Structure Matrix (DSM) transitive closure
+
+* Good, because matrix multiplication is compact.
+* Bad, because $O(V^2)$ memory at $V > 12,000$ is wasteful on sparse graphs and loses individual multi-hop explanation paths.
+
+### Deterministic key matching with `smm_aed_alias` and catalog comparators (chosen)
+
+* Good, because every drift finding is 100% explainable, reproducible, and consistent with `SMM.bind`.
+* Bad, because legitimately renamed runtime processes must be listed in `smm_aed_alias` once per version.
+
+### Heuristic neighborhood/fingerprint similarity matching
+
+* Good, because renamed nodes might match without an alias entry.
+* Bad, because false-positive fuzzy matches silently mask genuine `DVE.66/67` architectural drift.
 
 ## More Information
 
-* Framework model: [`software-as-a-graph/docs/graph-model.md` @ `d1f8b424`](https://github.com/onuralpyigit/software-as-a-graph/blob/d1f8b42438e3c500715daefe2a3500b96b1cac49/docs/graph-model.md), §6 (derivation rules), §7 (layers)
-* [SRS §6.1.3](../../requirements/SRS.md)
+* Framework model: [`software-as-a-graph/docs/graph-model.md` @ `0bbe06af`](https://github.com/onuralpyigit/software-as-a-graph/blob/0bbe06afa12be228e343895322716b8cbd085535/docs/graph-model.md), §6–§7
+* [SRS §6.1.3](../../requirements/SRS.md), [STD TC-DVE-14..16](../../test/STD.md)
 * Related: ADR-0006, ADR-0007, ADR-0010, ADR-0011, ADR-0012, ADR-0013, ADR-0016, ADR-0020
+* Revisit if R6/R9 pilot feedback requires probabilistic Monte Carlo availability simulation alongside deterministic path-strength ranking.
