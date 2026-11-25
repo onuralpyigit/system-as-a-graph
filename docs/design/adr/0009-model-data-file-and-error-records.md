@@ -3,128 +3,143 @@
 | Field | Value |
 |---|---|
 | Status | Proposed |
-| Date | 2026-11-19 |
+| Date | 2026-11-25 |
 | Deciders | CDR Board |
 | Consulted | Development team |
 | Kind | Ratify |
 | Traces | MDG.1, 14–16, 18–23; SCG.4; FDM.5; ADM.5–6; SMM.2–3, 25–26, 37; DVE.5, 8, 14–15, 24; SDD §1 decision 5; QA-03, QA-04, QA-05 |
 | Resolves | DP-29a, DP-30a (storage and entity schema of the Model Data file) |
-| Decide by | Wave A (2026-11-27) |
+| Decide by | Wave A1 (2026-12-04) |
 | Supersedes | — |
 
 ## Context and Problem Statement
 
-MDG.23 requires MDG to "save it as a Model Data file", and SMM.2–3 require SMM to accept and validate it. DVE.5 lists the files per selection. SDD §1 decision 5 requires every acquisition path to validate input and record failures with one consistent set of attributes. The SRS repeats this in each CSC: MDG.16, 19–22; SMM.3, 25, 37; FDM.5; ADM.5–6.
+MDG.23 requires MDG to prepare verified source data and save it as a **Model Data file**, while SMM.2–3 require SMM to ingest and validate format, schema, integrity and mandatory fields before constructing the System Model. DVE.5 lists Model Data files per `(project, platform, system_version)` selection. Across the CSCI, SDD §1 decision 5 and SRS MDG.16, 19–22; FDM.5; ADM.5–6; SMM.3, 25, 37; DVE.8, 24 require one consistent validation and structured error-recording model.
 
-As built (`1157784`):
+**As built (`1157784`) and code-audit findings:**
 
-* **File and path:** `FilesystemModelSetupDataStore` writes one JSON file per run, at `<workspace>/<project>/<platform>/<version>/<run_id>/<project>_<platform>_<version>.json`.
-  * Path components are sanitised, and `Workspace.contains()` refuses paths outside the workspace.
-  * The `run_id` is the dve task ID (`uuid4().hex`).
-* **Sections:** `context`, `inventory`, `acquired_files`, `errors`, `generated_at`, `produced_by` and `graph`.
-  * `graph` (`ModelSetupDataGraph`) has `metadata.scale`; the lists `nodes`, `networks`, `topics`, `messages`, `applications` and `libraries`; and `relationships.{runs_on, publishes_to, subscribes_to, sends, receives, uses, connects_to}`.
-  * IDs are per-run positional (`N0`, `A0`, `L0`, `T0`, `M0`, `W0`) and not stable across runs.
-* **Upload:** an externally produced file can be uploaded with `IModelSetupDataStore.add`. `check_payload` checks only its structure (`POST …/mdg-files`).
-* **File gaps:**
-  * no schema version and no published schema;
-  * naive local timestamps;
-  * application `priority` and `hotstandby` generated from a seed of the application name;
-  * topic `frequency` and `criticality` derived from mocked QoS;
-  * missing values written as `"NOT_FOUND"` or `-1`.
-* **Errors:** `ErrorRecord` holds `status` (`ERROR` | `MISSING_DATA`), `reason`, `source_name`, `source_type`, one combined `project_platform` string, and naive `occurred_at`.
-  * Port exceptions (`SourceRepoAccessError`, `SourceRepoAuthError`, `SourceRepoIntegrityError`, `ConfigManagementAccessError`) carry the category only in their class name.
-  * Per-unit outcomes use `UnitStatus` (`ok`, `missing_data`, `error`, `not_acquired`).
-  * `DataAcquisitionError` carries a record, but loses it when it crosses the pipe from an operation's child process: it comes back as `None` (`error_record.py:41-48`).
+* **Filesystem layout:** `FilesystemModelSetupDataStore` writes `<workspace>/<project>/<platform>/<version>/<run_id>/<project>_<platform>_<version>.json`.
+  * **Security/containment bug:** `Workspace._name(component)` (`workspace.py:40-41`) runs `re.sub(r"[^A-Za-z0-9._-]", "_", component)`, which leaves `".."` intact (`_name("..") == ".."`), and while `add()` and `resolve()` check `Workspace.contains()`, **`save()` (`filesystem_model_setup_data_store.py:29-37`) and `ProduceModelSetupData.execute()` (`produce_model_setup_data.py:137`) never call `Workspace.contains()`**.
+* **Validation & exclusion bugs:**
+  * **`MDG.23` violation (`produce_model_setup_data.py:200`):** `CheckMandatoryFields` records `ErrorRecord`s for invalid items, **but `ProduceModelSetupData` still passes the failed items into `ModelSetupDataGraph.build()` and saves them into `graph`!**
+  * `CheckMandatoryFields` (`check_mandatory_fields.py:30-41`) checks only 8 raw fields for `None`/`""`, ignoring `"NOT_FOUND"`, `-1`, `Topic.size`, and `Node`/`Network` attributes.
+  * `ModelSetupDataGraph.build()` (`model_setup_data_graph.py:47-50`) populates `lib_ids` only from `Application → Library` `USES`, silently dropping transitive `Library → Library` targets, generates fake `priority`/`hotstandby` from `random.Random(name)`, derives topic `frequency`/`criticality` from mocked QoS, deduplicates `topics` by name (discarding conflicting unit definitions needed by `DVE.38` and per-endpoint QoS needed by `DVE.32–35`), and emits `"NOT_FOUND"` / `-1` sentinels.
+* **Error records:** `ErrorRecord` (`error_record.py:15-28`) uses uppercase `ERROR | MISSING_DATA`, combines `project_platform` into one string, uses naive timestamps, tags missing Git units in `ProduceModelSetupData._missing` with `source_type = "config_mgmt_db"`, and loses `self.record` across child-process pipes (`ADR-0003`).
 
 ## Decision Drivers
 
-* SMM must validate format, schema, integrity and mandatory fields (SMM.3), which needs a published schema.
-* Old files must stay readable as the format evolves (DVE.5).
-* A run's file is evidence for every result derived from it (QA-04), so it must be immutable and hash-identifiable. Placeholders must never be mistaken for facts (QA-03).
-* The SRS distinguishes error kinds: missing data, access, authorization, format, integrity and missing field (MDG.16, 20; DVE.8). They must be filterable, the same in every CSC, and survive the child-process boundary.
+* SMM.3 requires a formal, machine-checkable schema, cryptographic integrity check, and explicit placeholder tracking so unknown values are never mistaken for architectural facts (QA-03, QA-04).
+* MDG.23 requires source items failing mandatory-field checks to be excluded from the constructed `graph` payload while keeping their `ErrorRecord`s in `errors`.
+* Model Data 1.0 must carry all extracted fields needed by ADR-0010 (`qos_lifespan_ms`, per-endpoint `declared_type_hash`/`declared_qos`, `brokers`, `communication_services`, `transfers`, unit `cpu_allocation`/`os_settings`/`runtime_config`, and `field_schema` for `SCG.4`).
+* Error records must cover every SRS error category (`SMM.25` missing entity vs. invalid relationship, `SMM.37` unmatched record, `MDG.16/20` access/auth/format/integrity/missing data) and survive child-process IPC intact.
 
 ## Considered Options
 
-* File: JSON per run on the filesystem, made versioned and schema-validated (as built, extended) / relational rows / a graph-database import format
-* Errors: a shared record type in `common/` with category and structured scope / keep the `mdg` record and copy it / per-CSC error models
+* Model Data storage & format: Versioned, schema-validated JSON file per run on the filesystem with SHA-256 registration (as built, extended)
+* Model Data storage & format: Normalized relational tables in SQLite without a file
+* Model Data storage & format: Engine-specific graph dump format
+* Error model: Shared `ErrorRecord` type in `common/errors.py` with structured category, stage and scope
+* Error model: Copying the legacy `mdg` `ErrorRecord` unchanged
+* Error model: Separate error classes/schemas per CSC
 
 ## Decision Outcome
 
-Chosen options: **a versioned, schema-validated JSON file per run (as built, extended)** and **a shared error-record type in `common/` (as built, extended)**. The file format works, is inspectable and downloadable, and the SRS calls it a *file*. The record pattern (record, raising error, per-item status) already works and only needs its gaps closed.
+Chosen options: **a versioned, JSON-Schema-validated JSON file per run on the filesystem (as built, extended)** and **one shared `ErrorRecord` type in `common/errors.py`**.
 
-### 1. Model Data file
+### 1. Model Data file (`DP-29a`, `DP-30a`; MDG.1, 14–15, 18–23; SMM.2–3)
 
-* **Location:** unchanged. The workspace root comes from host configuration outside the package (ADR-0004). The `run_id` is the producing operation's ID (ADR-0006, ADR-0007).
-* **Schema:**
-  * `"schema_version": "1.0"` at the top level, and `mdg/src/mdg/schemas/model-data-1.0.schema.json` shipped as package data.
-  * MDG validates before saving, the upload path validates instead of only calling `check_payload`, and SMM validates again on input (SMM.3).
-  * Validation uses `jsonschema` 4.17.x, which supports Python 3.7+ and whose dependencies (`attrs`, `pyrsistent`) publish cp39 manylinux2014 wheels. They are added to `mdg/wheelhouse/`.
-* **Section names:** `graph` keeps the framework names MDG emits today, because they are the System Model vocabulary (ADR-0010). Later sections take ADR-0010 names too: hierarchy, roles, brokers, communication services and node capacity. The ADR-0002 terms apply to code and documents, not to these names.
-* **Evolution:** minor versions only add optional fields. A major version ships a reader for the previous one. Files from before 1.0 are read as `0.x`, best effort and read-only.
-* **Integrity:** the file is written once to a temporary name and atomically renamed. Its SHA-256 goes to the artifact registry (ADR-0007), and SMM verifies it before construction.
-* **Timestamps:** UTC, ISO 8601 with offset.
-* **Placeholders:** values not acquired are written as `null` and listed in a `placeholders` array with JSON path and reason.
-  * Examples: the seeded `priority`/`hotstandby`, mocked QoS and the frequency derived from it, and node capacity not yet in the ansible repository (ADR-0008).
-  * The `"NOT_FOUND"` and `-1` sentinels are retired, and graph construction never turns placeholders into facts.
-* **Provenance block:** `produced_by`, the operation ID, the tool version, and the clone commit hash per unit (ADR-0008).
+* **Filesystem location & path-traversal hardening:** `<workspace>/<project>/<platform>/<version>/<run_id>/<project>_<platform>_<version>.json`, where `workspace` is under `/var/lib/dsm/workspace/` (ADR-0004) and `run_id` is the producing `operation_id` (ADR-0007).
+  * `Workspace._name()` explicitly rejects `.` and `..` path segments, and **every** path builder (`run_dir`, `save`, `add`, `resolve`) enforces `Workspace.contains()` before touching disk.
+  * Files are written to `<name>.json.tmp`, `fsync`ed, atomically renamed, hashed (`SHA-256`), and registered in `common_artifact` (`kind = 'model_data_file'`, ADR-0007). SMM verifies both the `SHA-256` digest and `model-data-1.0.schema.json` before construction (SMM.3).
+* **Schema validation (`jsonschema`):**
+  * Pin `jsonschema==4.17.3` (`<4.18`, keeping pure-Python `attrs` and `cp39` `manylinux2014_x86_64` `pyrsistent` in `common/wheelhouse/` so `mdg`, `smm`, `scg`, `fdm` and `adm` share one offline validator).
+  * Published at `mdg/src/mdg/schemas/model-data-1.0.schema.json`; validated on `MDG` save, `POST …/mdg-files` upload, and `SMM` ingest.
+* **Top-level structure of `model-data-1.0.schema.json`:**
+  * `schema_version`: `"1.0"`;
+  * `status`: `"ok" | "missing_data" | "error"` — explicitly records the overall acquisition outcome (`MDG.19`, mirrored in `common_operation.outcome_status`). When a unit is missing mandatory files (`MDG.19`) or fails mandatory-field checks (`MDG.21`), **that invalid item/unit is excluded from `graph` (`MDG.23`)**, its errors are recorded in `errors`, and a `missing_data` file may still be saved for inspection while SMM refuses silent baseline promotion without operator override;
+  * `provenance`: `{operation_id, produced_by, generated_at (UTC ISO 8601), tool_version, cmdb_source_id, cmdb_queried_at, git_source_id, package_source_id, topology_source_id, topology_mode, unit_commits: {unit_name: commit_sha}}` (`MDG.1`);
+  * `context`: `{project, platform, system_version, is_effective_version}`;
+  * `inventory`: full `SoftwareUnitVersion` list including `unit_kind` (`application | library`) and `is_candidate` (`MDG.14–15`);
+  * `packages`: per-unit `{name, version, artifact_name, sha256, size_bytes}` (`MDG.4`, ADR-0008);
+  * `acquired_files`: repo-relative `file_path`, `file_name`, `unit_name`, `version`, `commit_sha`, UTC `updated_at` (`MDG.18`);
+  * `placeholders`: array of `{json_pointer, entity_key, reason}` replacing `"NOT_FOUND"`, `-1`, and seeded random `priority`/`hotstandby` values (`QA-03`);
+  * `errors`: array of serialized `ErrorRecord` objects (§2);
+  * `graph`: aligned 1-to-1 with ADR-0010's structural model:
+    * **Collections:** `hierarchy` (`systems`, `segments`, `cscis`, `cscs`), `roles`, `nodes` (`cpu_cores`, `memory_gb`, `kind`, `os_type`, `ip_address`, `os_settings`, plus UI fields `group, hw, mw, gpu, display`), `network_devices` (`name`, `role`), `brokers` (`name`, `type`, `version`, `max_connections`), `communication_services` (`name`, `technology`, `version`), `applications` (including `cpu_allocation`, `os_settings`, `runtime_config`, `is_candidate`), `libraries` (including transitive `Library → Library` dependencies and `is_candidate`), `topics` (including `qos_durability`, `qos_reliability`, **`qos_lifespan_ms`**, `qos_transport_priority`, `qos_deadline_ms`, `qos_history_depth`, `field_schema`, `definition_conflict`), and `messages` (`message_id`, `size_bytes`, `frequency`, `fields_hash`, `field_schema`);
+    * **Relationships:** `contains`, `assigned_to`, `runs_on`, `uses` (`Application | Library → Application | Library`, `SMM.22`), `publishes_to` and `subscribes_to` (**carrying per-endpoint `declared_type_hash`, `declared_size`, and `declared_qos` for `DVE.32–35, 38`**), `routes`, `uses_service` (`{direction, protocol, source_endpoint, destination_endpoint}`), `transfers` (`CommunicationService → Message | Topic`, `{direction, source, destination}`, `DVE.39`), `carries`, `sends`, `receives`, and `connects_to` (`from_interface`, `to_interface`, `capacity_mbps`).
+* **Backward compatibility:** minor `1.x` versions add optional fields only; pre-1.0 files lacking `schema_version` are loaded through a read-only `0.x` adapter (translating uppercase `ERROR`/`MISSING_DATA`, `networks` → `network_devices`, and `"NOT_FOUND"`/`-1` → `placeholders`).
 
-### 2. Common validation and error records
+### 2. Common validation and error records (`common/src/common/errors.py`)
 
-* **Type**, in `common/errors.py` (ADR-0004):
+* **Canonical `ErrorRecord` fields:**
 
-  | Field | Notes |
+  | Field | Type & Values |
   |---|---|
-  | `status` | `error` / `missing_data` (as built), plus `warning` for non-blocking anomalies, e.g. an unmatched AED record (SMM.37) |
-  | `category` | `access`, `authorization`, `integrity`, `format`, `schema`, `missing_field`, `missing_data`, `invalid_relationship`, `internal` |
-  | `reason` | Human-readable text |
-  | `source_name`, `source_type` | As built |
-  | `stage` | Processing stage, e.g. `acquire_context`, `clone`, `parse`, `validate`, `construct`, `bind` (DVE.24) |
-  | `project`, `platform`, `system_version` | Separate fields, replacing `project_platform` |
-  | `subject` | Optional: unit name, file path, record ID or entity key |
-  | `operation_id` | The owning operation (ADR-0007) |
-  | `occurred_at` | UTC, ISO 8601 with offset |
+  | `status` | `error` \| `missing_data` \| `warning` (lowercase in 1.0; `0.x` converter maps legacy `ERROR`/`MISSING_DATA`) |
+  | `category` | `access` \| `authorization` \| `integrity` \| `format` \| `schema` \| `missing_field` \| `missing_data` \| **`missing_entity`** \| `invalid_relationship` \| **`unmatched_record`** \| `internal` |
+  | `reason` | Human-readable diagnostic message (secrets redacted) |
+  | `source_name`, `source_type` | Accurate origin identifier and source kind (fixing `ProduceModelSetupData._missing` and `AcquireProjectContext._record` mislabeling) |
+  | `stage` | Pipeline phase: `acquire_context`, `acquire_packages`, `clone`, `build`, `parse`, `validate`, `construct`, `ingest_field`, `generate_synthetic`, `produce_aed`, `bind`, `rule:<id>`, `interrupted`, `shutdown` (DVE.24) |
+  | `project`, `platform`, `system_version` | Separate strings (replacing combined `project_platform`) |
+  | `subject` | Optional entity key, unit name, repo-relative file path, or record ID |
+  | `operation_id` | Owning `common_operation.operation_id` |
+  | `occurred_at` | Timezone-aware UTC ISO 8601 timestamp |
 
-* **Raising:**
-  * Each port exception maps to one `category`. Adapters raise port exceptions, and services convert them into records.
-  * A service that must stop raises `DataAcquisitionError(record)`.
-  * The child sends the record as a plain dict in its `failed` event, and the API process stores it on the operation.
-  * `DataAcquisitionError` gets a `__reduce__` that pickles the record.
-* **Validation order** for every ingestion (MDG output, SMM input, FDM upload, ADM inputs):
-  1. readability and format;
-  2. schema;
-  3. integrity (hashes, references);
-  4. mandatory fields.
-
-  All failures of one item are collected before it is rejected.
-* **Per-item status:** an enum like `UnitStatus` is kept for batch inputs, and the operation result summarizes it.
-* **Storage:** records are persisted with their operation in SQLite (ADR-0007), and embedded in the artifact they concern where the SRS asks, as in the Model Data `errors` section.
+* **IPC-safe propagation:** `DomainOperationError` (and `DataAcquisitionError`) implements `__reduce__` returning `(cls, (self.record,))`, and `MultiprocessingTaskRunner` serializes `record.to_dict()` directly over the child pipe (ADR-0003, ADR-0006).
+* **Standard four-step validation order** across MDG, SMM, SCG, FDM and ADM:
+  1. readability and container/syntax format (`format`);
+  2. JSON/YAML/XML schema conformance (`schema`);
+  3. cryptographic hashes and cross-entity referential checks (`integrity`, `missing_entity`, `invalid_relationship`);
+  4. mandatory domain field presence (`missing_field`, `missing_data`).
+  All validation errors on an input batch are collected before rejecting invalid items.
 
 ### Consequences
 
-* Good, because SMM gets a contract it can validate, old files stay readable, and results trace back to a byte-identical input.
-* Good, because DVE can filter every CSC's errors by category, stage and scope (DVE.8, 23–24), and records keep their structure across processes.
-* Bad, because the seeded placeholder logic in `ModelSetupDataGraph` must go, and `graph.js` must read `placeholders` instead of `"NOT_FOUND"` (ADR-0015).
-* Bad, because `ErrorRecord` changes shape. Schema 1.0 adopts the new fields, with a converter for old files.
-* Bad, because `jsonschema` and its dependencies add wheels to the offline wheelhouse.
+* Good, because SMM, SCG and DVE receive a strictly validated, hash-verified JSON 1.0 contract with zero fake random attributes or `"NOT_FOUND"` sentinels.
+* Good, because `missing_entity`, `invalid_relationship`, and `unmatched_record` map 1-to-1 to SMM.25 and SMM.37, and records survive child-process boundaries intact.
+* Bad, because `ModelSetupDataGraph.build()` and `graph.js` (`"NOT_FOUND"` handling, ADR-0015) require a coordinated R3 update alongside the `0.x` compatibility reader.
 
 ### Confirmation
 
-* `produce_model_setup_data` output validates against the JSON Schema, and contains no `"NOT_FOUND"`, no `-1` and no generated values.
-* The upload route rejects a file that fails the schema, with a `schema` error record.
-* Every `mdg` adapter test asserts the `category` produced for each port exception.
-* A record raised in a child process is retrieved intact from the operation's `failure`, and a pickled `DataAcquisitionError` keeps its record.
-* An `import-linter` rule checks that error records are imported from `common`.
+* Schema test validates `produce_model_data` output against `model-data-1.0.schema.json` and asserts zero `"NOT_FOUND"`, `-1`, or random-seeded values.
+* Exclusion test (`MDG.23`, `TC-MSG-05`): injecting a record with a missing mandatory field records an `ErrorRecord` in `errors` and **excludes** that item from `graph`.
+* Security test verifies `Workspace` rejects `".."` in `save()`, `add()`, and `resolve()`.
+* IPC test raises `DataAcquisitionError(record)` inside a spawned child process and verifies the exact `ErrorRecord` fields in `common_operation.failure`.
 
 ## Pros and Cons of the Options
 
-* JSON file per run (as built, versioned): Good, because it is simple, inspectable, downloadable, and matches the SRS wording. Bad, because there are no queries across runs; listing reads each file's header.
-* Relational rows: Bad, because the graph-shaped payload would be split across many tables, losing the single-file evidence.
-* Graph-DB import format: Bad, because it binds MDG to ADR-0011's choice and is not human-readable.
-* Shared, extended error type: Good, because there is one filterable, durable model. Bad, because `mdg` and the schema must migrate.
-* Copying the current record: Bad, because the category stays text-only and the record is lost across processes.
-* Per-CSC models: Bad, because they contradict SDD §1 decision 5, and DVE would need one renderer per CSC.
+### Versioned, schema-validated JSON file per run on the filesystem (chosen)
+
+* Good, because it matches the SRS "Model Data file" requirement literally, is human-inspectable, downloadable, and trivially hash-verifiable.
+* Bad, because cross-run metadata queries require indexing summary attributes in `dsm.db` (`common_artifact`, ADR-0007).
+
+### Normalized relational rows in SQLite without a file
+
+* Good, because SQL queries can inspect elements across runs directly.
+* Bad, because shredding nested graph payloads across dozens of tables complicates export/upload (`DVE.5`) and weakens single-file cryptographic evidence.
+
+### Engine-specific graph dump format
+
+* Good, because bulk graph loading can be faster.
+* Bad, because it couples MDG to ADR-0011's graph server and breaks human readability and schema validation.
+
+### Shared `ErrorRecord` in `common/errors.py` (chosen)
+
+* Good, because one error schema, UI renderer, and SQLite representation serves every CSC (`SDD §1 decision 5`).
+* Bad, because existing `mdg` error call sites and tests must migrate to separated `project`/`platform`/`system_version` and lowercase `status`.
+
+### Copying the legacy `mdg` `ErrorRecord` unchanged
+
+* Good, because `mdg` needs no refactor.
+* Bad, because `category` is missing, `project_platform` is concatenated, and `self.record` is lost across `spawn` pipes.
+
+### Separate error models per CSC
+
+* Good, because each CSC tailors its own fields freely.
+* Bad, because it violates SDD §1 decision 5 and forces DVE to maintain six error mappers.
 
 ## More Information
 
-* Code: `mdg/src/mdg/domain/model_setup_data.py`, `mdg/src/mdg/domain/model_setup_data_graph.py`, `mdg/src/mdg/domain/workspace.py`, `mdg/src/mdg/domain/error_record.py`, `mdg/src/mdg/adapters/model_setup_data/`, `mdg/src/mdg/ports/`
-* Related: ADR-0002, ADR-0004, ADR-0006, ADR-0007, ADR-0015, ADR-0008, ADR-0010, ADR-0011
+* Code: `mdg/src/mdg/domain/model_setup_data.py`, `mdg/src/mdg/domain/model_setup_data_graph.py`, `mdg/src/mdg/domain/workspace.py`, `mdg/src/mdg/domain/error_record.py`, `mdg/src/mdg/services/produce_model_setup_data.py`, `mdg/src/mdg/services/check_mandatory_fields.py`
+* Related: ADR-0002, ADR-0003, ADR-0004, ADR-0006, ADR-0007, ADR-0008, ADR-0010, ADR-0011, ADR-0012, ADR-0015
+* Revisit if single Model Data JSON files exceed 200 MB uncompressed, in which case transparent `.json.gz` compression may be added in schema version `1.1`.

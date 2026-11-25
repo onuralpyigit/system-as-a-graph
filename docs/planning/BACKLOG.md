@@ -97,6 +97,7 @@
 | DP-01–08 | 0016 (rule catalog) | All verification rule sets & classification metrics | R3 DoD | R2 |
 | DP-11, 12, 25 | 0003, 0012, 0013 | Simulation definition; **AED format (feeds R4+R5)**; SCG→ADM | R4 DoD | R3 |
 | DP-15, 21, 26, 27 | 0003, 0014, 0020 | Telemetry capacity; field source protocol; handoffs | R5 DoD | R4 |
+| — | 0017 | Behavioral propagation and drift-detection semantics | R6 DoD | R5 |
 | DP-13, 14, 23 | 0005, 0018 | Report format; scoring; CLI/result format | R7 DoD | R6 |
 
 ---
@@ -235,7 +236,7 @@ Size: S ≤ 2 days, M ≤ 4 days, L ≤ 8 days (one increment = 3–6 weeks). "T
 | E5.2 ADM field prep | D-05 | ADM.2, 5 |
 | E5.3 Analytical Data Binding | D-07 | SMM.32–37 |
 | E5.4 Field data UI | D-12 | DVE.10, 12, 16 |
-| E5.5 Decision gate: ADR-0005, 0018 (DP-13/14/23) (start for R6/R7) | — | — |
+| E5.5 Decision gate: ADR-0017 accepted (for R6); start ADR-0005 §3, 0018 (DP-13/14/23, for R7) | — | — |
 
 | Story | Title | Traces | Size |
 |---|---|---|---|

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | {Proposed \| Accepted \| Rejected \| Deprecated \| Superseded by [ADR-NNNN](NNNN-title.md)} |
+| Status | {Proposed \| Accepted \| Accepted (<clause> Proposed) \| Rejected \| Deprecated \| Superseded by [ADR-NNNN](NNNN-title.md)} |
 | Date | {YYYY-MM-DD of the last status change} |
 | Deciders | CDR Board{, other people who took part in the decision} |
 | Consulted | {people or teams whose opinion was sought} |

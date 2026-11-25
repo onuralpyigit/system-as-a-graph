@@ -3,93 +3,107 @@
 | Field | Value |
 |---|---|
 | Status | Proposed |
-| Date | 2026-11-19 |
+| Date | 2026-11-25 |
 | Deciders | CDR Board |
 | Consulted | Development team, pipeline owners |
 | Kind | Ratify |
 | Traces | DVE.1–2, 27, 77–78; QA-06, QA-11 |
 | Resolves | DP-23 (EXT-IF-07 build automation / CLI protocol and result format), by §3 |
-| Decide by | Wave A (2026-11-27); §3 automation contract by Wave E (2027-08-13) |
+| Decide by | Wave A1 (2026-12-04); §3 automation contract by Wave E (2027-08-13) |
 | Supersedes | — |
 
 ## Context and Problem Statement
 
-SDP §5 specifies FastAPI with REST/JSON. `dve/` is built on **Flask 2.3.2 with Flask-WTF 1.2.2**. `dve/src/dve/api.py` has about 395 lines and 18 routes in one `create_app()` factory, with these traits:
+Earlier SDP §5 drafts specified FastAPI with Pydantic. `dve/` is built on **Flask 2.3.2 with Flask-WTF 1.2.2**. `dve/src/dve/api.py` has 395 lines and 18 routes inside a single `create_app()` factory, backed by 45 API test functions (63 parametrized test items in `dve/tests/test_api.py`).
 
-* hand-written body validation (`_json_body`);
-* CSRF protection (`CSRFProtect`);
-* an upload size limit (`MAX_CONTENT_LENGTH` from `max_upload_mb`);
-* errors returned as `{"error": "<message>"}`.
-
-From R3 the API grows substantially: working-model editing, verification and findings queries. In R7 it must serve automation clients such as Jenkins (DVE.27, 77–78). They submit installation evaluations for one or more units and receive, per unit, a score, class, blocking findings and decision, plus an aggregate result, "in a machine-processable format". The protocol of EXT-IF-07 is a deferred design point (DP-23). Every dependency must ship as a cp39 wheel (ADR-0004).
+From R3 onwards the API expands to serve working-model editing, structural verification, synthetic/field workflows, behavioral analysis, findings filtering and report export. DVE.27 requires accepting analysis requests via Build Automation Tools and a CLI—presenting live status of ongoing operations to both interactive users and automation clients—and DVE.77–78 require per-unit and aggregate installation-suitability evaluations in a machine-processable format (EXT-IF-07, DP-23). All dependencies must install offline as CPython 3.9 wheels (ADR-0004).
 
 ## Decision Drivers
 
-* Automation clients need a documented, versioned contract and stable exit semantics (DVE.77–78).
-* Request validation must be consistent and must produce the error records of ADR-0009.
-* The existing code and its 45 API tests work, so a port must buy something the SRS needs.
-* Operations run in child processes owned by the API process (ADR-0006), so production must keep a single API process.
+* Automation clients and CLI users need a versioned HTTP contract, documented schemas, and deterministic exit semantics (DVE.27, 77–78).
+* Request validation must handle boolean/numeric zero values accurately and emit the shared `ErrorRecord` structure of ADR-0009.
+* Keeping the working Flask + CSRF + session stack avoids rewriting 18 routes and 63 API tests for zero functional gain.
+* Child-process task execution (ADR-0006) requires a **single-process, multi-threaded** production WSGI server so one parent process owns the child process table while serving 20 concurrent polling users without blocking.
 
 ## Considered Options
 
-* Framework: Flask 2.3 with Flask-WTF (as built) / FastAPI with Pydantic (SDP §5) / Django REST Framework
-* Automation contract (open, §3): REST `/api/v1/` with API tokens plus a `dsm` CLI subcommand / CLI-only / result as JSON Schema / exit codes per decision
+* Framework: Flask 2.3 with Flask-WTF and `waitress` WSGI server (as built, extended)
+* Framework: FastAPI with Pydantic and Uvicorn (earlier SDP §5)
+* Framework: Django REST Framework
+* Automation contract (§3, open): Versioned REST `/api/v1/` with Bearer tokens plus `dsm` Click CLI subcommands
 
 ## Decision Outcome
 
-Chosen option for the framework: **Flask 2.3 with Flask-WTF (as built)**. It already serves the UI and the Model Data workflow and is tested. A documented contract and a validation helper give automation clients what DVE.27/78 need, without porting 18 routes and rebuilding sessions and CSRF.
+Chosen option for the framework: **Flask 2.3 with Flask-WTF and `waitress` as the single-process multi-threaded production WSGI server**. It preserves the tested UI, session and CSRF plumbing, stays 100% pure Python in the wheelhouse, and satisfies single-parent ownership of ADR-0006's child processes.
 
-### 1. As built (`1157784`)
+### 1. As built (`1157784` + `f820ccb`)
 
-* App factory `create_app(runtime=None)`, with every route as a closure. The `Runtime` dataclass (`dve/src/dve/__init__.py`) injects the adapters, and tests pass their own.
-* JSON for every `/api/...` route; `GET /` renders the single page (ADR-0015).
-* CSRF: the token from `GET /api/csrf-token` is sent as `X-CSRFToken`. A failure returns 403 with `{"error": …, "csrf": true}`.
-* Long-running work is started with `POST` and returns `202` with a task ID (`POST /api/mdg/run`). Status comes from `GET /api/mdg/tasks/<id>?after=N` (ADR-0006).
-* `serve()` runs Werkzeug's development server (`app.run()`).
-* Werkzeug is pinned to `>=2.3.7,<3.1` (2.3.8 in `dve/wheelhouse/`), because Flask 2.3.2's test client fails on Werkzeug 3.1 (ADR-0021).
+* App factory `create_app(runtime=None)` in `dve/src/dve/api.py`; `Runtime` (`dve/src/dve/__init__.py`) injects port adapters or test fakes.
+* `GET /` serves the single-page Operations Panel (ADR-0015); `/api/...` routes return JSON.
+* CSRF: `GET /api/csrf-token` issues a token sent in `X-CSRFToken`; failures return `403` with `{"error": …, "csrf": true}`.
+* Asynchronous tasks start with `202` (`POST /api/mdg/run`) and are polled via `GET /api/mdg/tasks/<id>?after=N` (ADR-0006).
+* Commit `f820ccb` pinned `Werkzeug>=2.3.7,<3.1` (`werkzeug-2.3.8` in `dve/wheelhouse/`) because Flask 2.3.2's test client reads `werkzeug.__version__`, removed in Werkzeug 3.1.
+* **As-built `api.py` defects identified for cleanup (§2):**
+  * `_json_body` (`api.py:77-85`) calls `request.get_json(silent=True, force=True)` (ignoring `Content-Type`) and checks `if not body.get(field)`, falsely rejecting valid `0`, `False`, and `[]` values as missing fields.
+  * The `413` handler (`api.py:131-133`) formats `config().api.max_upload_mb` rather than reading `app.config["MAX_CONTENT_LENGTH"]`.
+  * Local filesystem routes (`GET/POST …/mdg-files`, `…/model`, `…/download`, `api.py:279-326`) carry an unnecessary `@config_db_required` decorator even though they touch only `model_setup_data_store`.
+  * `serve()` (`api.py:387`) calls Werkzeug's single-threaded development `app.run()`, and `DataSourceService._sessions` (`data_source_service.py:25`) is an unlocked `dict` that is not thread-safe under multi-threaded WSGI execution.
 
-### 2. Rules for growth
+### 2. Rules for growth (Wave A1)
 
-* **Blueprints:** one per area, for example `auth`, `sources`, `model_data`, `operations`, `models`, `findings`, `reports` and `automation`. Each is registered in `create_app()` and takes its adapters from the `Runtime`.
-* **Versioning:** routes for automation clients live under `/api/v1/` and are authenticated by API token (ADR-0019). UI routes may stay unversioned; they change together with the page.
-* **Errors:** `{"error": "<message>", "code": "<stable_code>", "details": {…}}`. This keeps the as-built `error` key. `code` comes from the error record category (ADR-0009) or the HTTP case, such as `csrf`, `not_found` or `payload_too_large`.
-* **Validation:** one helper, grown from `_json_body`, validates a body against a small declarative schema (required keys, types, enums). A failure maps to a 400 with an error record. No validation framework is added.
-* **Contract document:** `docs/api/openapi.yaml`, written by hand for `/api/v1/`. A contract test walks the Flask URL map and fails if a route and the document disagree.
-* **Production server:** **waitress**, a pure-Python multi-threaded WSGI server, replaces `app.run()`. It keeps one process, so the task runner and its children stay owned by one parent. Pre-forking servers such as gunicorn are not used, because each worker would have its own task table.
+* **Blueprints:** split `api.py` by bounded area (`auth`, `sources`, `model_data`, `operations`, `models`, `verification`, `analysis`, `field_records`, `findings`, `reports`, `health`), each wired to `Runtime` inside `create_app()`. Fix the unnecessary `@config_db_required` guard on local artifact routes and synchronize `DataSourceService._sessions` with a `threading.RLock`.
+* **Versioning and live visibility (DVE.27):**
+  * `/api/v1/` hosts versioned endpoints shared by the UI, CLI, and CI automation, starting in Wave A1 with `/api/v1/operations` (including `GET /api/v1/operations?state=queued,running` so UI users and CLI clients both see all ongoing operations, DVE.27) and `/api/v1/health` (ADR-0020), and growing with each release wave.
+  * `/api/v1/` accepts either an authenticated browser session (+ CSRF on mutating verbs) or an `Authorization: Bearer <token>` header (exempt from CSRF, ADR-0019). UI-only convenience routes may remain unversioned under `/api/` as aliases over the same services.
+* **Error envelope:** `{"error": "<message>", "code": "<stable_code>", "details": {…}}`, retaining the top-level `error` string for backward compatibility while mapping `code` and `details` directly from `common.errors.ErrorRecord` (ADR-0009) or HTTP transport cases (`csrf`, `not_found`, `conflict`, `rate_limited`, `payload_too_large` derived from `app.config["MAX_CONTENT_LENGTH"]`).
+* **Request validation:** replace `_json_body` with a strict declarative validator requiring `application/json` (except multipart uploads), checking key presence (`key not in body or body[key] is None`) separately from non-empty string rules, validating types/enums, and returning `400` with a `schema` or `missing_field` `ErrorRecord`.
+* **OpenAPI contract (`docs/api/openapi.yaml`):** maintained alongside `/api/v1/` routes starting in Wave A1. A CI contract test inspects Flask's `app.url_map` and fails if any `/api/v1/` route or HTTP method is undocumented or stale.
+* **Production WSGI server (`waitress`):** vendor `waitress==3.0.2` (pure Python, zero extra dependencies) into `dve/wheelhouse/`. `serve()` runs `waitress.serve(app, host=…, port=…, threads=cfg.api.threads)` with `threads = 16` by default (overriding waitress's default of `4` so 20 concurrent users polling at 1 Hz plus uploads never exhaust worker threads), while keeping a single parent OS process for `MultiprocessingTaskRunner`. Pre-forking servers (`gunicorn`, `uwsgi`) are forbidden because forked workers would split child-process supervision.
 
-### 3. Automation-client contract (open, decide by Wave E)
+### 3. Automation-client and CLI contract (open, decide by Wave E)
 
-* **Question:** what do the API, CLI, result schema and exit codes look like for CI pipelines (DVE.27, 77–78; DP-23)?
-* **Direction:**
-  * REST under `/api/v1/` with API tokens (ADR-0019).
-  * A `dsm` CLI subcommand built with click, which is already in the wheelhouse, that submits, polls and prints the result.
-  * One operation per unit with an aggregate parent (ADR-0007, `parent_operation_id`).
-* **To decide:**
-  * the result JSON Schema: per-unit score, class, blocking findings and decision, plus the aggregate;
-  * the exit codes per decision;
-  * whether the CLI also runs without the server.
-* **Inputs:** ADR-0018 (scoring and decision), ADR-0006 (polling contract), ADR-0007 (operation records).
+* **Question:** what are the exact CLI subcommands, request/response JSON Schemas, and process exit codes for Build Automation Tools and CLI users across **verification, behavioral analysis, and installation evaluation** (DVE.27, 77–78; EXT-IF-07, DP-23)?
+* **Fixed architectural constraints:**
+  * Transport is HTTPS REST under `/api/v1/` authenticated by scoped API tokens (ADR-0019).
+  * `dsm` gains `click` subcommands (`click 8.1.8` is already in `dve/wheelhouse/`): e.g. `dsm verify`, `dsm analyze`, `dsm evaluate`, `dsm operations status/list/cancel`—submitting requests to `/api/v1/`, polling with `--wait`, streaming logs, and printing JSON or human-readable summaries (DVE.27).
+  * Multi-unit installation evaluation (DVE.78) creates one non-process parent `operation` row and one independent child `installation_evaluation` `operation_id` per candidate software unit (ADR-0006, ADR-0007).
+* **To settle in Wave E:**
+  * Exact JSON Schema (`docs/api/evaluation-result-1.0.schema.json`) carrying per-unit `operation_id`, `score`, `score_class`, `conformance`, `blocking_findings`, and `decision` (`allow` | `block`), plus the aggregate result (aligned with ADR-0018);
+  * Exact CLI exit-code mapping (`0` = conforming/`allow`, `2` = non-conforming/`block`, `3` = execution/operational error, `4` = authentication/validation error);
+  * Poll interval/backoff defaults and CI pipeline timeout handling (Jenkinsfile reference snippet).
 
 ### Consequences
 
-* Good, because there is no port, and the existing tests and UI keep working.
-* Good, because all dependencies stay pure Python or are already cp39 wheels.
-* Bad, because the OpenAPI document is maintained by hand. The contract test catches missing routes, not body changes, so §3 adds example-based tests for the automation responses.
-* Bad, because there is no async request handling. Status is delivered by polling, so none is needed.
+* Good, because the existing 18 routes, UI integration and 63 API tests keep working without a framework migration.
+* Good, because `waitress` and `click` are pure Python, keeping CentOS 7 offline packaging trivial.
+* Bad, because `docs/api/openapi.yaml` is maintained by hand rather than generated from Pydantic models, requiring route-map and response-schema contract tests in CI.
+* Bad, because synchronous WSGI threads hold a thread per in-flight request; keeping long work in child processes (ADR-0006) and configuring `threads = 16` bounds thread occupancy to short DB/graph reads.
 
 ### Confirmation
 
-* `dve/tests/test_api.py` passes against `create_app()` for every blueprint.
-* The OpenAPI contract test runs in CI.
-* A start-up test checks that `serve()` uses waitress and refuses the development server in production mode (ADR-0004).
+* `dve/tests/test_api.py` passes across all blueprints, including falsy JSON values (`0`, `False`, `[]`), `Content-Type` enforcement, accurate `413` limits, and concurrent `DataSourceService` access.
+* The OpenAPI route-coverage test passes in CI from Wave A1 onwards.
+* Start-up test verifies `serve()` invokes `waitress` with configured `threads` and rejects Werkzeug's dev server in `production` mode (ADR-0004).
 
 ## Pros and Cons of the Options
 
-* Flask with Flask-WTF (as built): Good, because it already works offline, with CSRF, sessions and tests. Bad, because validation and the contract need conventions rather than coming from type annotations.
-* FastAPI (SDP §5): Good, because it generates the OpenAPI schema and validation from annotations. Bad, because of the port of 18 routes and the session and CSRF rework, and because pydantic-core is a compiled dependency to vendor offline.
-* Django REST Framework: Good, because it is mature. Bad, because it is the largest migration, and its ORM overlaps with ADR-0007.
+### Flask 2.3 with Flask-WTF and `waitress` (chosen)
+
+* Good, because it is already built, tested, pure Python in `dve/wheelhouse/`, and runs in a single parent process compatible with `MultiprocessingTaskRunner`.
+* Bad, because request validation and OpenAPI schemas require explicit conventions and contract tests rather than automatic type-annotation generation.
+
+### FastAPI with Pydantic and Uvicorn (earlier SDP §5)
+
+* Good, because OpenAPI schemas and request validation are generated automatically from type annotations.
+* Bad, because porting 18 routes, reworking Flask cookie sessions and CSRF, and vendoring compiled Rust `pydantic-core` wheels for CPython 3.9/`glibc 2.17` adds risk and maintenance cost without unlocking new SRS capability.
+
+### Django REST Framework
+
+* Good, because batteries-included auth, admin and serializers are mature.
+* Bad, because it is the heaviest migration and its ORM conflicts with ADR-0003/0007's plain-SQL repository ports.
 
 ## More Information
 
-* Code: `dve/src/dve/api.py`, `dve/src/dve/__init__.py`, `dve/tests/test_api.py`, `dve/tests/conftest.py`, `dve/setup.py`
-* Related: ADR-0004, ADR-0006, ADR-0007, ADR-0015, ADR-0009, ADR-0018, ADR-0019, ADR-0021
+* Code: `dve/src/dve/api.py`, `dve/src/dve/__init__.py`, `dve/src/dve/services/data_source_service.py`, `dve/tests/test_api.py`, `dve/setup.py`
+* Related: ADR-0003, ADR-0004, ADR-0006, ADR-0007, ADR-0009, ADR-0015, ADR-0018, ADR-0019, ADR-0020, ADR-0021
+* Revisit if streaming server-sent events / WebSockets become mandatory beyond 1 Hz REST polling, or when upgrading Flask requires lifting the `Werkzeug<3.1` pin.

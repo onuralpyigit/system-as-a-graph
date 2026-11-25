@@ -3,146 +3,143 @@
 | Field | Value |
 |---|---|
 | Status | Proposed |
-| Date | 2026-11-19 |
+| Date | 2026-11-25 |
 | Deciders | CDR Board |
 | Consulted | Development team, security, directory administrators, platform team |
 | Kind | Reconcile |
 | Traces | DVE.3, 7, 27, 77–78; MDG.8; QA-01, QA-10 |
 | Resolves | DP-22 (EXT-IF-06 LDAP directory service protocol) |
-| Decide by | Wave A (2026-11-27); §3 authorization by Wave B (2027-01-22) |
+| Decide by | Wave A1 (2026-12-04); §3 authorization by Wave B (2027-01-22) |
 | Supersedes | — |
 
 ## Context and Problem Statement
 
-DVE.3 requires authentication against a defined LDAP directory service, with access limited to each user's authorizations. DVE.27 adds automation clients (Jenkins, CLI). MDG.8 requires data-source configurations, including user information, to be savable. SDD §2.3 leaves the LDAP protocol (EXT-IF-06) open. SDP §5 specifies LDAP direct bind, stateless JWT sessions, and environment variables (`.env`) for secrets.
+DVE.3 requires authenticating users via a defined LDAP directory service (EXT-IF-06, DP-22) and restricting system access to each user's authorizations. DVE.27, 77–78 require authenticating non-interactive CI/automation and CLI requests. MDG.8 requires savable data-source configurations including connection user credentials. Earlier SDP §5 drafts proposed LDAP direct bind, stateless JWT browser tokens, and `.env` environment variables.
 
-As built (`1157784`):
+**As built (`1157784`) and security-audit findings:**
 
-* **Directory:** `LdapDirectoryService` is a mock. It accepts `admin`/`admin` and `operator`/`operator` and returns a `Role` (`ADMIN`, `OPERATOR`).
-* **Session:** Flask's signed cookie (itsdangerous), holding `username`, `role` and `conn_token`.
-  * `session.permanent = True`, with `session_lifetime` = 86,400 s.
-  * `SameSite=Lax`; `HttpOnly` by Flask default; `Secure` not set.
-* **CSRF:** Flask-WTF `CSRFProtect`, with the `X-CSRFToken` header from `GET /api/csrf-token`.
-* **Authorization:** only `login_required`. The role is stored but never checked. Automation clients have no authentication.
-* **Secret key:** in the packaged `dve.ini` (`secret_key = dev-insecure-change-me`), with no override.
-* **Data-source credentials:**
-  * held per session in memory (`DataSourceService._sessions`, keyed by `conn_token`), joined as `"<user>:<password>"`, lost on restart, and not savable;
-  * passed to operations as spawn arguments, with no broker;
-  * kept out of the `git` command line by the environment credential helper, with errors redacted (ADR-0008).
-* **Browser storage:** only the last usernames are kept in `localStorage`.
+* **Directory:** `LdapDirectoryService` (`dve/src/dve/adapters/ldap_directory_service.py`) is a mock accepting `admin`/`admin` and `operator`/`operator`.
+* **Session & CSRF:** Flask `itsdangerous` signed cookie (`session.permanent = True`, `86400 s` lifetime, `HttpOnly`, `SameSite=Lax`, `Secure` unset) paired with `Flask-WTF` `CSRFProtect` (`X-CSRFToken`). `role` is stored in the cookie and never checked (`login_required` only).
+* **Critical session-fixation & credential-bleed bug (`dve/src/dve/api.py:179-191`):** `POST /api/login` overwrites `session["username"]` and `session["role"]` **without calling `session.clear()` or closing `session.get("conn_token")` in `DataSourceService`!** If User A connects CMDB and Git and User B subsequently signs in on the same browser/client without a prior logout, **User B inherits User A's `conn_token` and executes operations using User A's database and Git credentials** (`dve/tests/test_api.py:398-401` currently relies on this bug).
+* **Secrets & credentials:** `secret_key = dev-insecure-change-me` is packaged inside `dve.ini` with no host override; unsaved data-source credentials live indefinitely in an unlocked `DataSourceService._sessions` dict as `"<user>:<password>"` (exposed in `DataSourceConfig.__repr__` and `to_dict()`), and cannot be saved across restarts (`MDG.8` unmet).
+* **Browser `localStorage`:** `app.js` stores `dve.last-username`, `dve.last-db-username`, `dve.last-repo-username`, and per-user UI navigation state `dsm:state:<username>` (`selection`, `active_task`, `last_run`, `view`, `model_file`, `graph_mode`, `candidates`—no passwords or tokens).
 
 ## Decision Drivers
 
-* Logout and role changes must take effect promptly. Browser sessions must resist XSS token theft and CSRF.
-* Automation clients need long-lived, revocable, scoped credentials.
-* There is one backend process on one host (ADR-0004), with an SQLite store (ADR-0007). No vault exists on the offline host.
-* No credential may appear in plain text in logs, process arguments, records or the repository (QA-01), and rotation must not need code changes.
-* The tested session and CSRF code should be kept if it can meet these drivers.
+* Re-login must rotate session state cleanly (zero cross-user `conn_token` bleed), and logout or LDAP role revocation must take effect immediately (QA-01).
+* Browser sessions must resist XSS token exfiltration (`HttpOnly`) and CSRF, without 1 Hz background task polling keeping idle sessions alive forever.
+* CI/CD pipelines and CLI scripts need long-lived, scoped, revocable credentials independent of human LDAP passwords (`DVE.27, 77–78`).
+* Secrets and saved `MDG.8` credentials must live outside Python packages on the Vault-less offline host (ADR-0004) with offline key-rotation support.
 
 ## Considered Options
 
-* Sessions: the hardened Flask signed cookie with server-side revocation (as built, extended) / stateless JWT (SDP §5) / opaque server-side sessions
-* Automation: SaaG-issued API tokens / a shared service account with LDAP bind
-* Application secrets: host files outside the package / the packaged `.ini` (as built) / environment variables (SDP §5)
-* Data-source credentials: encrypted in SQLite, with session memory for unsaved connections / memory only (as built) / plain text / an external vault
+* Browser sessions: Hardened Flask signed cookie (`HttpOnly`, `SameSite=Lax`, `Secure`) backed by SQLite `epoch` revocation and non-extending background polls (reconciling as-built cookies with server revocation)
+* Browser sessions: Stateless JWT in `localStorage` or cookies (earlier SDP §5)
+* Browser sessions: Full opaque server-side session store replacing Flask sessions
+* Automation auth: Scoped SHA-256-hashed SaaG Bearer API tokens on `/api/v1/`
+* Automation auth: Shared LDAP service user credentials passed on every CI call
+* Application secrets: Mode-`0600` host files (`/etc/dsm/secret_key`, `/etc/dsm/data_key` keyring)
+* Application secrets: Packaged `.ini` (as built) or process environment variables (earlier SDP §5)
+* Saved `MDG.8` credentials: AES-256-GCM encrypted `common_data_source` rows in `dsm.db`
+* Saved `MDG.8` credentials: Volatile memory only (as built) or external HashiCorp Vault
 
 ## Decision Outcome
 
-Chosen options:
+Chosen options (reconciling the tested Flask cookie/CSRF code with enterprise LDAP, revocation and secret externalization):
+* **LDAPv3 search-and-bind** over LDAPS/StartTLS via `ldap3` (+ `pyasn1`);
+* **hardened Flask signed cookie with session reset on login and SQLite `epoch` revocation**;
+* **scoped SHA-256-hashed Bearer API tokens** for CLI and CI clients;
+* **mode-`0600` host secret/keyring files** outside `/opt/dsm/venv`; and
+* **AES-256-GCM encrypted `common_data_source` rows** in `dsm.db`.
 
-* **LDAP search-and-bind** through `ldap3`;
-* **the hardened Flask signed cookie with epoch revocation** in SQLite;
-* **SaaG API tokens** for automation clients;
-* **secret files outside the package**;
-* **AES-256-GCM-encrypted saved credentials**.
+### 1. LDAP authentication (`EXT-IF-06`, `DP-22`), sessions and API tokens
 
-This keeps the tested cookie and CSRF code and adds what it lacks: immediate logout everywhere, roles that change without waiting for expiry, and savable credentials, with no new service.
+* **LDAPv3 search-and-bind (`ldap3`):**
+  * Protocol: LDAPv3 over **LDAPS (`636`)** or **StartTLS (`389`)**, verifying server certificates against the configured CA bundle (`ca_bundle_path`; requires CPython 3.9 linked against OpenSSL ≥ 1.1.1, ADR-0004 §2).
+  * Wheelhouse: vendor pure-Python **`ldap3` (`2.9.1`) AND its transitive dependency `pyasn1` (`>=0.4.6`)** into `dve/wheelhouse/`.
+  * Flow: (1) service bind DN searches user entry by `uid` / `sAMAccountName` under `base_dn` (`connect_timeout = 5 s`, `receive_timeout = 5 s`); (2) user DN bind verifies the supplied password (never stored or logged); (3) group memberships (`memberOf` / ` groupOfNames`) are read and mapped to SaaG roles (§3).
+  * `[directory] backend = ldap | mock` selects the adapter (`ADR-0003`); `mock` is refused at start-up in `production` mode (`ADR-0004 §3`), and `dev/compose.yaml` adds an OpenLDAP seed container for contract tests.
+* **Hardened browser sessions & session-fixation fix:**
+  * **Mandatory login reset:** `POST /api/login` **always** closes any prior `session.get("conn_token")` in `DataSourceService`, calls `session.clear()`, generates a fresh `conn_token`, and writes `{username, epoch, issued_at, last_activity_at, conn_token}` (`dve/tests/test_api.py:398-401` is updated to reconnect sources explicitly after user switch).
+  * **Server-side epoch & role lookup:** every authenticated request reads `dve_user(username PK, epoch INTEGER, roles_json TEXT, roles_checked_at TEXT, disabled INTEGER)` in `dsm.db` (`ADR-0007`). Role claims are never trusted from the cookie. Logout (or admin revocation) increments `epoch`, invalidating all cookies of that user immediately.
+  * **Non-blocking group refresh & idle timeout:** if `roles_checked_at` is older than `15 min`, group refresh runs with a tight `2 s` timeout (falling back to cached roles with a warning if LDAP is transiently slow rather than stalling active requests). Interactive requests update `last_activity_at` (at most once per `60 s`) against a `30 min` idle timeout and `12 h` absolute timeout; **background 1 Hz polling requests carrying `X-Background-Poll: 1` (`ADR-0015 §1`) verify session validity without advancing `last_activity_at`** so unattended tabs still time out after `30 min`. Unsaved entries in `DataSourceService._sessions` carry the same TTL and are swept automatically.
+  * Cookie flags: `HttpOnly=True`, `SameSite="Lax"`, and `Secure=True` in `production` mode; CSRF stays enforced via `Flask-WTF` on all cookie-authenticated mutating requests.
+* **Automation & CLI Bearer tokens (`DVE.27, 77–78`):**
+  * Stored in `dve_api_token(token_id PK, name, token_sha256 UNIQUE, owner_user, scopes_json, project_scope NULL, created_at, expires_at, last_used_at NULL, revoked_at NULL)`.
+  * Raw token (`32` random bytes prefixed `dsm_tok_`) is displayed once on creation; only its `SHA-256` digest is stored.
+  * Scopes cover all `/api/v1/` automation needs: `evaluation:run`, `verification:run`, `analysis:run`, `operations:read`, `operations:cancel`, `field_records:upload`, `reports:read`. Bearer-token requests are accepted only on `/api/v1/`, are exempt from browser CSRF, and log token `name`/`token_id` in `common_audit_event`.
 
-### 1. Authentication (EXT-IF-06) and sessions
+### 2. Host secrets, encrypted `MDG.8` credentials and key rotation
 
-* **LDAP:**
-  * LDAPv3 over LDAPS (636) or StartTLS (389), with certificates verified against a configured CA bundle.
-  * The library is `ldap3`, pure Python, added to `dve/wheelhouse/`.
-  * Flow:
-    1. A service account binds and searches the user by `uid` or `sAMAccountName` under a base DN.
-    2. SaaG binds as that DN with the given password.
-    3. SaaG reads the groups for §3.
-  * The password is never stored or logged.
-  * `[directory] backend = ldap | mock` selects the adapter (ADR-0003). `mock` is refused in production mode (ADR-0004).
-* **Browser sessions:**
-  * The cookie holds only `username`, `epoch`, `issued_at`, `last_seen` and `conn_token`; the role leaves it.
-  * A `dve_user(username, epoch, roles, roles_checked_at)` row is read on every request. A mismatched epoch is rejected, and roles come from the row.
-  * Logout increments `epoch`, invalidating every cookie of that user; an administrator can do the same. Roles are refreshed from LDAP at login, and when `roles_checked_at` is older than 15 minutes.
-  * Flags: `HttpOnly`, `SameSite=Lax` (as built), and `Secure` in production mode.
-  * Timeouts: 12 h absolute, replacing the 24 h lifetime, and 30 min idle, refreshed at most once a minute. Both are configurable.
-  * CSRF stays as built.
-* **Automation clients (DVE.27, 77–78):**
-  * A user with the right role creates named tokens with scopes (e.g. `evaluation:run`) and an expiry.
-  * A token is 32 random bytes, shown once, and only its SHA-256 is stored, in `dve_api_token`.
-  * Clients send `Authorization: Bearer <token>`. Token requests are exempt from CSRF and accepted only on `/api/v1/` (ADR-0005).
-  * Revocation is in the UI. Token use is audited (ADR-0007).
-* **Development:** `dev/compose.yaml` gains an OpenLDAP container with seed users and groups. The mock stays for tests and quick local runs.
+* **Host secret files (`/etc/dsm/`, mode `0600`, owned by `dsm`, ADR-0004 §3):**
+  * `/etc/dsm/secret_key`: 32 random bytes signing Flask cookies.
+  * `/etc/dsm/data_key`: multi-line keyring file (`<key_id>:<base64_32_byte_key>` per line; **first line is the active encryption key**, subsequent lines are retired keys retained for decryption during rotation).
+  * `DSM_SECRET_KEY` and `DSM_DATA_KEY` environment overrides are permitted in `development` mode only and stripped from every child/subprocess environment (`ADR-0006`, `ADR-0008`).
+* **Saved data-source configurations (`MDG.8`, `common_data_source` in `dsm.db`):**
+  * Passwords/tokens are encrypted using **AES-256-GCM** (`cryptography.hazmat.primitives.ciphers.aead.AESGCM` with a fresh 96-bit random nonce prepended to ciphertext and `(source_id, source_type, connection_address)` bound as AEAD `associated_data` so ciphertexts cannot be transplanted onto attacker-controlled URLs!).
+  * `cryptography` (`43.0.3`, statically linking OpenSSL 3.x) + `cffi` + `pycparser` are placed in **`common/wheelhouse/`** (`ADR-0004`).
+  * **Offline key rotation:** `dsm rotate-data-key` prepends a new `<key_id>:<key>` to `/etc/dsm/data_key` and re-encrypts all `common_data_source` rows inside a SQLite transaction, allowing old keys to be pruned safely.
+  * API responses omit secrets (`has_secret: true`); child operations receive `source_id` and decrypt inside the worker at connect time. Unsaved session-only configs mask secrets in `DataSourceConfig.__repr__` and log redaction filters (`dve`, `mdg`, `common`).
 
-### 2. Secrets and credentials
+### 3. Role-based authorization and shared source access (open, decide by Wave B)
 
-* **Application secrets:**
-  * The packaged `dve.ini` keeps development defaults only.
-  * `/etc/dsm/dve.ini` (or the directory in `DSM_CONFIG`) holds paths only: `secret_key_file = /etc/dsm/secret_key` and `data_key_file = /etc/dsm/data_key`.
-  * The secret files are owned by the service user with mode 0600, created by the install script with `secrets.token_bytes(32)`, and never committed.
-  * In development, `DSM_SECRET_KEY` and `DSM_DATA_KEY` may supply the values. The task runner removes them from every child process and subprocess environment.
-  * In production mode, start-up refuses a missing secret, a secret file readable by others, or the development secret key.
-* **Saved data-source configurations (MDG.8):**
-  * Each is a `dve_data_source` row (ADR-0007, ADR-0008).
-  * Its password or token is encrypted with AES-256-GCM (`cryptography`'s `AESGCM`; 43.0.3 is already in `mdg/wheelhouse/`). Each row stores a key ID, so the key can be rotated by re-encrypting.
-  * Configurations belong to their creator, and sharing follows §3.
-* **Unsaved connections:** kept per session in memory, as built.
-* **Use:**
-  * API responses never contain the secret field.
-  * For a saved configuration, operation arguments carry `data_source_id` only, and the child decrypts at the moment of use.
-  * An unsaved connection's value may still be a spawn argument, but never goes into records, logs or `repr()`. `DataSourceConfig.__repr__` masks `user_info`.
-* **Git and logging:**
-  * The credential helper stays as built, and TLS verification is turned on (ADR-0008).
-  * A log filter on the `dve` and `mdg` loggers redacts secret fields and URL user-info.
-
-### 3. Authorization (open, decide by Wave B)
-
-* **Question:** how are DVE.3's "authorizations" defined and enforced per operation?
-* **Options to weigh:**
-  * roles mapped from LDAP groups;
-  * per-project permissions;
-  * a single role.
-* **Constraints already set:**
-  * roles are read from the `dve_user` row (§1);
-  * the as-built `ADMIN` and `OPERATOR` values are the starting vocabulary;
-  * API-token scopes and the sharing of saved configurations depend on this decision.
+* **Question:** how do LDAP groups map to SaaG roles and per-project permissions across interactive users and CI API tokens (`DVE.3`, `MDG.8`, `DVE.78`)?
+* **Scope to settle in Wave B:**
+  1. Role permission matrix (building on `ADMIN`, `ARCHITECT` / `OPERATOR`, `VIEWER`, `AUTOMATION`) governing: managing `system`/`project`-scoped `common_data_source` entries (`MDG.8`), uploading field records (`FDM.2`), creating/editing Working Models (`DVE.17`), cancelling operations (`ADR-0006`), approving/selecting evaluation profiles (`DVE.77`), and minting API tokens;
+  2. LDAP group DN → role mapping configuration in `/etc/dsm/dve.ini`;
+  3. Rules allowing CI Bearer tokens (`evaluation:run`) to use `project`- or `system`-scoped `common_data_source` entries without impersonating an interactive user.
 
 ### Consequences
 
-* Good, because the tested session and CSRF code is kept, and logout and role changes take effect on the next request.
-* Good, because CI pipelines get scoped, revocable credentials without sharing a person's password.
-* Good, because MDG.8 is met, saved connections survive restarts, and secrets live outside the package, so upgrades cannot overwrite or expose them.
-* Bad, because each request reads one indexed SQLite row, and the cookie is a bearer credential until its epoch is bumped (limited by the flags and timeouts).
-* Bad, because the LDAP service account must be provisioned, and losing the data-encryption key loses saved credentials. Its backup belongs to ADR-0004 §5.
-* Bad, because anyone with the service user's rights can read the key files. That is inherent without a vault, and mitigated by host hardening.
+* Good, because fixing login session reset eliminates cross-user credential bleed immediately, epoch checks make logout/revocation instant, and AEAD `associated_data` prevents credential-redirect attacks.
+* Good, because `X-Background-Poll: 1` preserves genuine 30-min idle session expiry despite 1 Hz UI polling, and `/etc/dsm/data_key` keyring format makes key rotation concrete offline.
+* Bad, because every authenticated request performs one primary-key SQLite lookup on `dve_user` (sub-millisecond under WAL).
 
 ### Confirmation
 
-* Integration tests against the dev OpenLDAP: valid login, wrong password, unknown user, TLS failure.
-* Logout and token revocation invalidate the credential on the next request, including a copy of the cookie saved before logout.
-* Production start-up fails with `[directory] backend = mock`, with the development secret key, or with a world-readable key file.
-* The existing CSRF tests and the `mdg` tests that keep passwords out of `git` arguments keep passing.
-* An operation started from a saved configuration has no password in its spawn arguments or its `operation` row.
-* `GET` on a configuration never returns the secret, and `repr(DataSourceConfig(...))` never contains it.
+* Regression & security test (`dve/tests/test_api.py`): User A connects CMDB/Git, User B calls `POST /api/login` on the same client—asserts User A's `conn_token` is closed and User B has zero connected sources.
+* Contract tests against `dev/` OpenLDAP: valid search-and-bind, wrong password, unknown user, expired/bumped `epoch`, idle timeout advancing only on interactive calls (not `X-Background-Poll: 1`), and Bearer token scope enforcement on `/api/v1/`.
+* Crypto & rotation tests: verify AES-256-GCM round-trip, AEAD failure when `connection_address` is tampered, `dsm rotate-data-key` re-encryption, zero secrets in `GET` responses, `repr()`, `common_operation.inputs`, or logs, and `production` start-up refusal on `mock` directory or insecure key permissions.
 
 ## Pros and Cons of the Options
 
-* Hardened signed cookie with epoch revocation (chosen): Good, because it keeps tested code, and revocation needs one row per user. Bad, because the cookie is a bearer credential until revoked.
-* Stateless JWT: Good, because it is verifiable without state. Bad, because revocation brings back state, and browser-held tokens are exposed to XSS.
-* Opaque server-side sessions: Good, because every session is revocable. Bad, because it replaces working code for little gain on a single host.
-* Host secret files (chosen): Good, because they are outside the package, with tight permissions. The packaged `.ini` ships inside the wheel, and environment variables are inherited by `git` and `gmake` unless scrubbed.
-* Encrypted credentials in SQLite (chosen): Good, because they are savable with no new service. Bad, because of key management. Memory only violates MDG.8. A vault would be a new critical service offline.
+### Hardened Flask signed cookie with SQLite `epoch` revocation (chosen)
+
+* Good, because it preserves `HttpOnly` + `Flask-WTF` CSRF protection while adding instant server-side logout/role revocation via one tiny table.
+* Bad, because a stolen cookie remains usable from another IP until idle timeout or `epoch` bump.
+
+### Stateless JWT (earlier SDP §5)
+
+* Good, because signature verification needs no database read.
+* Bad, because immediate logout/role revocation reintroduces a server-side blocklist anyway, and storing JWTs in `localStorage` exposes sessions to XSS.
+
+### Full opaque server-side session store
+
+* Good, because zero session metadata sits in the cookie.
+* Bad, because it replaces tested Flask session plumbing for negligible gain once `role` and `epoch` live in `dve_user`.
+
+### Scoped SHA-256-hashed Bearer API tokens (chosen)
+
+* Good, because Jenkins pipelines get least-privilege, revocable credentials without storing human LDAP passwords.
+* Bad, because token lifecycle UI and CLI commands must be built.
+
+### Shared LDAP service account in CI
+
+* Good, because no token table is needed.
+* Bad, because rotating a shared password breaks every pipeline at once and offers no per-pipeline scope or audit attribution.
+
+### Mode-`0600` host keyring files + AES-256-GCM in SQLite (chosen)
+
+* Good, because upgrades of `/opt/dsm/venv` never touch secrets, subprocess environments stay clean, and `MDG.8` credentials persist safely with key rotation.
+* Bad, because losing `/etc/dsm/data_key` without a custodial backup (`ADR-0004 §5`) renders saved data-source passwords unrecoverable.
+
+### Packaged `.ini` or environment variables / external Vault
+
+* Good, because `.env` is simple in containers and Vault centralizes rotation.
+* Bad, because packaged `.ini` leaks secrets inside wheels, environment variables leak into child environments unless scrubbed everywhere, and no Vault server exists on the air-gapped host.
 
 ## More Information
 
-* Code: `dve/src/dve/adapters/ldap_directory_service.py` (mock), `dve/src/dve/ports/directory_service.py`, `dve/src/dve/api.py`, `dve/src/dve/services/data_source_service.py`, `dve/src/dve/services/task_service.py`, `dve/src/dve/dve.ini`, `dve/src/dve/config.py`
-* Related: ADR-0003, ADR-0004, ADR-0005, ADR-0006, ADR-0007, ADR-0008
+* Code: `dve/src/dve/api.py`, `dve/src/dve/adapters/ldap_directory_service.py`, `dve/src/dve/services/data_source_service.py`, `dve/src/dve/config.py`, `mdg/src/mdg/domain/data_source.py`
+* Related: ADR-0003, ADR-0004, ADR-0005, ADR-0006, ADR-0007, ADR-0008, ADR-0014, ADR-0015, ADR-0020
+* Revisit if institutional SSO (SAML 2.0 / OIDC) replaces direct LDAPv3, or if an on-premises HSM / PKCS#11 provider becomes available for wrapping `data_key`.

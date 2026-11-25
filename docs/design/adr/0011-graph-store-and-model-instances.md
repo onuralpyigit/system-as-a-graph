@@ -3,163 +3,152 @@
 | Field | Value |
 |---|---|
 | Status | Proposed |
-| Date | 2026-11-19 |
+| Date | 2026-11-25 |
 | Deciders | CDR Board |
 | Consulted | Development team, platform team |
 | Kind | Decide |
 | Traces | SMM.1, 4, 26–31, 36; MDG.15; DVE.17, 19, 26, 28–58, 71–78; QA-02, QA-03, QA-04, QA-07, QA-10, QA-11 |
 | Resolves | DP-29d, DP-29f (storage of the System Model and the Working Model) |
-| Decide by | Wave A (2026-11-27); the engine choice is confirmed by the R3 spike |
+| Decide by | Wave A2 (2026-12-18), including the R3 engine-confirmation spike |
 | Supersedes | — |
 
 ## Context and Problem Statement
 
-The System Model (ADR-0010) must be stored, queried by the verification rules (DVE.28–49), traversed by the behavioral analyses (DVE.53–58), and browsed and edited from the Operations Panel (DVE.17, 19–20). The SRS implies three kinds of model, which must coexist under concurrent users and pipeline operations (SMM.29–30):
+The System Model (ADR-0010) must be stored durably, queried in Cypher by verification rules (DVE.28–49), traversed by behavioral analyses (DVE.53–58), and browsed and edited interactively from the Operations Panel (DVE.17, 19–20, including undoable edits per UXD §4). Four instance roles coexist under concurrent users and CI pipelines (SMM.29–31):
 
-1. **Baseline:** built from a Model Data file (SMM.4). It must never be altered by verification, analysis or data binding (DVE.29, 51; SMM.36).
-2. **Working model:** derived from a baseline. The user edits nodes and relationships on it and runs verification (DVE.17).
-3. **Candidate-evaluation model:** "a new, process-specific System Model" with candidate unit versions (SMM.31). MDG.15 already writes candidates into the Model Data inventory (`is_candidate`, a `candidates` list since `1157784`).
+1. **Baseline (`baseline`):** constructed from a validated Model Data file (SMM.4); strictly immutable after construction (DVE.29, 51; SMM.36).
+2. **Working model (`working`):** copied from a baseline (or parent working model) so an operator can add/remove nodes and relationships, update attributes, undo edits, and run hypothetical verifications/analyses without breaking structural integrity (DVE.17).
+3. **Candidate-evaluation model (`candidate`):** process-specific System Model combining candidate unit version(s) with target system units (SMM.31, MDG.15, DVE.71–78).
+4. **Operation snapshot (`snapshot`):** short-lived read-only copy of a `working` model at a pinned revision created before spawning an operation (ADR-0006 §2).
 
-Nothing is implemented yet; SDP §5 names FalkorDB. Two constraints frame the choice:
-
-* the target host is offline and has no container runtime, so a server must install natively on CentOS 7 or later (ADR-0004);
-* the framework's `saag` engines need Python ≥ 3.10, so SMM implements derivation itself (ADR-0010 §7).
-
-The expected scale is hundreds to a few thousand units, topics and messages. The deciding factors are therefore isolation, offline installability, query language and operating cost.
+Nothing is built yet. Earlier SDP §5 drafts named FalkorDB, whereas `SoftwareAsAGraph @ 0bbe06af` implements only `Neo4jRepository` and `MemoryRepository` (zero FalkorDB code exists in `saag`). The target host is air-gapped CentOS 7+ (`glibc 2.17`) with CPython 3.9 and no container runtime (ADR-0004), hosting up to `200` live model instances of ~5,000 units/topics and ~50,000 relationships each (ADR-0006, ADR-0020).
 
 ## Decision Drivers
 
-* The engine and its Python driver must install offline, and the driver must have a CPython 3.9 wheel.
-* Baselines are immutable by construction (QA-03). Creating, copying and deleting working and candidate models must be cheap (QA-02).
-* Weights and `DEPENDS_ON` must equal the framework model's (ADR-0010); SMM's in-memory engine computes them.
-* Rules need a declarative query language (ADR-0016). Development and tests must run without a server (QA-11).
-* Working-model edits must be traceable (DVE.17, 26; QA-04), and pipeline evaluations isolated (DVE.78). Licensing must permit on-premises use.
+* Both the graph server binary and its Python driver must install and run offline on CentOS 7 (`glibc 2.17`) + CPython 3.9.
+* Instance copy, delete, and scoped queries must remain fast (< 5 s copy, < 2 s rule queries) even with **200 coexisting model instances** (~2.5M total nodes) loaded simultaneously (QA-02, QA-07).
+* Baselines must be immutable by construction, working-model edits + `DEPENDS_ON` re-derivation must commit atomically and support `[Undo]` (SMM.29, DVE.17, UXD §4), and unit tests must run without a graph server (QA-11).
+* Server licensing must be cleared for on-premises institutional deployment.
 
 ## Considered Options
 
-* Store: a native graph server (Neo4j Community 5 or FalkorDB) behind an SMM `IGraphStore` port, chosen by a spike / SMM's in-memory engine per operation / graph tables in SQLite / PostgreSQL + Apache AGE
-* Instances: a separate graph instance per model / a delta overlay applied at query time / a full copy per operation
+* Graph store: Native Cypher graph server (Neo4j Community 5 default, or FalkorDB, confirmed by R3 spike) behind SMM's `IGraphStore` port
+* Graph store: In-memory Python graph only (reloaded from JSON per request/operation)
+* Graph store: Relational node/edge tables in SQLite
+* Graph store: PostgreSQL with Apache AGE
+* Instance model: Separate isolated graph instance per model (`baseline`, `working`, `candidate`, `snapshot`)
+* Instance model: Read-time delta overlay on top of baselines
+* Instance model: Ephemeral per-operation graph copies with no persistent working models
 
 ## Decision Outcome
 
-Chosen options:
+Chosen options: **a native Cypher graph server behind SMM's `IGraphStore` port (Neo4j Community 5 as default, confirmed by the Wave A2 R3 spike)** and **a separate graph instance per model with atomic copy-on-create and logged undoable edits for working models**.
 
-* **A native graph server behind an SMM `IGraphStore` port, chosen by a spike.** A server gives a shared, queryable model and Cypher, and the port keeps the engine replaceable.
-* **A separate graph instance per model, with working models copied from their baseline.** To rule authors every instance is an ordinary graph, and the change log keeps edits traceable.
+### 1. `IGraphStore` port and derivation pipeline
 
-### 1. Port and engines
+`IGraphStore` (`smm/src/smm/ports/graph_store.py`) adapts the 7-method `IGraphRepository(Protocol)` of `SoftwareAsAGraph @ 0bbe06af` into an explicit SMM ABC—replacing server-side `derive_dependencies()` with SMM's pure-Python derivation engine (`ADR-0010 §7`) plus atomic `save_derived`:
 
-`IGraphStore` (`smm/src/smm/ports/graph_store.py`) keeps the operation names of the framework's `IGraphRepository`, but SMM implements it and imports nothing from `saag`:
-
-| Operation | Purpose |
+| Method | Purpose |
 |---|---|
-| `save_graph`, `get_graph_data`, `get_layer_data`, `get_statistics`, `export_json`, `close` | Build and read one instance (framework names) |
-| `save_derived` | Write the weights and `DEPENDS_ON` computed in memory, in one transaction |
-| `create_instance`, `copy_instance`, `delete_instance`, `list_instances` | Instance lifecycle (§3) |
-| `save_extensions` | Write the ADR-0010 extension labels and relationships |
-| `apply_edit` | Apply one working-model edit command (§3) |
-| `query` | Run a read-only, parameterized Cypher query (ADR-0016 `ModelReader`) |
+| `create_instance`, `copy_instance`, `delete_instance`, `list_instances` | Instance lifecycle across `baseline`, `working`, `candidate`, and `snapshot` |
+| `save_graph`, `save_extensions`, `save_derived` | Write structural framework elements, SRS extension elements, and derived weights/`DEPENDS_ON` in a single store transaction |
+| `apply_edit_and_derived` | Atomically apply a forward or inverse (`undo`) structural edit and replace derived weights/`DEPENDS_ON` in **one transaction** (preventing torn intermediate reads, SMM.29) |
+| `get_graph_data`, `get_layer_data`, `get_statistics`, `export_json`, `close` | Read operations matching `saag` `IGraphRepository` |
+| `query` | Parameterized read-only Cypher execution scoped automatically to `instance_id` (backing ADR-0016 `ModelReader`) |
 
-* **Engines:**
-  * the server adapter, `smm/src/smm/adapters/<engine>_graph_store.py`, in production;
-  * SMM's in-memory engine (`smm/src/smm/graph/`, ADR-0010 §7), which computes weights and `DEPENDS_ON` and is the fake in tests.
-* **Derivation:**
-  1. SMM builds the structural view in memory from validated Model Data and derives there.
-  2. It writes the instance with `save_graph`, `save_extensions` and `save_derived`.
-  3. After an edit, it reads the structural view back, re-derives, and rewrites the derived view.
-* **Keys:** the entity `name` per label. The run-local Model Data ID is kept as `source_id`. Uniqueness is on (`instance_id`, label, `name`), or (label, `name`) inside a named graph.
-* **Access:** SMM owns the only adapter. Other CSCs use its façade (ADR-0003). Queries are parameterized.
-* **Algorithms:** a rule that needs an algorithm loads the instance or a layer projection into networkx 3.2.1 inside the operation's child process, read-only.
-* **Service:** the server listens on `localhost` only, starts before `dsm`, and its data directory is in the backups (ADR-0004).
+* **Implementations:** `smm/src/smm/adapters/<engine>_graph_store.py` in production, and `InMemoryGraphStore` (`smm/src/smm/graph/`) for fast server-free unit/rule tests (`ADR-0021`).
+* **Network binding:** the graph server binds to `127.0.0.1` only, starts via `systemd` before `dsm.service`, and is accessed solely through `smm`'s façade (ADR-0003).
 
-### 2. Spike candidates
+### 2. R3 spike candidates and CPython 3.9 / CentOS 7 constraints
 
-| | Neo4j Community 5 | FalkorDB |
+| Dimension | Neo4j Community 5 (**Default**) | FalkorDB (Alternative) |
 |---|---|---|
-| Install | Tarball plus a Java 17 runtime tarball; systemd service | Redis server plus the FalkorDB module (`.so`); must load on glibc 2.17, possibly built from source |
-| Python driver | `neo4j` 5.x, pure Python, Python 3.7+ | `falkordb` over `redis-py` |
-| Instances | One user database; indexed `instance_id` on every node and relationship | Native named graphs `model:<instance_id>` |
-| Query language | Cypher, as the framework's Neo4j engine uses | openCypher subset |
-| Licence | GPL-3.0 (Community) | SSPL v1 |
+| Host installation on CentOS 7 (`glibc 2.17`) | Neo4j 5 tarball + Eclipse Temurin Java 17/21 tarball (`glibc 2.17` compatible; zero C compilation); dedicated `neo4j.service` | Requires building/packaging Redis 6.2+/7.x (CentOS 7 EPEL only ships Redis 3.2) **plus** compiling `falkordb.so` (C/Rust/GraphBLAS/OpenMP) against `glibc 2.17` |
+| CPython 3.9 wheelhouse | `neo4j` `5.x` (`<6.0`, requires Python `>=3.8`, pure Python `py3-none-any`) + **`pytz`** (`py3-none-any`) | **Current `FalkorDB >= 1.1` requires Python `>= 3.10` (incompatible with CPython 3.9)**; restricted to legacy `FalkorDB == 1.0.x` + `redis >= 4.5` + `async-timeout >= 4.0.3` |
+| Multi-instance isolation & indexing | Single `neo4j` database; **every node carries shared base label `:ModelElement` with `CREATE INDEX model_elem_inst FOR (n:ModelElement) ON (n.instance_id)`** plus per-label composite uniqueness `(instance_id, name)` | Native keyspace `model:<instance_id>`, `GRAPH.COPY`, `GRAPH.DELETE` |
+| Cypher parity with `saag @ 0bbe06af` | Exact dialect used by `saag`'s `Neo4jRepository` | openCypher subset (lacks Neo4j 5 `CALL { … UNION … }` subqueries and composite constraint syntax) |
+| Licence | GPLv3 (installed as an independent OS service process talked to over Bolt via Apache-2.0 `neo4j` Python driver—never linked into SaaG Python code) | SSPL v1 (requires explicit institutional legal clearance) |
 
-* **Default if the spike is inconclusive: Neo4j Community.** It is the more mature product, its install needs no compiled module, and the framework already uses its Cypher dialect.
-* **Scoping with Neo4j:** the adapter adds the `instance_id` scope to every query. Rule authors and `ModelReader` callers never write it (ADR-0016).
+* **Why `:ModelElement(instance_id)` is mandatory on Neo4j Community 5:** Neo4j 5 property indexes require a node label; label-less `MATCH (n {instance_id: $id})` performs a full database scan across all 200 instances (~2.5M nodes). Stamping `:ModelElement` on every node ensures `copy_instance`, `delete_instance`, and scoped `ModelReader` queries use an exact index seek in milliseconds.
+* **Default if FalkorDB fails CPython 3.9 / `glibc 2.17` / SSPL checks:** **Neo4j Community 5**.
 
-### 3. Model instances
+### 3. Model instance registry, atomic edits and Undo (SMM.26, 29–31; DVE.17)
 
-| Kind | Created from | Mutability | Owner | Lifetime |
-|---|---|---|---|---|
-| `baseline` | A Model Data file (SMM.4) | Immutable after construction | System | Retained per ADR-0004 §5 |
-| `working` | Copy of a baseline or another working model | Edited through SMM's working-model API only | One user | Until deleted, or expired (ADR-0004 §5) |
-| `candidate` | Its own Model Data file with candidates (MDG.15) | Immutable after construction | One operation | Deleted when its evaluation ends, after findings are persisted |
+| `kind` | Source | Mutability | Lifecycle |
+|---|---|---|---|
+| `baseline` | Validated Model Data file (SMM.4) | Immutable (`revision = 0`) | Retained per ADR-0004 §5 |
+| `working` | Copy of a `baseline` or `working` instance | Mutable only via SMM's `apply_edit` / `undo_edit` | Per-user cap `5` (ADR-0006); deleted by owner or TTL |
+| `candidate` | Candidate Model Data file (MDG.15, SMM.31) | Immutable (`revision = 0`) | Deleted automatically when its `installation_evaluation` finishes and findings are saved |
+| `snapshot` | Pre-spawn copy of a `working` instance at `(instance_id, revision)` | Immutable | Deleted automatically when the reading operation finishes (swept at start-up on crash, ADR-0006 §1) |
 
-* **Isolation mechanism:**
-
-  | Engine | Instance | Copy | Delete |
-  |---|---|---|---|
-  | FalkorDB | Named graph `model:<instance_id>` | `GRAPH.COPY` | `GRAPH.DELETE` |
-  | Neo4j Community | Indexed `instance_id` on every element | `MATCH … CREATE` in batches, in one transaction | `MATCH (n {instance_id: $id}) DETACH DELETE n`, in batches |
-  | In-memory engine (tests) | One Python object | Deep copy | Drop the reference |
-
-* **Registry:** a `model_instance` table in SQLite (ADR-0007) with these columns:
-  * `instance_id` (`uuid4().hex`), `kind`, `parent_instance_id`;
-  * `model_data_ref` and its hash;
-  * project, platform and system version;
-  * `created_by`, `created_at`, `status`, `revision`.
-* **Immutability:** SMM's façade exposes writes only for `working` instances. Verification and analysis get a read-only handle (ADR-0003).
-* **Edits (DVE.17):** each edit is a command: add or remove a node, add or remove a relationship, or set an attribute. A command:
-  1. is validated against the schema and structural integrity rules (ADR-0010);
-  2. is applied to the working graph;
-  3. is appended to `model_edit(instance_id, revision, command JSON, user, at)`;
-  4. increments `revision`.
-
-  Concurrency follows ADR-0006 §2.
-* **Reproducibility:** every operation records `instance_id` and `revision` (ADR-0007).
-* **Analytical data:** bound as a separable layer (ADR-0012), never written into a baseline.
+* **SQLite registry (`smm_model_instance` in `dsm.db`, ADR-0007):**
+  * `instance_id TEXT PK`, `kind`, `parent_instance_id NULL`, `parent_revision NULL`, `model_data_artifact_id`, `model_data_sha256`, `project`, `platform`, `system_version`, `created_by`, `created_at`, `status` (`creating` \| `ready` \| `failed` \| `deleting`), `revision INTEGER NOT NULL DEFAULT 0`.
+* **Working-model commands and Undo (`DVE.17`, `UXD §4`):**
+  * Commands: `add_node`, `remove_node(cascade: bool = False)`, `add_relationship`, `remove_relationship`, `update_attributes`.
+  * By default, `remove_node(cascade=False)` rejects deleting a node that still has incident structural relationships (`409` / `invalid_relationship` `ErrorRecord`) so users never sever topology silently; when the UI confirms `cascade=True`, SMM captures the node and all incident structural relationships in the edit record's `inverse_command` before removing them.
+  * Every edit executes under ADR-0006 §2's per-instance lock and optimistic `expected_revision` check:
+    1. Load current $G_{\text{structural}}$, validate the command against `schema.py` (`ADR-0010`), compute `inverse_command`, and re-derive weights + `DEPENDS_ON` in memory;
+    2. Commit the structural delta + replaced `DEPENDS_ON` edges in **one** `IGraphStore.apply_edit_and_derived` transaction;
+    3. Append `smm_model_edit(instance_id, revision, action, forward_command_json, inverse_command_json, actor, at)` and bump `smm_model_instance.revision` in `dsm.db`.
+  * **`undo_edit(instance_id, expected_revision)`:** reads the latest un-undone `smm_model_edit` row, applies `inverse_command_json` through the exact same atomic pipeline, increments `revision`, and records `action = 'undo'`—preserving an append-only audit trail while supporting multi-step `[Undo]` in the Operations Panel (ADR-0015).
 
 ### Consequences
 
-* Good, because the Operations Panel and the rules share one queryable model in Cypher.
-* Good, because derivation and tests do not depend on the server, so the engine choice stays reversible.
-* Good, because rules need no overlay logic, pipeline evaluations are isolated, and the change log gives an exact, reportable diff of each working model.
-* Bad, because a server must be installed and patched offline, which is the largest operating cost in the CSCI.
-* Bad, because with Neo4j Community, isolation depends on the adapter's `instance_id` scope rather than a native primitive. A missing filter would mix instances.
-* Bad, because every write round-trips the instance through Python memory, and storage grows with working models, bounded by expiry and ADR-0006's limits.
-* Bad, because working models do not follow later baseline updates. Rebasing would replay the change log, and it is not in scope.
-* Follow-up: on acceptance, replace the "to be determined" storage wording in SDD §2.4 with a link to this ADR.
+* Good, because rules and UI views share Cypher over isolated instances, `:ModelElement(instance_id)` prevents Neo4j full-graph scans at 200 instances, and atomic `apply_edit_and_derived` + `undo_edit` satisfy SMM.29 and DVE.17 cleanly.
+* Good, because pure-Python derivation and `InMemoryGraphStore` keep `smm` and `dve` unit suites fast and server-independent.
+* Bad, because bundling and operating a native graph server + JVM tarball is the heaviest infrastructure component on the offline host.
+* Bad, because Neo4j Community isolation relies on `Neo4jGraphStore` injecting `:ModelElement {instance_id: $id}` into every query; `ModelReader` encapsulates this so rule authors never write raw unscoped queries.
 
 ### Confirmation
 
-A spike in R3, on a CentOS-7-compatible host without network access, records these for each candidate before acceptance:
+The Wave A2 spike on a network-disconnected CentOS-7-compatible VM (`glibc 2.17`, CPython 3.9) verifies before acceptance:
 
-1. **Offline install:** the server installs from copied files with a `deploy/` script, runs under the service manager, and survives a reboot.
-2. **Driver:** the Python driver installs from a cp39 wheelhouse.
-3. **Parity:** a model built from the ADR-0010 worked-example fixture and read back has the same weights and `DEPENDS_ON` as the in-memory engine.
-4. **Load:** 5,000 Applications, 5,000 Topics and 50,000 relationships are written in under 30 s.
-5. **Copy:** copying that instance takes under 5 s.
-6. **Queries:** the pub/sub-match and cycle queries, and `get_layer_data("app")`, return in under 2 s.
-7. **Isolation:** two instances edited concurrently never see each other's elements.
-8. **Licensing:** the licence is cleared.
-
-After the spike, CI runs the parity and isolation tests against the chosen adapter. Also:
-
-* writing to a `baseline` or `candidate` instance through SMM fails;
-* replaying a working model's change log on its parent reproduces it;
-* two parallel candidate evaluations never see each other's nodes.
+1. **Offline install & reboot survival:** `deploy/` script installs the server and `cp39` driver wheels (`neo4j` + `pytz`, or `FalkorDB 1.0.x` + `redis` + `async-timeout`) with `--no-index` and survives reboot under `systemd`.
+2. **Parity:** ADR-0010 `0bbe06af` worked example round-trips with identical weights and `DEPENDS_ON` edges.
+3. **200-instance scale & `:ModelElement` index verification:** with **200 coexisting instances** loaded (including the 5,000-App / 5,000-Topic / 50,000-edge reference model), `EXPLAIN` confirms zero `AllNodesScan`, initial write finishes in `< 30 s`, `copy_instance` in `< 5 s`, `delete_instance` in `< 5 s`, and pub/sub + cycle + `get_layer_data("app")` queries in `< 2 s`.
+4. **Isolation, immutability & Undo:** concurrent edits on two working instances never cross-bleed; writes to `baseline`/`candidate`/`snapshot` fail; `apply_edit` followed by `undo_edit` reproduces the exact pre-edit structural and `DEPENDS_ON` graph.
+5. **Licence clearance:** written sign-off recorded in the spike PR (GPLv3 separate-process boundary for Neo4j Community, or SSPL v1 review if FalkorDB).
 
 ## Pros and Cons of the Options
 
-* Native graph server (chosen): Good, because it gives a shared model, Cypher and a replaceable engine. Bad, because of the offline operating cost and, for Neo4j Community, scoping by property.
-* In-memory engine only: Good, because it needs no service. Bad, because it has no query language, instances exist only during an operation, and the panel cannot query a shared model (DVE.17, 19).
-* Graph tables in SQLite: Good, because it needs no new service. Bad, because traversals become slow recursive SQL, and the rules lose Cypher.
-* PostgreSQL + AGE: Bad, because it needs a server ADR-0007 does not adopt, and the extension is less mature.
-* Separate instance per model (chosen): Good, because it is simple to query and isolation is strong. Bad, because of storage per instance.
-* Delta overlay: Good, because storage is minimal. Bad, because every rule query must merge the overlay, and Cypher has no overlay semantics.
-* Full copy per operation: Bad, because it copies even when nothing changed, and edits would be lost between operations.
+### Native Cypher graph server behind `IGraphStore` (chosen)
+
+* Good, because it provides shared concurrent read access, expressive Cypher pattern matching for ADR-0016 rules, and engine replaceability behind `IGraphStore`.
+* Bad, because it adds an offline daemon (and JVM for Neo4j) to install, monitor and back up.
+
+### In-memory Python graph only
+
+* Good, because zero server processes are installed on the host.
+* Bad, because there is no shared persistent graph for interactive UI exploration/editing (DVE.17, 19–20) and no declarative Cypher engine for rules.
+
+### Relational node/edge tables in SQLite
+
+* Good, because storage stays inside Embedded SQLite.
+* Bad, because multi-hop structural/pattern rules become verbose recursive SQL CTEs and contend with `dsm.db` operational writes (retained only as emergency revisit fallback).
+
+### PostgreSQL with Apache AGE
+
+* Good, because relational and openCypher data live in one server.
+* Bad, because SaaG does not deploy PostgreSQL (ADR-0007) and compiling AGE for CentOS 7 offline is high-maintenance.
+
+### Separate graph instance per model (chosen)
+
+* Good, because every baseline, working, candidate and snapshot model is a normal self-contained graph—keeping rule Cypher queries simple and pipeline runs strictly isolated.
+* Bad, because storage scales linearly with active working models (bounded by the 5-per-user / 200-total caps and TTL cleanup).
+
+### Read-time delta overlay on top of baselines
+
+* Good, because working models store only diffs.
+* Bad, because every Cypher rule and `DEPENDS_ON` traversal would have to merge node/edge tombstones and attribute overrides at query time.
+
+### Ephemeral per-operation graph copies only
+
+* Good, because no persistent working models consume disk.
+* Bad, because interactive iterative editing and `[Undo]` in the Operations Panel (DVE.17) require persistent working models across sessions.
 
 ## More Information
 
-* Framework model: [`software-as-a-graph/docs/graph-model.md` @ `d1f8b424`](https://github.com/onuralpyigit/software-as-a-graph/blob/d1f8b42438e3c500715daefe2a3500b96b1cac49/docs/graph-model.md), §6.4 (implementation parity); framework `pyproject.toml` (Python ≥ 3.10 dependency floors)
-* [SDP §5](../../planning/SDP.md), [UXD §6](../UXD.md)
-* Related: ADR-0003, ADR-0004, ADR-0006, ADR-0007, ADR-0010, ADR-0012, ADR-0016, ADR-0020
-* Revisit if neither candidate installs offline (fallback: graph tables in SQLite, with the in-memory engine for traversals), or if the licence review rejects the chosen engine.
+* Framework model: [`software-as-a-graph/docs/graph-model.md` @ `0bbe06af`](https://github.com/onuralpyigit/software-as-a-graph/blob/0bbe06afa12be228e343895322716b8cbd085535/docs/graph-model.md), `saag/core/ports/graph_repository.py`, `saag/infrastructure/neo4j_repo.py`
+* [SDP §5](../../planning/SDP.md), [UXD §4, §6](../UXD.md)
+* Related: ADR-0003, ADR-0004, ADR-0006, ADR-0007, ADR-0010, ADR-0012, ADR-0015, ADR-0016, ADR-0020, ADR-0021
+* Revisit if neither server passes offline CentOS 7 installation or institutional licensing (fallback: dedicated per-instance SQLite graph files loaded into `smm`'s in-memory engine for traversals).

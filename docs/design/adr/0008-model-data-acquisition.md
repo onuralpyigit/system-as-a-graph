@@ -3,179 +3,174 @@
 | Field | Value |
 |---|---|
 | Status | Proposed |
-| Date | 2026-11-19 |
+| Date | 2026-11-25 |
 | Deciders | CDR Board |
 | Consulted | Development team, configuration management owners, system/network engineering, ansible repository owners |
 | Kind | Ratify |
-| Traces | MDG.2–13, 17–21; SMM.12–15, 18, 20–22, 24; DVE.7, 32–35, 40–46; QA-01, QA-05, QA-06 |
+| Traces | MDG.2–13, 16–21; SCG.4; SMM.12–24; DVE.7, 32–35, 38–46; QA-01, QA-05, QA-06 |
 | Resolves | DP-09 (MDG.6 topology source and method); DP-10 (MDG.19 mandatory file list); DP-17, DP-18, DP-19, DP-20 (protocols of EXT-IF-01 CMDB, EXT-IF-02 source repository, EXT-IF-03 package repository, EXT-IF-04 topology source) |
-| Decide by | Wave A (2026-11-27) |
+| Decide by | Wave A1 (2026-12-04) |
 | Supersedes | — |
 
 ## Context and Problem Statement
 
-MDG reads the configuration management database, the source code repository, the package repository and the network topology source (MDG.2–5). SDD §2.3 leaves each one's protocol open. The SRS also defers the automatic topology source (MDG.6) and the mandatory file list (MDG.19).
+MDG acquires data from four external sources (MDG.2–5): the configuration management database (EXT-IF-01), the source code repository (EXT-IF-02), the software units package repository (EXT-IF-03), and the network topology data source (EXT-IF-04). SDD §2.3 leaves all four protocols open (DP-17…DP-20), and the SRS defers the automatic topology acquisition method (MDG.6, DP-09) and mandatory source-repository file list (MDG.19, DP-10). MDG must also support manual topology entry (MDG.7), savable source configurations (MDG.8), CMDB deficiency/access/format error handling (MDG.16), source-file metadata and integrity checking (MDG.17–20), and extraction of the structural, QoS, resource and message-schema facts consumed by SMM, SCG and DVE.
 
-As built (`1157784`):
+**As built (`1157784`) and code-audit findings:**
 
-* **CMDB:** `MysqlConfigManagementRepository` uses PyMySQL 1.0.3 with parameterised, read-only `SELECT`s. It reads the tables `platform_pkg_version`, `platform_current_atm_version` and `csu_csms_relation`.
-  * Each query opens a new connection (`connect_timeout=5`).
-  * `pymysql.MySQLError` maps to `ConfigManagementAccessError`.
-  * The address format is `<host>:<port>/<database>`.
-* **Source repository:** `GitSourceCodeRepository` runs the `git` CLI.
-  * Units are shallow-cloned with `--depth 1 --branch <version>`; the tag equals the version. Versions are listed with `ls-remote --tags --refs`.
-  * Credentials stay out of the URL and the command line. An inline helper reads `DSM_GIT_USER` and `DSM_GIT_PASSWORD` from the subprocess environment. `GIT_TERMINAL_PROMPT=0` is set, and errors are redacted.
-  * `-c http.sslVerify=false` is always set (`git_source_code_repository.py:126`).
-  * `.git` is deleted after cloning, so no commit hash is kept.
-* **Package repository:** not built. "Packages" are CMDB `pkg_name`/`pkg_version` rows, fetched from Git by tag.
-* **Topology:**
-  * The **ansible repository** (`mdg.ini` `[workspace] ansible_repo`) is a CMDB unit cloned by tag. `IAnsibleRepoParser` turns it into `Node`, `Network` and `ConnectsTo` (with device, dev_raw and bandwidth in Gb/s).
-  * The **system repository** gives `runs_on`, roles and criticality through `ISystemRepoParser`.
-  * Both parsers are mocks, and the dev seed repositories hold only a README.
-  * A missing or failed clone of either repository fails the run.
-* **Mandatory files:** `MandatoryFiles` requires, per software unit, a `Makefile` whose non-comment text contains an include pattern (`include/Makefile_java.mk`), plus `<unit_name>.xml`.
-  * The rule does not apply to the system and ansible repositories.
-  * Only units that an application places on a node are cloned (`produce_model_setup_data.py:172-177`), so library units such as `common_lib` are not.
-* **Parsing:** `SourceCodeParser` is the only real parser.
-  * It reads topics from the manifest (`<topic name=".." role="pub|sub|pubsub"/>`, skipping configured dummy names).
-  * It reads library `uses` from Java imports under a configured prefix and suffix.
-  * `TypeSupportParser` (QoS) and `MessageFileParser` (messages) are mocks.
-* **Optional build:** `[build] run_regenerate_code`, off by default. `GmakeBuildRunner` runs `gmake regenerate_code` in the Makefile directory with a 300 s timeout. A failing build is logged; a missing `gmake` fails the run.
-* **Configuration:** `DataSourceConfig` (source type, name, access method, connection address, user information) lives per session in memory (`DataSourceService`) and cannot be saved.
+* **CMDB (`MysqlConfigManagementRepository`):** PyMySQL 1.0.3, read-only parameterized `SELECT`s over `platform_pkg_version`, `platform_current_atm_version` and `csu_csms_relation` (`connect_timeout=5`, new connection per query). *Gaps:* maps `MySQLError` to `access`, omitting deficiency (`missing_data`) and row-format (`format`) errors (MDG.16); `list_unit_versions` lacks `DISTINCT`.
+* **Source repository (`GitSourceCodeRepository`):** runs `git` CLI (`ls-remote --tags --refs` and `clone --depth 1 --branch <version>`, requires `git ≥ 2.14`, ADR-0004) with `DSM_GIT_USER`/`DSM_GIT_PASSWORD` env helper and `GIT_TERMINAL_PROMPT=0`. *Bugs & gaps:*
+  * hardcodes `-c http.sslVerify=false` (`git_source_code_repository.py:126`);
+  * deletes `.git` without recording `HEAD` commit hash or tagged commit timestamp;
+  * `rpartition("/")` without `.rstrip("/")` (`line 56`) breaks repository base URLs ending with `/`;
+  * `DataSourceService` joins `"<user>:<password>"` and splits on `:` (breaking usernames containing `:`), and `_redact` (`line 119`) does naive `text.replace(password, "***")` (turning `"dsm-src"` into `"***-src"` when the dev password is `"dsm"`), while auth error detection misses `"terminal prompts disabled"` / `"could not read Username"`;
+  * `AcquiredFile` records only the located mandatory files rather than all acquired source, script and configuration files (MDG.17–18), and writes host-absolute workspace paths (`str(path)`) into the JSON output.
+* **Package repository (`EXT-IF-03`):** not yet implemented (`SourceType` lacks a package adapter).
+* **Topology (`EXT-IF-04`):** `IAnsibleRepoParser` and `ISystemRepoParser` are mocks; `dev/gitea/seed/` holds only READMEs for `ansible_repo` and `system_repo`, and missing/failed clone of `ansible_repo` aborts the run even if manual topology is desired (MDG.7).
+* **Mandatory files & unit cloning:** `MandatoryFiles` checks for a `Makefile` with non-comment `include/Makefile_java.mk` plus `<unit_name>.xml`, **but** `ProduceModelSetupData` (`lines 172-177`) clones only units placed on a host by `system_repo` (skipping `common_lib`), and in `dev/gitea/seed/`, `common_lib_1.0.0` and `sensor_app_1.0.0` lack `Makefile`s (diverging from `FakeSourceCodeRepository`).
+* **Parsers & optional build:** `SourceCodeParser` parses `<topic name=".." role="pub|sub|pubsub"/>` and Java `import` `uses`; `TypeSupportParser` and `MessageFileParser` are mocks. `GmakeBuildRunner` runs `gmake regenerate_code` (`300 s` timeout) when opted in, but discards `stderr` on non-zero exit and runs `gmake --version` without a timeout.
 
 ## Decision Drivers
 
-* The CMDB is MySQL in every environment known so far. Each extra library is one more wheel to vendor offline (ADR-0004).
-* Acquisition must be reproducible (MDG.17–18) and versioned with the system version (MDG.9), including topology.
-* The protocols must work with internal certificate authorities. MDG.8 requires savable configurations.
-* Running repository code on the SaaG host is a risk, and the host has no container runtime to sandbox it.
-* Manual topology entry (MDG.7) and automatic acquisition must be validated the same way (MDG.21). The resource rules need numeric capacity (DVE.40–46), but the as-built `hw` field is free text such as `x86-64/8c`.
+* Every adapter must work offline on CentOS 7+ (`CPython 3.9`, `git ≥ 2.14`) using standard library or already-vendored wheels (`PyMySQL`, `PyYAML`, ADR-0004).
+* Acquisition must be cryptographically reproducible (tag → Git commit SHA + package SHA-256 + CMDB snapshot timestamp, MDG.1, 17–18, QA-04) and TLS-verified with internal CA bundles (QA-01).
+* Manual (MDG.7) and automatic (MDG.6) topology paths must share one validation model and emit field names and units identical to the System Model schema (ADR-0010).
+* Parsers must extract all structural entities, QoS parameters (including `Lifespan`, DVE.34), per-unit topic content hashes (DVE.38), external-to-middleware service flows (DVE.39), unit resource configs (SMM.24), and message field/range schemas (SCG.4).
 
 ## Considered Options
 
-* CMDB: PyMySQL in one adapter (as built) / SQLAlchemy Core (SDP §5)
-* Source repository: `git` CLI shallow clone by tag (as built) / Git server REST archive / a Python Git library
-* Package repository: HTTPS REST / filesystem mount
-* Topology: the ansible repository over Git (as built, parser mocked) / a `topology.yaml` in the system repository / a CMDB query / manual entry only
-* Extraction: static parsing with an opt-in host build (as built) / always build / build in a container
+* CMDB (`EXT-IF-01`): PyMySQL read-only adapter (as built, extended)
+* CMDB (`EXT-IF-01`): SQLAlchemy Core dialect layer (earlier SDP §5)
+* Source repository (`EXT-IF-02`): `git` CLI shallow clone over HTTPS with CA verification (as built, hardened)
+* Source repository (`EXT-IF-02`): Git server REST tarball API or Python Git library (`dulwich`/`pygit2`)
+* Package repository (`EXT-IF-03`): HTTPS REST metadata & checksum adapter via `urllib.request`
+* Package repository (`EXT-IF-03`): Shared filesystem mount
+* Network topology (`EXT-IF-04`, `DP-09`): `SourceType.NETWORK_TOPOLOGY` supporting both `git_ansible` (Ansible YAML inventory/vars) and `manual` (`mdg_topology_override`)
+* Network topology (`EXT-IF-04`, `DP-09`): Dedicated CMDB tables or manual entry only
+* Source extraction: Static XML/YAML/Java/IDL parsing with resource-bounded opt-in `gmake` codegen
 
 ## Decision Outcome
 
-Chosen options: **PyMySQL**, **the `git` CLI over HTTPS**, **HTTPS REST through the standard library for packages**, **the ansible repository for topology**, and **static parsing with a constrained opt-in host build**, all as built or extending what is built.
+Chosen options: **PyMySQL for EXT-IF-01**, **`git` CLI over TLS-verified HTTPS for EXT-IF-02**, **stdlib HTTPS REST (`IPackageRepository`) for EXT-IF-03**, **`SourceType.NETWORK_TOPOLOGY` (`git_ansible` YAML or `manual` SQLite store) for EXT-IF-04 / DP-09**, and **static source/config parsing with a resource-bounded opt-in `gmake` build**.
 
-### 1. Data sources and connection configuration
+### 1. External data-source protocols and configuration (MDG.2–5, 8, 16; DP-17…DP-20)
 
-* **EXT-IF-01, CMDB:** the MySQL protocol through PyMySQL, read-only. Every table and column name lives in one place in the adapter, so a different schema changes only that mapping. A non-MySQL CMDB would need a new adapter behind `IConfigManagementRepository`.
-* **EXT-IF-02, source repository:** Git over HTTPS with the `git` CLI, shallow clone by tag, and the environment-based credential helper.
-* **EXT-IF-03, package repository:** HTTPS REST behind a new `IPackageRepository` port. It returns metadata (name, version, checksum) and downloads by version, using `urllib.request` with a token. The product is confirmed with its owners before R5, with a fake until then.
-* **Configuration (MDG.8):** `DataSourceConfig` stays the domain type, and `access_method` selects the adapter (ADR-0003).
-  * Configurations are saved per user in SQLite (ADR-0007), with credentials encrypted (ADR-0019).
-  * `dve.ini` gives only defaults.
-  * Each source is verified with one cheap call when it is connected (DVE.7).
-* **To build:**
-  * TLS verification on, with a per-source `ca_bundle` (`-c http.sslCAInfo=<path>`); remove `sslVerify=false`.
-  * Record `git rev-parse HEAD` before deleting `.git`, on every `AcquiredFile` and in the Model Data provenance (ADR-0009, ADR-0007).
-  * One CMDB connection per run.
-  * The package adapter, and saved configurations with a write-only secret field.
+* **EXT-IF-01, CMDB (`DP-17`):** MySQL protocol over TLS/TCP via `PyMySQL`, read-only parameterized SQL, reusing **one connection per acquisition run** (`connect_timeout=5`, `read_timeout=30`). Table/column names are isolated in one mapping dictionary inside `MysqlConfigManagementRepository`.
+  * **Error mapping (`MDG.16`):** connection/SQL failures raise `ConfigManagementAccessError` (`category = access`); empty project/platform/version/inventory sets raise `ConfigManagementDeficiencyError` (`status = missing_data`, `category = missing_data`); null/malformed version or hierarchy columns raise `ConfigManagementFormatError` (`category = format`).
+* **EXT-IF-02, Source Code Repository (`DP-18`):** Git smart-HTTP over **TLS-verified HTTPS** (`-c http.sslVerify=true`, with optional per-source `-c http.sslCAInfo=<ca_bundle_path>`; `sslVerify=false` is removed from production code).
+  * Normalizes trailing `/` on base URLs before resolving `<base>/<unit_name>.git`; stores `username` and `secret` as separate fields on `DataSourceConfig` (retiring `":"`-concatenated `user_info`), uses credential-helper environment variables (`DSM_GIT_USER`, `DSM_GIT_PASSWORD`), detects HTTP `401`/`403` and `"terminal prompts disabled"` / `"could not read Username"` as `SourceRepoAuthError` (`category = authorization`), and redacts credentials via token-boundary/URL-userinfo regexes rather than naive substring replacement.
+  * Before removing `.git`, records `commit_sha` (`git rev-parse HEAD`) and tagged commit UTC timestamp (`git show -s --format=%cI HEAD`) for provenance and `AcquiredFile.updated_at` (MDG.18).
+* **EXT-IF-03, Software Units Package Repository (`DP-19`, MDG.4):** HTTPS REST over TLS via Python's `urllib.request` (`ssl.create_default_context(cafile=…)`), behind `IPackageRepository`:
+  * **Contract:** `GET <connection_address>/api/v1/packages/<unit_name>/<version>` with `Authorization: Bearer <token>` or HTTP Basic auth from `DataSourceConfig`, returning JSON `{name, version, artifact_name, sha256, size_bytes, published_at, unit_kind}` (compatible with Nexus/Artifactory/Gitea package endpoints via adapter path templates).
+  * **Role in acquisition:** cross-checks that every inventory unit version exists in the package repository, records package metadata and `sha256` into Model Data `packages` (ADR-0009), and flags missing packages (`missing_data`) or checksum/version mismatches (`SourceRepoIntegrityError`, `category = integrity`). Shipped with `HttpPackageRepository` and `FakePackageRepository` (and seeded mock endpoint in `dev/`).
+* **EXT-IF-04, Network Topology Data Source (`DP-20`, MDG.5–7):** configured independently as `SourceType.NETWORK_TOPOLOGY` in `common_data_source` (never piggybacking silently on `EXT-IF-02`'s config), with `access_method` selecting between:
+  * `git_ansible` (automatic, **DP-09**, MDG.6): clones the configured topology Git repository at the system version tag over HTTPS using `NETWORK_TOPOLOGY`'s own address and credentials;
+  * `manual` (MDG.7): reads the operator-entered topology JSON stored in `mdg_topology_override` (`dsm.db`, ADR-0007) for `(project, platform, system_version)` and **skips cloning `ansible_repo` entirely**. An operator may also apply a `manual` override on top of `git_ansible`; both record `origin = manual` in provenance without writing back to Git.
+* **Savable configurations (MDG.8):** persisted in `common_data_source` (`dsm.db`, ADR-0007) with `scope` (`user`, `project`, or `system` so CI API tokens resolve project/system sources cleanly, ADR-0019 §2–3) and AES-256-GCM encrypted secrets. Connecting a source runs a lightweight reachability probe (`SELECT 1`, `git ls-remote`, `HEAD /api/v1/packages`, DVE.7).
 
-### 2. Network topology (MDG.5–7, EXT-IF-04)
+### 2. Network topology YAML schema and ADR-0010 alignment (MDG.5–7; DP-09)
 
-* **Source:** the ansible repository, cloned per system version over Git, through the EXT-IF-02 adapter and credentials. It is versioned with the system and maintained by its deployers, so no new interface or file is needed.
-* **Format:** the standard Ansible YAML layout, parsed with PyYAML, which is pinned but unused today. The parser reads:
-  * the inventory file (`inventory.yml` or `hosts.yml`, path configurable), whose groups give `Node.group`;
-  * `host_vars/<host>.yml` and `group_vars/<group>.yml`.
+`AnsibleRepoParser` parses YAML via `yaml.safe_load` (`PyYAML`, zero Jinja execution; unexpanded `{{ … }}` templates become `null` + `placeholders` entries per ADR-0009) from `inventory.yml` (or `hosts.yml`), `group_vars/<group>.yml`, and `host_vars/<host>.yml`, emitting canonical ADR-0010 field names and units directly:
 
-  It reads nothing else and evaluates no Jinja. A templated value becomes a placeholder (ADR-0009).
-* **SaaG keys** in host or group variables. The names must be confirmed with the ansible repository owners; this point is open.
+| Ansible YAML key (`host_vars` / `group_vars`) | Emitted Model Data / ADR-0010 field | Used by |
+|---|---|---|
+| `saag_kind` (`operator_console` \| `processor`) | `Node.kind` | SMM.14; DVE.40 |
+| `saag_cores` (int), `saag_ram_gb` (float) | `Node.cpu_cores`, `Node.memory_gb` | SMM.14; DVE.41–46 |
+| `saag_os_type`, `saag_ip_address` | `Node.os_type`, `Node.ip_address` | SMM.14 |
+| `saag_os_settings` (mapping: `isolated_cores`, `rt_throttling`, `swappiness`, `hugepages`, `limits`) | `Node.os_settings` | SMM.24; DVE.44, 46 |
+| `saag_hw`, `saag_mw`, `saag_gpu`, `saag_display` | `Node.hw`, `mw`, `gpu`, `display` (+ inventory group → `Node.group`) | ADR-0015 hardware cabinet view |
+| `saag_network_devices`: list of `{name, role: switch \| router}` | `NetworkDevice` (`name`, `role`) | SMM.15; Rule 7 |
+| `saag_interfaces`: list of `{device, dev_raw, peer_device, peer_interface, bandwidth_gbps}` | `CONNECTS_TO` (`from_interface = device`, `to_interface = peer_interface`, `dev_raw`, **`capacity_mbps = bandwidth_gbps × 1000`**) | SMM.15, 18; DVE.40, 57 |
 
-  | Key | Model field | Used by |
+* Missing topology files yield `missing_data`; invalid YAML/types yield `format` `ErrorRecord`s; hosts referenced by `system_repo` without `host_vars` are retained with `placeholders` entries so resource rules flag incomplete capacity explicitly.
+
+### 3. Mandatory files, unit classification and source extraction (MDG.17–21; DP-10)
+
+* **Cloning all inventory units & classifying `Application` vs. `Library` (MDG.14, 17):**
+  * MDG clones **every** software unit in the Software Unit Version Inventory (not only host-placed units).
+  * A unit is classified as `Application` if `system_repo` places it on at least one `Node` (`runs_on`) or CMDB/package metadata marks `unit_kind = application`; otherwise, if it is a shared dependency (`unit_kind = library` or referenced via `uses`), it is classified as `Library`.
+* **Mandatory source-repository file set (MDG.19, DP-10):**
+
+  | Unit kind | Mandatory files | Missing-file outcome |
   |---|---|---|
-  | `saag_hw`, `saag_os`, `saag_mw`, `saag_gpu`, `saag_display` | `Node.hw`, `os`, `mw`, `gpu`, `display` (as built) | SMM.14 |
-  | `saag_kind` (`operator_console` \| `processor`) | `Node.kind` (new) | SMM.14 |
-  | `saag_cores`, `saag_ram_gb` | `Node.cores`, `Node.ram_gb` (new, numeric) | DVE.41–46 |
-  | `saag_interfaces`: list of `{device, dev_raw, network, bandwidth_gbps}` | `ConnectsTo`, `Network` (as built) | SMM.15, 18; DVE.40 |
+  | `Application` | 1. A `Makefile` under the unit whose non-comment text matches `[mandatory_files] makefile_include_patterns` (e.g. `include/Makefile_java.mk`)<br/>2. `<unit_name>.xml` unit manifest | Unit status `missing_data`, `ErrorRecord(status='missing_data', category='missing_data')`, and overall operation `outcome_status = 'missing_data'` (MDG.19, ADR-0007) |
+  | `Library` | At least one build/descriptor file: matching `Makefile` **or** `<unit_name>.xml` (allowing header/shared libraries without a pub/sub manifest and manifest-backed libraries like `common_lib`) | Same `missing_data` recording |
+  | `system_repo`, `ansible_repo` | Validated by `SystemRepoParser` / `AnsibleRepoParser` (§2) rather than `MandatoryFiles` | Reported per §2 |
 
-* **Validation:**
-  * A missing file gives `missing_data` (MDG.19), and a malformed file gives a `format` error record (ADR-0009).
-  * A host without capacity keys is kept and listed as a placeholder, so the rules report it instead of guessing.
-  * Nodes named only by the system repository are kept as placeholders.
-* **Manual entry (MDG.7):** the UI edits the same fields and saves them as an override attached to the run in SQLite. The override is recorded as manual (ADR-0007) and never written back to the repository.
-* **To build:**
-  * a real `AnsibleRepoParser`, with seed files (valid, missing and invalid hosts) in `dev/gitea/seed/ansible_repo_1.0.0/`;
-  * numeric `cores`, `ram_gb` and `kind` on `Node`, carried into Model Data (ADR-0009, ADR-0010);
-  * the override API and screen.
-
-### 3. Mandatory files and extraction (MDG.17–21)
-
-* **Mandatory set (DP-10):** per software unit. A missing file marks the unit `missing_data` with an error record (ADR-0009).
-
-  | File | Rule |
-  |---|---|
-  | `Makefile` | Any `Makefile` under the unit whose non-comment content includes one of `[mandatory_files] makefile_include_patterns` |
-  | `<unit_name>.xml` | The topic manifest declaring published and consumed topics |
-
-  * The system and ansible repositories have no mandatory files; topology gaps are reported by §2.
-  * Installation scripts and configuration files are acquired when present and recorded per MDG.18, but are not mandatory.
-  * Changing the set is a change to this ADR.
-* **Extraction:** static parsing, with settings in `mdg.ini` `[source_parser]`. Parsers are ports with fakes (ADR-0003).
-* **Opt-in build:** off by default. When an operator enables it, `gmake regenerate_code` runs on the host:
-  * as the unprivileged service user;
-  * inside the run's own clone;
-  * with an environment reduced to `PATH`, `HOME` and `LANG`, so no `DSM_GIT_*` or other secret is inherited;
-  * with the 300 s timeout and `resource.setrlimit` limits on CPU time and address space, set in `preexec_fn`;
-  * with the exit code and stderr tail written to the run log.
-* **Per-file record (MDG.18):** name, path, package/version and update time, plus the commit hash. The update time becomes the commit time once the hash is recorded.
-* **To build:**
-  * Replace `TypeSupportParser` with a parser of the units' topic type definitions, giving Durability, Reliability, Lifespan and Transport Priority, before the R3 QoS rules (DVE.32–35). Until then its values are placeholders.
-  * Replace `MessageFileParser` (SMM.13, 20–21) and `SystemRepoParser`.
-  * Clone every inventory unit, including libraries, which are exempt from the manifest rule (MDG.17).
-  * Parse CPU allocation, OS settings and runtime configuration into unit attributes (SMM.24, DVE.41–46). The source files are agreed with the owners and recorded here.
-  * Add the build constraints above to `GmakeBuildRunner`.
+  * `dev/gitea/seed/` and `FakeSourceCodeRepository` are aligned to one shared seed layout (`common_lib_1.0.0` valid library, `nav_app_1.0.0` valid application, plus dedicated negative-test tags/units for `TC-MSG-04`).
+* **Integrity checking and file recording (MDG.18, 20):**
+  * `SourceRepoIntegrityError` (`category = integrity`) is raised on non-zero `git` checkout/object verification, unreadable/corrupt UTF-8 or malformed XML/YAML syntax in unit descriptors, or mismatch against `IPackageRepository`'s source/package digest.
+  * `AcquiredFile` records **every** acquired source file, installation script (`.sh`, `.service`, Ansible deploy tasks) and configuration file (`.xml`, `.yaml`, `.properties`, `.conf`) within the unit—with **repo-relative** `file_path`, `unit_name`, `version`, `commit_sha`, and tagged commit UTC `updated_at` (MDG.17–18).
+* **Static parsers replacing the remaining mocks:**
+  1. **`SystemRepoParser`:** parses deployment descriptors in `system_repo` to extract:
+     * `System → SoftwareSegment → CSCI → CSC` hierarchy (supplementing CMDB `csu_csms_relation`), `Role` definitions and `ASSIGNED_TO` edges (SMM.6–11, 23);
+     * `RUNS_ON` placements and per-unit `cpu_allocation` (`cores_requested`, `pinned_cores`, `dedicated`, `high_performance`), unit `os_settings`, and `runtime_config` (`memory_max_mb`, JVM/process flags) (SMM.18, 24; DVE.40–46);
+     * `Broker` instances (`type`, `version`, `max_connections`, `RUNS_ON`, `ROUTES`) and `CommunicationService` instances (`technology`, `version`, `RUNS_ON`, `USES_SERVICE`, and external-to-middleware `TRANSFERS` `{direction, source, destination, message_or_topic}`) (SMM.16–17, 19; DVE.39).
+  2. **`SourceCodeParser`:** parses `<unit_name>.xml` (`publishes_to`, `subscribes_to`, `sends`, `receives`, direct unit/library `uses`, SMM.20–22) and Java/C++ import statements.
+  3. **`TypeSupportParser`:** parses DDS/middleware QoS & IDL/XML type definitions to extract **Durability, Reliability, Lifespan (`qos_lifespan_ms`), Transport Priority**, Deadline and History Depth (DVE.32–35), plus a canonical structural **`declared_type_hash`** and `declared_size` per `(unit, topic)` endpoint so `DVE.38` detects same-named topics with differing content definitions across units!
+  4. **`MessageFileParser`:** parses message/topic payload definitions (`.idl`, `.xsd`, `.xml`, `.json`) to extract `message_id`, `size_bytes`, `frequency`, `fields_hash`, and **`field_schema`** (`[{name, type, min, max, unit}]`) required by `SCG.4` synthetic data generation.
+* **Bounded opt-in build (`GmakeBuildRunner`):** off by default (`run_regenerate_code = false`). When enabled, runs in a new session (`start_new_session=True`), scrubbed environment (`PATH`, `HOME`, `LANG` only—never `DSM_*`), `300 s` timeout (`10 s` on `gmake --version`), `resource.setrlimit` caps (`RLIMIT_CPU`, `RLIMIT_AS`, `RLIMIT_FSIZE`), and logs exit code plus redacted `stderr` tail into `common_operation_log`.
 
 ### Consequences
 
-* Good, because every external source has a small, offline-friendly adapter, and acquisition is reproducible (tag → commit hash) and secure by default once TLS is on.
-* Good, because topology comes from a repository that is already acquired, and one set of fields serves the automatic path, the manual path and validation.
-* Good, because the MDG.19 file list is settled with a rule already implemented and tested.
-* Bad, because a non-MySQL CMDB would need a second adapter, and the package protocol is provisional.
-* Bad, because the ansible owners must add the `saag_*` keys, and Ansible layouts vary.
-* Bad, because the opt-in build still runs repository code on the host, bounded but not sandboxed. A unit whose topics need generated code is parsed incompletely while it is off.
+* Good, because all four external interfaces (`DP-17…20`), automatic/manual topology (`DP-09`), and mandatory files (`DP-10`) are concretely specified with offline-ready stdlib/`PyMySQL`/`PyYAML` adapters.
+* Good, because emitted field names, units (`capacity_mbps`), `qos_lifespan_ms`, per-endpoint `declared_type_hash`, `CommunicationService` flows, and `field_schema` feed ADR-0010, ADR-0013 and ADR-0016 with zero translation gaps.
+* Bad, because `system_repo` and `ansible_repo` maintainers must populate the documented YAML/XML descriptors (missing attributes degrade gracefully to `placeholders` rather than silent fake numbers).
+* Bad, because opt-in `gmake` still runs build recipes on the host under `rlimit` bounds rather than a container sandbox.
 
 ### Confirmation
 
-* Existing tests in `mdg/tests/adapters/` cover:
-  * address parsing and error mapping;
-  * tag clone arguments and version ordering;
-  * no password on a `git` command line or in error text;
-  * mandatory files, including the comment-only include case.
-* Adapter contract tests (ADR-0021) run the same cases against the `dev/` MySQL and Gitea stack.
-* New tests:
-  * `git` arguments never contain `sslVerify=false` outside a test override;
-  * the topology parser handles the valid, missing and invalid seeds and never calls Ansible or Jinja;
-  * `GmakeBuildRunner` passes a reduced environment and sets resource limits.
+* Unit and adapter contract tests (`mdg/tests/contract/`, ADR-0021) against `dev/` MySQL, Gitea and mock Package REST verify: TLS CA enforcement (zero `sslVerify=false`), trailing-slash URLs, `:` in usernames, boundary-safe redaction, CMDB deficiency/format/access categories (`MDG.16`), `manual` vs `git_ansible` topology modes (`MDG.6–7`), `Library` + `Application` cloning and `AcquiredFile` repo-relative paths (`MDG.17–19`), `SourceRepoIntegrityError` (`MDG.20`), and `GmakeBuildRunner` env scrubbing + `rlimit`s.
 
 ## Pros and Cons of the Options
 
-* PyMySQL (as built): Good, because it is pure Python and already in the wheelhouse. Bad, because it is bound to MySQL. SQLAlchemy Core is dialect-independent but a large dependency for an engine change that is not planned.
-* `git` CLI (as built): Good, because it works with any server and tags are exact. Bad, because it needs subprocess and credential plumbing. A REST archive is server-specific, and Python Git libraries vary in shallow-clone and auth support.
-* Package REST: Good, because it is the standard interface of repository managers. A filesystem mount has no checksums or metadata.
-* Ansible repository: Good, because it is versioned, already cloned, and maintained by the deployers. Bad, because the owners must maintain the SaaG keys.
-  * A `topology.yaml` would duplicate what the ansible repository holds.
-  * The CMDB holds no network data.
-  * Manual entry alone fails MDG.6.
-* Static parsing with an opt-in host build (as built): Good, because it is deterministic and fast. Bad, because the opt-in runs on the host.
-  * Always building needs the full toolchain and runs repository code every time.
-  * A container build needs a runtime the host lacks.
+### PyMySQL read-only adapter (chosen)
+
+* Good, because it is pure Python, already in `mdg/wheelhouse/`, and keeps SQL explicit.
+* Bad, because non-MySQL CMDBs require adding a new `IConfigManagementRepository` adapter.
+
+### SQLAlchemy Core (earlier SDP §5)
+
+* Good, because dialects swap more easily.
+* Bad, because vendoring SQLAlchemy and greenlet wheels adds weight for an unplanned database change.
+
+### `git` CLI shallow clone over TLS-verified HTTPS (chosen)
+
+* Good, because it works against any Git server with exact tag resolution and shallow bandwidth.
+* Bad, because it requires `git ≥ 2.14` on the target host and subprocess credential-helper care.
+
+### Git server REST archive or Python Git library
+
+* Good, because no `git` subprocess is spawned.
+* Bad, because archive URLs are vendor-specific (Gitea vs GitLab vs Bitbucket) and `pygit2` requires native `libgit2` wheels on CentOS 7.
+
+### HTTPS REST `IPackageRepository` via stdlib (chosen)
+
+* Good, because it verifies unit versions and SHA-256 digests with zero third-party wheels.
+* Bad, because repository path templates must match the institution's artifact manager.
+
+### Shared filesystem mount for packages
+
+* Good, because file reads are local.
+* Bad, because network mounts break host isolation and carry no standard metadata/checksum API.
+
+### `NETWORK_TOPOLOGY` supporting `git_ansible` YAML and `manual` SQLite store (chosen)
+
+* Good, because it satisfies both MDG.6 (versioned deployer-maintained Ansible vars) and MDG.7 (standalone or override manual entry) behind one validation model.
+* Bad, because Ansible inventories using dynamic plugins or unexpanded Jinja expressions yield `placeholders` that require manual override.
+
+### Dedicated CMDB tables or manual entry only
+
+* Good, because no YAML parser is needed.
+* Bad, because the institutional CMDB has no NIC/switch tables, and manual-only violates MDG.6.
+
+### Static parsing with resource-bounded opt-in `gmake` (chosen)
+
+* Good, because default runs are fast, deterministic and execute zero untrusted code.
+* Bad, because units relying on build-generated IDL/XML must either check generated descriptors into Git or enable the host `gmake` option.
 
 ## More Information
 
-* Code:
-  * `mdg/src/mdg/adapters/config_management/mysql_config_management_repository.py`
-  * `mdg/src/mdg/adapters/source_code/` (`git_source_code_repository.py`, `mandatory_files.py`, `gmake_build_runner.py`)
-  * `mdg/src/mdg/adapters/source_data/`
-  * `mdg/src/mdg/domain/source_data.py`
-  * `mdg/src/mdg/services/produce_model_setup_data.py`
-  * `mdg/src/mdg/mdg.ini`
-  * `dve/src/dve/services/data_source_service.py`
-* Related: ADR-0003, ADR-0004, ADR-0007, ADR-0009, ADR-0010, ADR-0019, ADR-0021
-* Revisit if the production CMDB is not MySQL-compatible.
+* Code: `mdg/src/mdg/adapters/config_management/mysql_config_management_repository.py`, `mdg/src/mdg/adapters/source_code/`, `mdg/src/mdg/adapters/source_data/`, `mdg/src/mdg/services/produce_model_setup_data.py`, `dve/src/dve/services/data_source_service.py`
+* Related: ADR-0003, ADR-0004, ADR-0006, ADR-0007, ADR-0009, ADR-0010, ADR-0013, ADR-0016, ADR-0019, ADR-0021
+* Revisit if the institutional CMDB migrates off MySQL, or if container/namespace sandboxing (`bwrap`) becomes available on the target host for `gmake`.
